@@ -1,0 +1,78 @@
+const JELLYFIN_URL = process.env.JELLYFIN_URL;
+const JELLYFIN_API_KEY = process.env.JELLYFIN_API_KEY;
+
+if (!JELLYFIN_URL || !JELLYFIN_API_KEY) {
+  throw new Error("Missing JELLYFIN_URL or JELLYFIN_API_KEY in .env.local");
+}
+
+const headers = {
+  "X-Emby-Token": JELLYFIN_API_KEY,
+  "Content-Type": "application/json",
+};
+
+export interface JellyfinItem {
+  Id: string;
+  Name: string;
+  Type: string;
+  RunTimeTicks?: number;
+  ProductionYear?: number;
+  ImageTags?: { Primary?: string };
+  MediaSources?: JellyfinMediaSource[];
+}
+
+export interface JellyfinMediaSource {
+  Id: string;
+  Name: string;
+  Path: string;
+  Container: string;
+  Size: number;
+}
+
+function buildUrl(
+  path: string,
+  options: Record<string, string | string[] | boolean | number>,
+): string {
+  const params = new URLSearchParams();
+
+  for (const [key, value] of Object.entries(options)) {
+    if (Array.isArray(value)) {
+      params.set(key, value.join(","));
+    } else {
+      params.set(key, String(value));
+    }
+  }
+
+  return `${JELLYFIN_URL}${path}?${params}`;
+}
+
+export async function fetchJellyfinLibrary(): Promise<JellyfinItem[]> {
+  const url = buildUrl("/Items", {
+    IncludeItemTypes: ["Movie", "Series"],
+    Recursive: true,
+    Fields: ["MediaSources"],
+  });
+
+  const res = await fetch(url, { headers, next: { revalidate: 60 } });
+  if (!res.ok) throw new Error(`Jellyfin error: ${res.status}`);
+
+  const data = await res.json();
+  return data.Items ?? [];
+}
+
+export async function fetchJellyfinItem(id: string): Promise<JellyfinItem> {
+  const url = buildUrl(`/Items/${id}`, {
+    Fields: ["MediaSources"],
+  });
+
+  const res = await fetch(url, { headers, next: { revalidate: 60 } });
+
+  if (!res.ok) throw new Error(`Jellyfin error: ${res.status}`);
+
+  return res.json();
+}
+
+export function getThumbnailUrl(itemId: string): string {
+  return buildUrl(`/Items/${itemId}/Images/Primary`, {
+    api_key: JELLYFIN_API_KEY!,
+  });
+}
