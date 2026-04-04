@@ -51,7 +51,11 @@ function buildUrl(
   return `${JELLYFIN_URL}${path}?${params}`;
 }
 
-export async function fetchJellyfinLibrary(): Promise<JellyfinItem[]> {
+export async function fetchJellyfinLibrary(
+  params: {
+    searchTerm?: string;
+  } = {},
+): Promise<JellyfinItem[]> {
   const url = buildUrl("/Items", {
     IncludeItemTypes: ["Movie", "Series"],
     Recursive: true,
@@ -60,6 +64,11 @@ export async function fetchJellyfinLibrary(): Promise<JellyfinItem[]> {
     Limit: 100,
     SortBy: "SortName",
     SortOrder: "Ascending",
+    ...(params.searchTerm ? { SearchTerm: params.searchTerm } : {}),
+  });
+
+  console.log({
+    ...(params.searchTerm ? { SearchTerm: params.searchTerm } : {}),
   });
 
   const res = await fetch(url, { headers, next: { revalidate: 60 } });
@@ -74,7 +83,7 @@ export async function fetchJellyfinWatchItem(
 ): Promise<JellyfinItem> {
   const url = buildUrl(`/Items/${contentId}`, {
     Fields: ["MediaSources"],
-    UserId: JELLYFIN_USER_ID,
+    UserId: JELLYFIN_USER_ID!,
   });
 
   const res = await fetch(url, { headers, next: { revalidate: 60 } });

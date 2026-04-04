@@ -1,12 +1,22 @@
 import Link from "next/link";
 import Image from "next/image";
 import { fetchJellyfinLibrary, getThumbnailUrl } from "../lib/jellyfin";
+import SearchBar from "@/components/features/SearchBar";
 
-export default async function Library() {
-  const libraryItems = await fetchJellyfinLibrary();
+export default async function Library({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { q: query } = (await searchParams) || {};
+
+  const libraryItems = await fetchJellyfinLibrary({ searchTerm: query });
 
   return (
     <>
+      <div className="flex items-center h-10 border-b border-primary-border px-4 gap-4">
+        <SearchBar defaultQuery={query || ""} />
+      </div>
       <div className="flex items-center h-10 border-b border-primary-border px-4 gap-4">
         <span className="text-xs text-secondary-text">
           {libraryItems.length} titles
@@ -33,7 +43,6 @@ export default async function Library() {
             <div className="text-xs text-secondary-text mt-1">{item.Type}</div>
           </Link>
         ))}
-
         {libraryItems.length === 0 && (
           <div className="col-span-3 p-12 text-center text-secondary-text text-sm">
             No items found in your Jellyfin library.
