@@ -1,7 +1,8 @@
-import Link from "next/link";
-import Image from "next/image";
-import { fetchJellyfinLibrary, getThumbnailUrl } from "../lib/jellyfin";
+import { fetchJellyfinLibrary, getThumbnailUrl } from "../lib/jellyfin.server";
 import SearchBar from "@/components/features/SearchBar";
+import { db } from "@/lib/db";
+import LibraryGrid from "@/components/features/LibraryGrid";
+import { MediaContent } from "@prisma/client";
 
 export default async function Library({
   searchParams,
@@ -10,7 +11,24 @@ export default async function Library({
 }) {
   const { q: query } = (await searchParams) || {};
 
-  const libraryItems = await fetchJellyfinLibrary({ searchTerm: query });
+  const [libraryItems, publicMediaContent, user] = await Promise.all([
+    fetchJellyfinLibrary({ searchTerm: query }),
+    db.mediaContent.findMany({ where: { type: "jellyfin" } }),
+    db.user.findUnique({ where: { id: process.env.TEMP_USER_ID! } }),
+  ]);
+
+  const publicMediaContentMap: Map<string, MediaContent> = new Map(
+    publicMediaContent
+      .filter((item) => !!item.jellyfin_id)
+      .map((item): [string, MediaContent] => [item.jellyfin_id!, item]),
+  );
+
+  const isAdmin = user?.is_admin;
+
+  const premappedLibraryItems = libraryItems.map((item) => ({
+    ...item,
+    thumbnailUrl: getThumbnailUrl(item.Id),
+  }));
 
   return (
     <>
@@ -22,33 +40,11 @@ export default async function Library({
           {libraryItems.length} titles
         </span>
       </div>
-      <div className="grid grid-cols-3 border-l border-t border-primary-border">
-        {libraryItems.map((item) => (
-          <Link
-            key={item.Id}
-            href={`/watch/${item.Id}`}
-            className="border-r border-b border-primary-border p-4 hover:bg-background-hover transition-colors group"
-          >
-            <div className="aspect-video bg-background mb-3 overflow-hidden">
-              <Image
-                src={getThumbnailUrl(item.Id)}
-                alt={item.Name}
-                className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
-                width={1}
-                height={1}
-                unoptimized // TODO: Remove when we have a proper jellyfin proxy
-              />
-            </div>
-            <div className="text-sm font-medium truncate">{item.Name}</div>
-            <div className="text-xs text-secondary-text mt-1">{item.Type}</div>
-          </Link>
-        ))}
-        {libraryItems.length === 0 && (
-          <div className="col-span-3 p-12 text-center text-secondary-text text-sm">
-            No items found in your Jellyfin library.
-          </div>
-        )}
-      </div>
+      <LibraryGrid
+        libraryItems={premappedLibraryItems}
+        isAdmin={isAdmin}
+        publicMediaContentMap={publicMediaContentMap}
+      />
     </>
   );
 }

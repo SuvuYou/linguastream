@@ -1,5 +1,5 @@
 import Player from "@/components/features/Player";
-import { fetchJellyfinWatchItem, getJellyfinStreamUrl } from "@/lib/jellyfin";
+import { fetchJellyfinWatchItem, getJellyfinStreamUrl } from "@/lib/jellyfin.server";
 
 export default async function Watch({
   params,
