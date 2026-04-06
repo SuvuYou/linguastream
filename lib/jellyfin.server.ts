@@ -54,6 +54,8 @@ function buildUrl(
 export async function fetchJellyfinLibrary(
   params: {
     searchTerm?: string;
+    ids?: string[];
+    excludeIds?: string[];
   } = {},
 ): Promise<JellyfinItem[]> {
   const url = buildUrl("/Items", {
@@ -65,6 +67,8 @@ export async function fetchJellyfinLibrary(
     SortBy: "SortName",
     SortOrder: "Ascending",
     ...(params.searchTerm ? { SearchTerm: params.searchTerm } : {}),
+    ...(params.ids ? { Ids: params.ids } : {}),
+    ...(params.excludeIds ? { ExcludeItemIds: params.excludeIds } : {}),
   });
 
   const res = await fetch(url, { headers, next: { revalidate: 60 } });
