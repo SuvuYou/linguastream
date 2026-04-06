@@ -25,35 +25,46 @@ model User {
 }
 
 model MediaContent {
-  id               String   @id @default(uuid())
-  user_id          String
-  title            String
-  type             String
-  source_language  String
-  target_language  String
-  jellyfin_id      String?
-  file_path        String?
+  id              String   @id @default(uuid())
+  user_id         String
+  title           String
+  type            String
+  source_language String
+  jellyfin_id     String?
+  file_path       String?
   youtube_video_id String?
+  created_at      DateTime @default(now())
+
+  user            User           @relation(fields: [user_id], references: [id])
+  subtitle_tracks SubtitleTrack[]
+  subtitle_lines  SubtitleLine[]
+  cards           Card[]
+}
+
+model SubtitleTrack {
+  id               String   @id @default(uuid())
+  media_content_id String
+  subtitle_language  String
   created_at       DateTime @default(now())
 
-  user           User           @relation(fields: [user_id], references: [id])
+  media_content  MediaContent   @relation(fields: [media_content_id], references: [id])
   subtitle_lines SubtitleLine[]
-  cards          Card[]
+
+  @@unique([media_content_id, subtitle_language])
 }
 
 model SubtitleLine {
-  id               String @id @default(uuid())
-  media_content_id String
-  index            Int
-  start_ms         Int
-  end_ms           Int
-  original_text    String
-  translated_text  String
-  source_language  String
-  target_language  String
+  id                String @id @default(uuid())
+  media_content_id  String
+  subtitle_track_id String
+  index             Int
+  start_ms          Int
+  end_ms            Int
+  text              String
 
-  media_content MediaContent @relation(fields: [media_content_id], references: [id])
-  cards         Card[]
+  media_content  MediaContent  @relation(fields: [media_content_id], references: [id])
+  subtitle_track SubtitleTrack @relation(fields: [subtitle_track_id], references: [id])
+  cards          Card[]
 }
 
 model Deck {
@@ -91,7 +102,7 @@ model Card {
   word_profile_id  String?
   word             String
   source_language  String
-  target_language  String
+  subtitle_language  String
   timestamp_ms     Int
   next_review      DateTime @default(now())
   interval_days    Int      @default(1)

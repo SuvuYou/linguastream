@@ -67,10 +67,6 @@ export async function fetchJellyfinLibrary(
     ...(params.searchTerm ? { SearchTerm: params.searchTerm } : {}),
   });
 
-  console.log({
-    ...(params.searchTerm ? { SearchTerm: params.searchTerm } : {}),
-  });
-
   const res = await fetch(url, { headers, next: { revalidate: 60 } });
   if (!res.ok) throw new Error(`Jellyfin error: ${res.status}`);
 
