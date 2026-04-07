@@ -1,7 +1,7 @@
 "use client";
 
 import { LANGUAGES } from "@/helpers/const";
-import { searchParamsSchema } from "@/helpers/params-schema";
+import { PUBLIC_LIBRARY_PARAMS_SCHEMA } from "@/helpers/params-schema";
 import { useZodSearchParams } from "@/hooks/useZodSearchParams";
 import { useAppStore } from "@/lib/store";
 import { useEffect } from "react";
@@ -19,7 +19,7 @@ export default function LanguageFilter(props: {
     selectedSubtitleLanguage,
   } = props;
 
-  const searchParams = useZodSearchParams(searchParamsSchema);
+  const searchParams = useZodSearchParams(PUBLIC_LIBRARY_PARAMS_SCHEMA);
 
   const { setPreferredSourceLanguage, setPreferredSubtitleLanguage } =
     useAppStore();
