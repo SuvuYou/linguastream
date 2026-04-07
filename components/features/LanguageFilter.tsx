@@ -1,8 +1,9 @@
 "use client";
 
-import { LANGUAGES } from "@/lib/languages";
+import { LANGUAGES } from "@/helpers/const";
+import { searchParamsSchema } from "@/helpers/params-schema";
+import { useZodSearchParams } from "@/hooks/useZodSearchParams";
 import { useAppStore } from "@/lib/store";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 
 export default function LanguageFilter(props: {
@@ -18,9 +19,7 @@ export default function LanguageFilter(props: {
     selectedSubtitleLanguage,
   } = props;
 
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const searchParams = useZodSearchParams(searchParamsSchema);
 
   const { setPreferredSourceLanguage, setPreferredSubtitleLanguage } =
     useAppStore();
@@ -36,13 +35,10 @@ export default function LanguageFilter(props: {
   ]);
 
   const updateFilter = (type: "src" | "sub", value: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set(type, value);
-
     if (type === "src") setPreferredSourceLanguage(value);
     if (type === "sub") setPreferredSubtitleLanguage(value);
 
-    router.replace(`${pathname}?${params}`);
+    searchParams.set({ [type]: value });
   };
 
   function getLabel(code: string) {

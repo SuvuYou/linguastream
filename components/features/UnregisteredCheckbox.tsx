@@ -1,6 +1,7 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import { searchParamsSchema } from "@/helpers/params-schema";
+import { useZodSearchParams } from "@/hooks/useZodSearchParams";
 import { useRef } from "react";
 
 export default function UnregisteredCheckbox({
@@ -8,8 +9,7 @@ export default function UnregisteredCheckbox({
 }: {
   shouldShowUnregistered: boolean;
 }) {
-  const router = useRouter();
-  const pathname = usePathname();
+  const searchParams = useZodSearchParams(searchParamsSchema);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -19,9 +19,9 @@ export default function UnregisteredCheckbox({
 
     debounceRef.current = setTimeout(() => {
       if (isChecked) {
-        router.replace(`${pathname}?unreg=true`);
+        searchParams.set({ unreg: true });
       } else {
-        router.replace(pathname);
+        searchParams.remove("unreg");
       }
     }, 100);
   };

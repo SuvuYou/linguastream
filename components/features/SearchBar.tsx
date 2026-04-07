@@ -1,11 +1,11 @@
 "use client";
 
 import { useRef, useTransition } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useZodSearchParams } from "@/hooks/useZodSearchParams";
+import { searchParamsSchema } from "@/helpers/params-schema";
 
 export default function SearchBar({ defaultQuery }: { defaultQuery: string }) {
-  const router = useRouter();
-  const pathname = usePathname();
+  const searchParams = useZodSearchParams(searchParamsSchema);
   const [isPending, startTransition] = useTransition();
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -17,9 +17,9 @@ export default function SearchBar({ defaultQuery }: { defaultQuery: string }) {
     debounceRef.current = setTimeout(() => {
       startTransition(() => {
         if (newQuery) {
-          router.replace(`${pathname}?q=${encodeURIComponent(newQuery)}`);
+          searchParams.set({ q: newQuery });
         } else {
-          router.replace(pathname);
+          searchParams.remove("q");
         }
       });
     }, 300);
