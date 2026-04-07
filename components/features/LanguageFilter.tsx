@@ -1,3 +1,5 @@
+"use client";
+
 import { LANGUAGES } from "@/lib/languages";
 import { useAppStore } from "@/lib/store";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
