@@ -1,20 +1,90 @@
 import { db } from "@/lib/db";
+import { MediaContent } from "@prisma/client";
+
+export async function bulkCreateJellyfinContent(
+  items: { jellyfin_id: string; title: string }[],
+) {
+  return db.mediaContent.createMany({
+    data: items.map((item) => ({
+      jellyfin_id: item.jellyfin_id,
+      title: item.title,
+      type: "jellyfin",
+      source_language: "unknown",
+      user_id: process.env.TEMP_USER_ID!,
+    })),
+    skipDuplicates: true,
+  });
+}
+
+export async function fetchAllRegisteredJellyfinIds(): Promise<Set<string>> {
+  const items = await db.mediaContent.findMany({
+    where: { type: "jellyfin" },
+    select: { jellyfin_id: true },
+  });
+
+  return new Set(items.map((i) => i.jellyfin_id).filter(Boolean) as string[]);
+}
+
+interface FetchPublicMediaContentOptions {
+  sourceLanguage?: string;
+  subtitleLanguage?: string;
+  page?: number;
+  pageSize?: number;
+}
 
 export async function fetchPublicMediaContent(
-  sourceLanguage?: string,
-  subtitleLanguage?: string,
-) {
-  return db.mediaContent.findMany({
-    where: {
-      type: "jellyfin",
-      ...(sourceLanguage ? { source_language: sourceLanguage } : {}),
-      ...(subtitleLanguage
-        ? {
-            subtitle_tracks: {
-              some: { subtitle_language: subtitleLanguage },
-            },
-          }
-        : {}),
-    },
-  });
+  options: FetchPublicMediaContentOptions,
+): Promise<{
+  items: MediaContent[];
+  total: number;
+  pageCount: number;
+}> {
+  const { sourceLanguage, subtitleLanguage, page = 0, pageSize = 20 } = options;
+
+  const where = {
+    type: "jellyfin",
+    ...(sourceLanguage ? { source_language: sourceLanguage } : {}),
+    ...(subtitleLanguage
+      ? {
+          subtitle_tracks: { some: { subtitle_language: subtitleLanguage } },
+        }
+      : {}),
+  };
+
+  const [items, total] = await Promise.all([
+    db.mediaContent.findMany({
+      where,
+      take: pageSize,
+      skip: page * pageSize,
+      orderBy: { created_at: "desc" },
+    }),
+    db.mediaContent.count({ where }),
+  ]);
+
+  return { items, total, pageCount: Math.ceil(total / pageSize) };
+}
+
+export async function fetchUnregisteredMediaContent(options: {
+  page: number;
+  pageSize?: number;
+}): Promise<{
+  items: MediaContent[];
+  total: number;
+  pageCount: number;
+}> {
+  const { page, pageSize = 20 } = options;
+
+  const where = { type: "jellyfin", source_language: "unknown" };
+
+  const [items, total] = await Promise.all([
+    db.mediaContent.findMany({
+      where,
+      take: pageSize,
+      skip: page * pageSize,
+      orderBy: { created_at: "desc" },
+    }),
+    db.mediaContent.count({ where }),
+  ]);
+
+  return { items, total, pageCount: Math.ceil(total / pageSize) };
 }

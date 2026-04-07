@@ -6,7 +6,15 @@ export async function fetchAvailableSourceLanguages() {
     distinct: ["source_language"],
   });
 
-  return sourceLanguages.map((item) => item.source_language);
+  if (sourceLanguages.length === 0) {
+    return [];
+  }
+
+  return sourceLanguages
+    .filter(
+      (item): item is { source_language: string } => !!item.source_language,
+    )
+    .map((item) => item.source_language);
 }
 
 export async function fetchAvailableSubtitleLanguages() {

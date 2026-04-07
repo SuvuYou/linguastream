@@ -1,3 +1,5 @@
+import { JellyfinItem } from "@/types";
+
 const JELLYFIN_URL = process.env.JELLYFIN_URL;
 const JELLYFIN_API_KEY = process.env.JELLYFIN_API_KEY;
 const JELLYFIN_USER_ID = process.env.JELLYFIN_USER_ID;
@@ -12,24 +14,6 @@ const headers = {
   "X-Emby-Token": JELLYFIN_API_KEY,
   "Content-Type": "application/json",
 };
-
-export interface JellyfinItem {
-  Id: string;
-  Name: string;
-  Type: string;
-  RunTimeTicks?: number;
-  ProductionYear?: number;
-  ImageTags?: { Primary?: string };
-  MediaSources?: JellyfinMediaSource[];
-}
-
-export interface JellyfinMediaSource {
-  Id: string;
-  Name: string;
-  Path: string;
-  Container: string;
-  Size: number;
-}
 
 function buildUrl(
   path: string,
@@ -55,20 +39,20 @@ export async function fetchJellyfinLibrary(
   params: {
     searchTerm?: string;
     ids?: string[];
-    excludeIds?: string[];
+    limit?: number;
+    startIndex?: number;
   } = {},
 ): Promise<JellyfinItem[]> {
   const url = buildUrl("/Items", {
     IncludeItemTypes: ["Movie", "Series"],
     Recursive: true,
     Fields: ["MediaSources"],
-    StartIndex: 0,
-    Limit: 100,
     SortBy: "SortName",
     SortOrder: "Ascending",
+    ...(params.startIndex ? { StartIndex: params.startIndex } : {}),
+    ...(params.limit ? { Limit: params.limit } : {}),
     ...(params.searchTerm ? { SearchTerm: params.searchTerm } : {}),
     ...(params.ids ? { Ids: params.ids } : {}),
-    ...(params.excludeIds ? { ExcludeItemIds: params.excludeIds } : {}),
   });
 
   const res = await fetch(url, { headers, next: { revalidate: 60 } });
