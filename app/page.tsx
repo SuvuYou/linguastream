@@ -15,7 +15,7 @@ import LanguageFilter from "@/components/features/LanguageFilter";
 import SyncButton from "@/components/features/SyncButton";
 import { MergedContentItem } from "@/types";
 import { MediaContent } from "@prisma/client";
-import { parseSearchParams, searchParamsSchema } from "@/helpers/params-schema";
+import { parseSearchParams, PUBLIC_LIBRARY_PARAMS_SCHEMA } from "@/helpers/params-schema";
 
 const PAGE_SIZE = 20;
 
@@ -31,7 +31,7 @@ export default async function Library({
   }>;
 }) {
   const params = await searchParams;
-  const parsedParams = parseSearchParams(searchParamsSchema, params);
+  const parsedParams = parseSearchParams(PUBLIC_LIBRARY_PARAMS_SCHEMA, params);
 
   const {
     q: query,

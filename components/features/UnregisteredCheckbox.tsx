@@ -1,6 +1,6 @@
 "use client";
 
-import { searchParamsSchema } from "@/helpers/params-schema";
+import { PUBLIC_LIBRARY_PARAMS_SCHEMA } from "@/helpers/params-schema";
 import { useZodSearchParams } from "@/hooks/useZodSearchParams";
 import { useRef } from "react";
 
@@ -9,7 +9,7 @@ export default function UnregisteredCheckbox({
 }: {
   shouldShowUnregistered: boolean;
 }) {
-  const searchParams = useZodSearchParams(searchParamsSchema);
+  const searchParams = useZodSearchParams(PUBLIC_LIBRARY_PARAMS_SCHEMA);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleToggle = (e: React.ChangeEvent<HTMLInputElement>) => {

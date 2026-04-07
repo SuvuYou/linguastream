@@ -6,7 +6,7 @@ const LanguageCodeSchema = z.enum(
   LANGUAGES.map((l) => l.code) as [LanguageCode, ...LanguageCode[]],
 );
 
-export const searchParamsSchema = z.object({
+export const PUBLIC_LIBRARY_PARAMS_SCHEMA = z.object({
   q: z.string().optional(),
 
   src: LanguageCodeSchema.optional(),

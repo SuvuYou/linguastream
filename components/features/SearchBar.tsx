@@ -2,10 +2,10 @@
 
 import { useRef, useTransition } from "react";
 import { useZodSearchParams } from "@/hooks/useZodSearchParams";
-import { searchParamsSchema } from "@/helpers/params-schema";
+import { PUBLIC_LIBRARY_PARAMS_SCHEMA } from "@/helpers/params-schema";
 
 export default function SearchBar({ defaultQuery }: { defaultQuery: string }) {
-  const searchParams = useZodSearchParams(searchParamsSchema);
+  const searchParams = useZodSearchParams(PUBLIC_LIBRARY_PARAMS_SCHEMA);
   const [isPending, startTransition] = useTransition();
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
