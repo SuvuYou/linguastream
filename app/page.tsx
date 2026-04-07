@@ -15,6 +15,7 @@ import LanguageFilter from "@/components/features/LanguageFilter";
 import SyncButton from "@/components/features/SyncButton";
 import { MergedContentItem } from "@/types";
 import { MediaContent } from "@prisma/client";
+import { parseSearchParams, searchParamsSchema } from "@/helpers/params-schema";
 
 const PAGE_SIZE = 20;
 
@@ -29,15 +30,16 @@ export default async function Library({
     unreg?: string;
   }>;
 }) {
+  const params = await searchParams;
+  const parsedParams = parseSearchParams(searchParamsSchema, params);
+
   const {
     q: query,
     src: sourceLanguage,
     sub: subtitleLanguage,
-    unreg: showUnregistered,
+    unreg: shouldShowUnregistered = false,
     page,
-  } = (await searchParams) || {};
-
-  const shouldShowUnregistered = showUnregistered === "true";
+  } = parsedParams;
 
   // Step 1: Fetch available languages
   const [availableSourceLanguages, availableSubtitleLanguages, adminUser] =
@@ -71,8 +73,6 @@ export default async function Library({
           pageSize: PAGE_SIZE,
         });
 
-  console.log("dbPublicMediaContent", dbPublicMediaContent);
-
   const dbPublicIds = dbPublicMediaContent
     .map((c) => c.jellyfin_id)
     .filter((id): id is string => !!id);
@@ -95,8 +95,6 @@ export default async function Library({
     ),
     thumbnailUrl: getThumbnailUrl(dbItem.jellyfin_id ?? ""),
   }));
-
-  console.log("Merged content items:", mergedPublicMediaContent);
 
   // TODO: handle case where jellyfin item has been deleted but db entry still exists
 

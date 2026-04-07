@@ -1,4 +1,4 @@
-import { LANGUAGES } from "@/lib/languages";
+import { LANGUAGES } from "@/helpers/const";
 import { useState, useTransition } from "react";
 
 export default function AddToLibraryModal(props: {
