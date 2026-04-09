@@ -6,7 +6,6 @@ import {
   fetchPublicMediaContent,
   fetchUnregisteredMediaContent,
 } from "@/lib/db-helpers/media";
-import { fetchAdminUser } from "@/lib/db-helpers/users";
 import {
   fetchAvailableSourceLanguages,
   fetchAvailableSubtitleLanguages,
@@ -15,7 +14,11 @@ import LanguageFilter from "@/components/features/LanguageFilter";
 import SyncButton from "@/components/features/SyncButton";
 import { MergedContentItem } from "@/types";
 import { MediaContent } from "@prisma/client";
-import { parseSearchParams, PUBLIC_LIBRARY_PARAMS_SCHEMA } from "@/helpers/params-schema";
+import {
+  parseSearchParams,
+  PUBLIC_LIBRARY_PARAMS_SCHEMA,
+} from "@/helpers/params-schema";
+import { getCurrentUser } from "@/lib/firebase/session";
 
 const PAGE_SIZE = 20;
 
@@ -46,7 +49,7 @@ export default async function Library({
     await Promise.all([
       fetchAvailableSourceLanguages(),
       fetchAvailableSubtitleLanguages(),
-      fetchAdminUser(),
+      getCurrentUser(),
     ]);
 
   const isAdmin = adminUser?.is_admin;

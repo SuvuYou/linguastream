@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { getCurrentUser } from "@/lib/firebase/session";
 
 const createSchema = z.object({
   title: z.string(),
@@ -14,6 +15,12 @@ export async function POST(req: NextRequest) {
 
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+  }
+
+  const user = await getCurrentUser();
+
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { title, jellyfin_id, source_language } = parsed.data;
@@ -32,7 +39,7 @@ export async function POST(req: NextRequest) {
       type: "jellyfin",
       jellyfin_id,
       source_language,
-      user_id: process.env.TEMP_USER_ID!,
+      user_id: user.id,
     },
   });
 
