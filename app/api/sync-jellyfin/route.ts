@@ -1,16 +1,13 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
 import {
   bulkCreateJellyfinContent,
   fetchAllRegisteredJellyfinIds,
 } from "@/lib/db-helpers/media";
 import { fetchJellyfinLibrary } from "@/lib/jellyfin.server";
+import { getCurrentUser } from "@/lib/firebase/session";
 
 export async function POST() {
-  // TODO: Auth check — replace with real auth later
-  const user = await db.user.findUnique({
-    where: { id: process.env.TEMP_USER_ID! },
-  });
+  const user = await getCurrentUser();
 
   if (!user?.is_admin) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -25,7 +22,7 @@ export async function POST() {
     .filter((item) => !registeredIds.has(item.Id))
     .map((item) => ({ jellyfin_id: item.Id, title: item.Name }));
 
-  const result = await bulkCreateJellyfinContent(newItems);
+  const result = await bulkCreateJellyfinContent(newItems, user.id);
 
   return NextResponse.json({
     synced: result.count,
