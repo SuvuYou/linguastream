@@ -1,16 +1,21 @@
+import {
+  JELLYFIN_CONTENT_TYPE,
+  UNKNOWN_SOURCE_LANGUAGE,
+} from "@/helpers/const";
 import { db } from "@/lib/db";
 import { MediaContent } from "@prisma/client";
 
 export async function bulkCreateJellyfinContent(
   items: { jellyfin_id: string; title: string }[],
+  userId: string,
 ) {
   return db.mediaContent.createMany({
     data: items.map((item) => ({
       jellyfin_id: item.jellyfin_id,
       title: item.title,
-      type: "jellyfin",
-      source_language: "unknown",
-      user_id: process.env.TEMP_USER_ID!,
+      type: JELLYFIN_CONTENT_TYPE,
+      source_language: UNKNOWN_SOURCE_LANGUAGE,
+      user_id: userId,
     })),
     skipDuplicates: true,
   });
@@ -18,7 +23,7 @@ export async function bulkCreateJellyfinContent(
 
 export async function fetchAllRegisteredJellyfinIds(): Promise<Set<string>> {
   const items = await db.mediaContent.findMany({
-    where: { type: "jellyfin" },
+    where: { type: JELLYFIN_CONTENT_TYPE },
     select: { jellyfin_id: true },
   });
 
@@ -42,7 +47,7 @@ export async function fetchPublicMediaContent(
   const { sourceLanguage, subtitleLanguage, page = 0, pageSize = 20 } = options;
 
   const where = {
-    type: "jellyfin",
+    type: JELLYFIN_CONTENT_TYPE,
     ...(sourceLanguage ? { source_language: sourceLanguage } : {}),
     ...(subtitleLanguage
       ? {
@@ -74,7 +79,10 @@ export async function fetchUnregisteredMediaContent(options: {
 }> {
   const { page, pageSize = 20 } = options;
 
-  const where = { type: "jellyfin", source_language: "unknown" };
+  const where = {
+    type: JELLYFIN_CONTENT_TYPE,
+    source_language: UNKNOWN_SOURCE_LANGUAGE,
+  };
 
   const [items, total] = await Promise.all([
     db.mediaContent.findMany({

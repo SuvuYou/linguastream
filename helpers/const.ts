@@ -4,3 +4,9 @@ export const LANGUAGES = [
 ] as const;
 
 export type LanguageCode = (typeof LANGUAGES)[number]["code"];
+
+export const UNKNOWN_SOURCE_LANGUAGE = "unknown";
+
+export const JELLYFIN_CONTENT_TYPE = "jellyfin";
+export const YOUTUBE_CONTENT_TYPE = "youtube";
+export const UPLOAD_CONTENT_TYPE = "upload";

@@ -45,14 +45,14 @@ export default async function Library({
   } = parsedParams;
 
   // Step 1: Fetch available languages
-  const [availableSourceLanguages, availableSubtitleLanguages, adminUser] =
+  const [availableSourceLanguages, availableSubtitleLanguages, user] =
     await Promise.all([
       fetchAvailableSourceLanguages(),
       fetchAvailableSubtitleLanguages(),
       getCurrentUser(),
     ]);
 
-  const isAdmin = adminUser?.is_admin;
+  const isAdmin = user?.is_admin;
 
   const selectedSourceLanguage =
     availableSourceLanguages.find((lang) => lang === sourceLanguage) ||
