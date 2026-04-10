@@ -4,7 +4,7 @@ import { LANGUAGES } from "@/helpers/const";
 import { PUBLIC_LIBRARY_PARAMS_SCHEMA } from "@/helpers/params-schema";
 import { useZodSearchParams } from "@/hooks/useZodSearchParams";
 import { useAppStore } from "@/lib/store";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export default function LanguageFilter(props: {
   availableSourceLanguages: string[];
@@ -24,6 +24,12 @@ export default function LanguageFilter(props: {
   const { setPreferredSourceLanguage, setPreferredSubtitleLanguage } =
     useAppStore();
 
+  const [visualSelectedSourceLanguage, setVisualSelectedSourceLanguage] =
+    useState(selectedSourceLanguage);
+
+  const [visualSelectedSubtitleLanguage, setVisualSelectedSubtitleLanguage] =
+    useState(selectedSubtitleLanguage);
+
   useEffect(() => {
     setPreferredSourceLanguage(selectedSourceLanguage);
     setPreferredSubtitleLanguage(selectedSubtitleLanguage);
@@ -36,7 +42,9 @@ export default function LanguageFilter(props: {
 
   const updateFilter = (type: "src" | "sub", value: string) => {
     if (type === "src") setPreferredSourceLanguage(value);
+    if (type === "src") setVisualSelectedSourceLanguage(value);
     if (type === "sub") setPreferredSubtitleLanguage(value);
+    if (type === "sub") setVisualSelectedSubtitleLanguage(value);
 
     searchParams.set({ [type]: value });
   };
@@ -50,7 +58,7 @@ export default function LanguageFilter(props: {
       <div className="flex items-center gap-2 px-4 h-full">
         <span className="text-xs text-secondary-text">Content</span>
         <select
-          value={selectedSourceLanguage}
+          value={visualSelectedSourceLanguage}
           onChange={(e) => updateFilter("src", e.target.value)}
           className="bg-transparent text-xs text-active-border outline-none cursor-pointer"
         >
@@ -65,7 +73,7 @@ export default function LanguageFilter(props: {
       <div className="flex items-center gap-2 px-4 h-full">
         <span className="text-xs text-secondary-text">Subtitles</span>
         <select
-          value={selectedSubtitleLanguage}
+          value={visualSelectedSubtitleLanguage}
           onChange={(e) => updateFilter("sub", e.target.value)}
           className="bg-transparent text-xs text- outline-none cursor-pointer"
         >

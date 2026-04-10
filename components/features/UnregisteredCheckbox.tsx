@@ -2,7 +2,7 @@
 
 import { PUBLIC_LIBRARY_PARAMS_SCHEMA } from "@/helpers/params-schema";
 import { useZodSearchParams } from "@/hooks/useZodSearchParams";
-import { useRef } from "react";
+import { useState } from "react";
 
 export default function UnregisteredCheckbox({
   shouldShowUnregistered,
@@ -10,27 +10,24 @@ export default function UnregisteredCheckbox({
   shouldShowUnregistered: boolean;
 }) {
   const searchParams = useZodSearchParams(PUBLIC_LIBRARY_PARAMS_SCHEMA);
-  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const [checked, setChecked] = useState(shouldShowUnregistered);
 
   const handleToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
     const isChecked = e.target.checked;
+    setChecked(isChecked);
 
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-
-    debounceRef.current = setTimeout(() => {
-      if (isChecked) {
-        searchParams.set({ unreg: true });
-      } else {
-        searchParams.remove("unreg");
-      }
-    }, 100);
+    if (isChecked) {
+      searchParams.set({ unreg: true });
+    } else {
+      searchParams.remove("unreg");
+    }
   };
 
   return (
     <label className="flex items-center gap-2 text-xs text-secondary-text cursor-pointer">
       <input
         type="checkbox"
-        checked={shouldShowUnregistered}
+        checked={checked}
         className="accent-active-border"
         onChange={handleToggle}
       />

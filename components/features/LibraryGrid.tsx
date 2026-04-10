@@ -6,6 +6,7 @@ import Link from "next/link";
 import AddToLibraryModal from "./AddToLibraryModal";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { UNKNOWN_SOURCE_LANGUAGE } from "@/helpers/const";
 
 export default function LibraryGrid({
   mergedContentItem,
@@ -61,7 +62,7 @@ export default function LibraryGrid({
                   {item.jellyfinItem.Type}
                 </div>
               </Link>
-              {isAdmin && (
+              {isAdmin && item.source_language === UNKNOWN_SOURCE_LANGUAGE && (
                 <button
                   onClick={() =>
                     setModal({
