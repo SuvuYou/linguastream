@@ -1,3 +1,4 @@
+import { UNKNOWN_SOURCE_LANGUAGE } from "@/helpers/const";
 import { db } from "@/lib/db";
 
 export async function fetchAvailableSourceLanguages() {
@@ -12,7 +13,9 @@ export async function fetchAvailableSourceLanguages() {
 
   return sourceLanguages
     .filter(
-      (item): item is { source_language: string } => !!item.source_language,
+      (item): item is { source_language: string } =>
+        !!item.source_language &&
+        item.source_language !== UNKNOWN_SOURCE_LANGUAGE,
     )
     .map((item) => item.source_language);
 }
