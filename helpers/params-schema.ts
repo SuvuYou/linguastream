@@ -9,14 +9,15 @@ const LanguageCodeSchema = z.enum(
 export const PUBLIC_LIBRARY_PARAMS_SCHEMA = z.object({
   q: z.string().optional(),
 
-  src: LanguageCodeSchema.optional(),
-  sub: LanguageCodeSchema.optional(),
+  src: LanguageCodeSchema.optional().default(LANGUAGES[0].code),
+  sub: LanguageCodeSchema.optional().default(LANGUAGES[0].code),
 
   page: z
     .string()
     .transform((v) => Number(v))
     .refine((n) => !isNaN(n) && n > 0, { message: "Invalid page" })
-    .optional(),
+    .optional()
+    .default(0),
 
   unreg: z
     .string()

@@ -31,10 +31,11 @@ export async function fetchAllRegisteredJellyfinIds(): Promise<Set<string>> {
 }
 
 interface FetchPublicMediaContentOptions {
+  searchTerm?: string;
   sourceLanguage?: string;
   subtitleLanguage?: string;
-  page?: number;
-  pageSize?: number;
+  page: number;
+  pageSize: number;
 }
 
 export async function fetchPublicMediaContent(
@@ -44,7 +45,13 @@ export async function fetchPublicMediaContent(
   total: number;
   pageCount: number;
 }> {
-  const { sourceLanguage, subtitleLanguage, page = 0, pageSize = 20 } = options;
+  const {
+    searchTerm = "",
+    sourceLanguage,
+    subtitleLanguage,
+    page,
+    pageSize,
+  } = options;
 
   const where = {
     type: JELLYFIN_CONTENT_TYPE,
@@ -52,6 +59,11 @@ export async function fetchPublicMediaContent(
     ...(subtitleLanguage
       ? {
           subtitle_tracks: { some: { subtitle_language: subtitleLanguage } },
+        }
+      : {}),
+    ...(searchTerm
+      ? {
+          title: { contains: searchTerm, mode: "insensitive" as const },
         }
       : {}),
   };
@@ -70,18 +82,24 @@ export async function fetchPublicMediaContent(
 }
 
 export async function fetchUnregisteredMediaContent(options: {
+  searchTerm?: string;
   page: number;
-  pageSize?: number;
+  pageSize: number;
 }): Promise<{
   items: MediaContent[];
   total: number;
   pageCount: number;
 }> {
-  const { page, pageSize = 20 } = options;
+  const { searchTerm = "", page, pageSize } = options;
 
   const where = {
     type: JELLYFIN_CONTENT_TYPE,
     source_language: UNKNOWN_SOURCE_LANGUAGE,
+    ...(searchTerm
+      ? {
+          title: { contains: searchTerm, mode: "insensitive" as const },
+        }
+      : {}),
   };
 
   const [items, total] = await Promise.all([
