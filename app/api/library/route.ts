@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
     q: query,
     src: sourceLanguage,
     sub: subtitleLanguage,
-    unreg: shouldShowUnregistered = false,
+    unreg: shouldShowUnregistered,
     page,
   } = parsedParams;
 
