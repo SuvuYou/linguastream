@@ -22,7 +22,8 @@ export const PUBLIC_LIBRARY_PARAMS_SCHEMA = z.object({
   unreg: z
     .string()
     .transform((v) => v === "true")
-    .optional(),
+    .optional()
+    .default(false),
 });
 
 export function parseSearchParams<T extends z.ZodTypeAny>(
