@@ -9,16 +9,25 @@ import { UNKNOWN_SOURCE_LANGUAGE } from "@/helpers/const";
 import LibrarySkeleton from "./LibrarySkeleton";
 import { useUser } from "@/hooks/useUser";
 import { DEFAULT_LIBRARY_RESPONSE, useLibrary } from "@/hooks/useLibrary";
+import { useLanguages } from "@/hooks/useLanguages";
 
 export default function LibraryGrid() {
   const user = useUser();
-  const Library = useLibrary();
+
+  const languages = useLanguages();
+
+  const library = useLibrary({
+    shouldFetch:
+      !!languages.data && !languages.isLoading && !languages.isFetching,
+    selectedSourceLanguage: languages.selectedSourceLanguage,
+    selectedSubtitleLanguage: languages.selectedSubtitleLanguage,
+  });
 
   const isAdmin = user.data?.is_admin;
-  const isLoading = user.isLoading || Library.isLoading;
-  const isError = user.isError || Library.isError;
+  const isLoading = user.isLoading || library.isLoading;
+  const isError = user.isError || library.isError;
 
-  const { items, total } = Library.data || DEFAULT_LIBRARY_RESPONSE;
+  const { items, total } = library.data || DEFAULT_LIBRARY_RESPONSE;
 
   const router = useRouter();
   const [modal, setModal] = useState<{ id: string; title: string } | null>(

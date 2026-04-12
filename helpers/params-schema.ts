@@ -26,6 +26,31 @@ export const PUBLIC_LIBRARY_PARAMS_SCHEMA = z.object({
     .default(false),
 });
 
+export const FETCH_LIBRARY_API_PARAMS_SCHEMA = z.object({
+  q: z.string().optional(),
+
+  selectedSrc: LanguageCodeSchema.default(LANGUAGES[0].code),
+  selectedSub: LanguageCodeSchema.default(LANGUAGES[0].code),
+
+  page: z
+    .string()
+    .transform((v) => Number(v))
+    .refine((n) => !isNaN(n) && n >= 0, { message: "Invalid page" })
+    .optional()
+    .default(0),
+
+  unreg: z
+    .string()
+    .transform((v) => v === "true")
+    .optional()
+    .default(false),
+});
+
+export const FETCH_LANGUAGES_API_PARAMS_SCHEMA = z.object({
+  src: LanguageCodeSchema.default(LANGUAGES[0].code),
+  sub: LanguageCodeSchema.default(LANGUAGES[0].code),
+});
+
 export function parseSearchParams<T extends z.ZodTypeAny>(
   schema: T,
   params: URLSearchParams | Record<string, string | string[] | undefined>,
