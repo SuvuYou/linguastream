@@ -7,13 +7,18 @@ import {
 
 export async function GET() {
   const user = await getCurrentUser();
+
   if (!user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const [sourceLanguages, subtitleLanguages] = await Promise.all([
-    fetchAvailableSourceLanguages(),
-    fetchAvailableSubtitleLanguages(),
-  ]);
+  const [availableSourceLanguages, availableSubtitleLanguages] =
+    await Promise.all([
+      fetchAvailableSourceLanguages(),
+      fetchAvailableSubtitleLanguages(),
+    ]);
 
-  return NextResponse.json({ sourceLanguages, subtitleLanguages });
+  return NextResponse.json({
+    availableSourceLanguages,
+    availableSubtitleLanguages,
+  });
 }

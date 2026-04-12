@@ -1,17 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/firebase/session";
-import {
-  fetchAvailableSourceLanguages,
-  fetchAvailableSubtitleLanguages,
-} from "@/lib/db-helpers/languages";
 import { fetchJellyfinLibrary, getThumbnailUrl } from "@/lib/jellyfin.server";
 import {
   fetchPublicMediaContent,
   fetchUnregisteredMediaContent,
 } from "@/lib/db-helpers/media";
 import {
+  FETCH_LIBRARY_API_PARAMS_SCHEMA,
   parseSearchParams,
-  PUBLIC_LIBRARY_PARAMS_SCHEMA,
 } from "@/helpers/params-schema";
 import { PAGE_SIZE } from "@/helpers/const";
 
@@ -24,31 +20,17 @@ export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
 
   const parsedParams = parseSearchParams(
-    PUBLIC_LIBRARY_PARAMS_SCHEMA,
+    FETCH_LIBRARY_API_PARAMS_SCHEMA,
     searchParams,
   );
 
   const {
     q: query,
-    src: sourceLanguage,
-    sub: subtitleLanguage,
+    selectedSrc: sourceLanguage,
+    selectedSub: subtitleLanguage,
     unreg: shouldShowUnregistered,
     page,
   } = parsedParams;
-
-  // Fetch available languages for validation
-  const [availableSource, availableSubtitle] = await Promise.all([
-    fetchAvailableSourceLanguages(),
-    fetchAvailableSubtitleLanguages(),
-  ]);
-
-  const activeSource = availableSource.includes(sourceLanguage)
-    ? sourceLanguage
-    : availableSource[0];
-
-  const activeSubtitle = availableSubtitle.includes(subtitleLanguage)
-    ? subtitleLanguage
-    : availableSubtitle[0];
 
   // Fetch DB items based on mode
   const {
@@ -63,8 +45,8 @@ export async function GET(req: NextRequest) {
       })
     : await fetchPublicMediaContent({
         searchTerm: query,
-        sourceLanguage: activeSource,
-        // subtitleLanguage: activeSubtitle, // TODO: re-enable subtitle language filter when we have more subtitle data
+        sourceLanguage,
+        // subtitleLanguage, // TODO: re-enable subtitle language filter when we have more subtitle data
         page,
         pageSize: PAGE_SIZE,
       });
@@ -93,9 +75,5 @@ export async function GET(req: NextRequest) {
     items,
     total,
     pageCount,
-    activeSource,
-    activeSubtitle,
-    availableSource,
-    availableSubtitle,
   });
 }

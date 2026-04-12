@@ -2,34 +2,28 @@
 
 import { LANGUAGES } from "@/helpers/const";
 import { PUBLIC_LIBRARY_PARAMS_SCHEMA } from "@/helpers/params-schema";
-import { DEFAULT_LIBRARY_RESPONSE, useLibrary } from "@/hooks/useLibrary";
+import { DEFAULT_LANGUAGES_RESPONSE, useLanguages } from "@/hooks/useLanguages";
 import { useZodSearchParams } from "@/hooks/useZodSearchParams";
 import { useAppStore } from "@/lib/store";
 import { useEffect } from "react";
 
 export default function LanguageFilter() {
-  const { data, isLoading, isFetching, isError } = useLibrary();
+  const languages = useLanguages();
 
   const searchParams = useZodSearchParams(PUBLIC_LIBRARY_PARAMS_SCHEMA);
 
-  const {
-    activeSource: selectedSourceLanguage,
-    activeSubtitle: selectedSubtitleLanguage,
-    availableSource: availableSourceLanguages,
-    availableSubtitle: availableSubtitleLanguages,
-  } = data || DEFAULT_LIBRARY_RESPONSE;
+  const { availableSourceLanguages, availableSubtitleLanguages } =
+    languages.data || DEFAULT_LANGUAGES_RESPONSE;
 
   const { setPreferredSourceLanguage, setPreferredSubtitleLanguage } =
     useAppStore();
 
-  console.log("selectedSourceLanguage", selectedSourceLanguage);
-
   useEffect(() => {
-    setPreferredSourceLanguage(selectedSourceLanguage);
-    setPreferredSubtitleLanguage(selectedSubtitleLanguage);
+    setPreferredSourceLanguage(languages.selectedSourceLanguage);
+    setPreferredSubtitleLanguage(languages.selectedSubtitleLanguage);
   }, [
-    selectedSourceLanguage,
-    selectedSubtitleLanguage,
+    languages.selectedSourceLanguage,
+    languages.selectedSubtitleLanguage,
     setPreferredSourceLanguage,
     setPreferredSubtitleLanguage,
   ]);
@@ -45,7 +39,7 @@ export default function LanguageFilter() {
     return LANGUAGES.find((lang) => lang.code === code)?.label ?? code;
   }
 
-  if (isError) {
+  if (languages.isError) {
     return (
       <div className="p-12 text-center text-sm text-secondary-text">
         Failed to load library.
@@ -53,7 +47,7 @@ export default function LanguageFilter() {
     );
   }
 
-  if (isLoading || isFetching) {
+  if (languages.isLoading || languages.isFetching) {
     return (
       <div className="p-12 text-center text-sm text-secondary-text">
         Loading languages...
@@ -66,7 +60,7 @@ export default function LanguageFilter() {
       <div className="flex items-center gap-2 px-4 h-full">
         <span className="text-xs text-secondary-text">Content</span>
         <select
-          value={selectedSourceLanguage}
+          value={languages.selectedSourceLanguage}
           onChange={(e) => updateFilter("src", e.target.value)}
           className="bg-transparent text-xs text-active-border outline-none cursor-pointer"
         >
@@ -81,7 +75,7 @@ export default function LanguageFilter() {
       <div className="flex items-center gap-2 px-4 h-full">
         <span className="text-xs text-secondary-text">Subtitles</span>
         <select
-          value={getLabel(selectedSubtitleLanguage)}
+          value={languages.selectedSubtitleLanguage}
           onChange={(e) => updateFilter("sub", e.target.value)}
           className="bg-transparent text-xs text- outline-none cursor-pointer"
         >
