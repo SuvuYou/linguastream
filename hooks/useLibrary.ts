@@ -23,7 +23,7 @@ export function useLibrary({
       if (params.unreg) searchParams.set("unreg", "true");
       searchParams.set("page", String(params.page));
       searchParams.set("selectedSrc", selectedSourceLanguage);
-      searchParams.set("selectedSub", selectedSubtitleLanguage);
+      // searchParams.set("selectedSub", selectedSubtitleLanguage);
 
       const response = await fetch(`/api/library?${searchParams}`);
 
