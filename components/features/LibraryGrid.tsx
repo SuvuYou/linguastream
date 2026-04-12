@@ -16,13 +16,15 @@ export default function LibraryGrid() {
 
   const languages = useLanguages();
 
-  console.log(languages.selectedSubtitleLanguage);
-
   const library = useLibrary({
-    shouldFetch:
-      !!languages.data && !languages.isLoading && !languages.isFetching,
-    selectedSourceLanguage: languages.selectedSourceLanguage,
-    selectedSubtitleLanguage: languages.selectedSubtitleLanguage,
+    enabled:
+      !!languages.data &&
+      !languages.isLoading &&
+      !languages.isFetching &&
+      !!languages.selectedSourceLanguage,
+    // !!languages.selectedSubtitleLanguage,
+    selectedSourceLanguage: languages.selectedSourceLanguage!,
+    selectedSubtitleLanguage: languages.selectedSubtitleLanguage!,
   });
 
   const isAdmin = user.data?.is_admin;
@@ -35,8 +37,6 @@ export default function LibraryGrid() {
   const [modal, setModal] = useState<{ id: string; title: string } | null>(
     null,
   );
-
-  console.log(items);
 
   if (isError) {
     return (

@@ -19,8 +19,10 @@ export default function LanguageFilter() {
     useAppStore();
 
   useEffect(() => {
-    setPreferredSourceLanguage(languages.selectedSourceLanguage);
-    setPreferredSubtitleLanguage(languages.selectedSubtitleLanguage);
+    if (languages.selectedSourceLanguage)
+      setPreferredSourceLanguage(languages.selectedSourceLanguage);
+    if (languages.selectedSubtitleLanguage)
+      setPreferredSubtitleLanguage(languages.selectedSubtitleLanguage);
   }, [
     languages.selectedSourceLanguage,
     languages.selectedSubtitleLanguage,
@@ -42,7 +44,7 @@ export default function LanguageFilter() {
   if (languages.isError) {
     return (
       <div className="p-12 text-center text-sm text-secondary-text">
-        Failed to load library.
+        Failed to load languages.
       </div>
     );
   }
@@ -60,7 +62,7 @@ export default function LanguageFilter() {
       <div className="flex items-center gap-2 px-4 h-full">
         <span className="text-xs text-secondary-text">Content</span>
         <select
-          value={languages.selectedSourceLanguage}
+          value={languages.selectedSourceLanguage || ""}
           onChange={(e) => updateFilter("src", e.target.value)}
           className="bg-transparent text-xs text-active-border outline-none cursor-pointer"
         >
@@ -75,7 +77,7 @@ export default function LanguageFilter() {
       <div className="flex items-center gap-2 px-4 h-full">
         <span className="text-xs text-secondary-text">Subtitles</span>
         <select
-          value={languages.selectedSubtitleLanguage}
+          value={languages.selectedSubtitleLanguage || ""}
           onChange={(e) => updateFilter("sub", e.target.value)}
           className="bg-transparent text-xs text- outline-none cursor-pointer"
         >

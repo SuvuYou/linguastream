@@ -1,22 +1,22 @@
-import { FETCH_LIBRARY_API_PARAMS_SCHEMA } from "@/helpers/params-schema";
+import { USE_LIBRARY_HOOK_PARAMS_SCHEMA } from "@/helpers/params-schema";
 import { useZodSearchParams } from "./useZodSearchParams";
 import { useQuery } from "@tanstack/react-query";
 import type { LibraryResponse } from "@/types/library";
 
 export function useLibrary({
-  shouldFetch,
+  enabled,
   selectedSourceLanguage,
   // selectedSubtitleLanguage,
 }: {
-  shouldFetch: boolean;
+  enabled: boolean;
   selectedSourceLanguage: string;
   selectedSubtitleLanguage: string;
 }) {
-  const { params } = useZodSearchParams(FETCH_LIBRARY_API_PARAMS_SCHEMA);
+  const { params } = useZodSearchParams(USE_LIBRARY_HOOK_PARAMS_SCHEMA);
 
   return useQuery<LibraryResponse>({
-    enabled: shouldFetch,
-    queryKey: ["library", params],
+    enabled,
+    queryKey: ["library", { ...params, selectedSourceLanguage }],
     queryFn: async () => {
       const searchParams = new URLSearchParams();
       if (params.q) searchParams.set("q", params.q);
