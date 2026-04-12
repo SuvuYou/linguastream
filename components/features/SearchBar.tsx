@@ -4,7 +4,7 @@ import { useRef, useTransition } from "react";
 import { useZodSearchParams } from "@/hooks/useZodSearchParams";
 import { PUBLIC_LIBRARY_PARAMS_SCHEMA } from "@/helpers/params-schema";
 
-export default function SearchBar({ defaultQuery }: { defaultQuery: string }) {
+export default function SearchBar() {
   const searchParams = useZodSearchParams(PUBLIC_LIBRARY_PARAMS_SCHEMA);
   const [isPending, startTransition] = useTransition();
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
@@ -31,7 +31,7 @@ export default function SearchBar({ defaultQuery }: { defaultQuery: string }) {
       <input
         type="text"
         placeholder="Search by title..."
-        defaultValue={defaultQuery}
+        defaultValue={searchParams.params.q}
         onChange={handleChange}
         className={`bg-transparent text-sm text-secondary-text placeholder:text-secondary-text outline-none w-48 transition-opacity ${isPending ? "opacity-50" : "opacity-100"}`}
       />

@@ -87,6 +87,8 @@ export async function GET(req: NextRequest) {
     thumbnailUrl: getThumbnailUrl(dbItem.jellyfin_id ?? ""),
   }));
 
+  // TODO: handle case where jellyfin item has been deleted but db entry still exists
+
   return NextResponse.json({
     items,
     total,

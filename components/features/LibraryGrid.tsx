@@ -1,29 +1,51 @@
 "use client";
 
 import Image from "next/image";
-import type { MergedContentItem } from "@/types";
 import Link from "next/link";
 import AddToLibraryModal from "./AddToLibraryModal";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { UNKNOWN_SOURCE_LANGUAGE } from "@/helpers/const";
+import LibrarySkeleton from "./LibrarySkeleton";
+import { useUser } from "@/hooks/useUser";
+import { DEFAULT_LIBRARY_RESPONSE, useLibrary } from "@/hooks/useLibrary";
 
-export default function LibraryGrid({
-  mergedContentItem,
-  isAdmin,
-}: {
-  mergedContentItem: MergedContentItem[];
-  isAdmin?: boolean;
-}) {
+export default function LibraryGrid() {
+  const user = useUser();
+  const Library = useLibrary();
+
+  const isAdmin = user.data?.is_admin;
+  const isLoading = user.isLoading || Library.isLoading;
+  const isError = user.isError || Library.isError;
+
+  const { items, total } = Library.data || DEFAULT_LIBRARY_RESPONSE;
+
   const router = useRouter();
   const [modal, setModal] = useState<{ id: string; title: string } | null>(
     null,
   );
 
+  console.log(items);
+
+  if (isError) {
+    return (
+      <div className="p-12 text-center text-sm text-secondary-text">
+        Failed to load library.
+      </div>
+    );
+  }
+
+  if (isLoading) return <LibrarySkeleton />;
+
   return (
     <>
+      <>
+        <span className="w-full relative right-0 text-xs text-secondary-text">
+          {total} titles
+        </span>
+      </>
       <div className="grid grid-cols-3 border-l border-t border-primary-border">
-        {mergedContentItem.map((item) => {
+        {items.map((item) => {
           if (!item.jellyfinItem) {
             return (
               <div
@@ -78,7 +100,7 @@ export default function LibraryGrid({
             </div>
           );
         })}
-        {mergedContentItem.length === 0 && (
+        {items.length === 0 && (
           <div className="col-span-3 p-12 text-center text-secondary-text text-sm">
             No items found in your Jellyfin library.
           </div>
