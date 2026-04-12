@@ -4,13 +4,9 @@ import { PUBLIC_LIBRARY_PARAMS_SCHEMA } from "@/helpers/params-schema";
 import { useZodSearchParams } from "@/hooks/useZodSearchParams";
 import { useState } from "react";
 
-export default function UnregisteredCheckbox({
-  shouldShowUnregistered,
-}: {
-  shouldShowUnregistered: boolean;
-}) {
+export default function UnregisteredCheckbox() {
   const searchParams = useZodSearchParams(PUBLIC_LIBRARY_PARAMS_SCHEMA);
-  const [checked, setChecked] = useState(shouldShowUnregistered);
+  const [checked, setChecked] = useState(searchParams.params.unreg);
 
   const handleToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
     const isChecked = e.target.checked;

@@ -2,33 +2,27 @@
 
 import { LANGUAGES } from "@/helpers/const";
 import { PUBLIC_LIBRARY_PARAMS_SCHEMA } from "@/helpers/params-schema";
+import { DEFAULT_LIBRARY_RESPONSE, useLibrary } from "@/hooks/useLibrary";
 import { useZodSearchParams } from "@/hooks/useZodSearchParams";
 import { useAppStore } from "@/lib/store";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
-export default function LanguageFilter(props: {
-  availableSourceLanguages: string[];
-  availableSubtitleLanguages: string[];
-  selectedSourceLanguage: string;
-  selectedSubtitleLanguage: string;
-}) {
-  const {
-    availableSourceLanguages,
-    availableSubtitleLanguages,
-    selectedSourceLanguage,
-    selectedSubtitleLanguage,
-  } = props;
+export default function LanguageFilter() {
+  const { data, isLoading, isFetching, isError } = useLibrary();
 
   const searchParams = useZodSearchParams(PUBLIC_LIBRARY_PARAMS_SCHEMA);
+
+  const {
+    activeSource: selectedSourceLanguage,
+    activeSubtitle: selectedSubtitleLanguage,
+    availableSource: availableSourceLanguages,
+    availableSubtitle: availableSubtitleLanguages,
+  } = data || DEFAULT_LIBRARY_RESPONSE;
 
   const { setPreferredSourceLanguage, setPreferredSubtitleLanguage } =
     useAppStore();
 
-  const [visualSelectedSourceLanguage, setVisualSelectedSourceLanguage] =
-    useState(selectedSourceLanguage);
-
-  const [visualSelectedSubtitleLanguage, setVisualSelectedSubtitleLanguage] =
-    useState(selectedSubtitleLanguage);
+  console.log("selectedSourceLanguage", selectedSourceLanguage);
 
   useEffect(() => {
     setPreferredSourceLanguage(selectedSourceLanguage);
@@ -42,9 +36,7 @@ export default function LanguageFilter(props: {
 
   const updateFilter = (type: "src" | "sub", value: string) => {
     if (type === "src") setPreferredSourceLanguage(value);
-    if (type === "src") setVisualSelectedSourceLanguage(value);
     if (type === "sub") setPreferredSubtitleLanguage(value);
-    if (type === "sub") setVisualSelectedSubtitleLanguage(value);
 
     searchParams.set({ [type]: value });
   };
@@ -53,12 +45,28 @@ export default function LanguageFilter(props: {
     return LANGUAGES.find((lang) => lang.code === code)?.label ?? code;
   }
 
+  if (isError) {
+    return (
+      <div className="p-12 text-center text-sm text-secondary-text">
+        Failed to load library.
+      </div>
+    );
+  }
+
+  if (isLoading || isFetching) {
+    return (
+      <div className="p-12 text-center text-sm text-secondary-text">
+        Loading languages...
+      </div>
+    );
+  }
+
   return (
     <div className="flex items-center h-full divide-x divide-primary-border">
       <div className="flex items-center gap-2 px-4 h-full">
         <span className="text-xs text-secondary-text">Content</span>
         <select
-          value={visualSelectedSourceLanguage}
+          value={selectedSourceLanguage}
           onChange={(e) => updateFilter("src", e.target.value)}
           className="bg-transparent text-xs text-active-border outline-none cursor-pointer"
         >
@@ -73,7 +81,7 @@ export default function LanguageFilter(props: {
       <div className="flex items-center gap-2 px-4 h-full">
         <span className="text-xs text-secondary-text">Subtitles</span>
         <select
-          value={visualSelectedSubtitleLanguage}
+          value={getLabel(selectedSubtitleLanguage)}
           onChange={(e) => updateFilter("sub", e.target.value)}
           className="bg-transparent text-xs text- outline-none cursor-pointer"
         >

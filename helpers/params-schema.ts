@@ -15,7 +15,7 @@ export const PUBLIC_LIBRARY_PARAMS_SCHEMA = z.object({
   page: z
     .string()
     .transform((v) => Number(v))
-    .refine((n) => !isNaN(n) && n > 0, { message: "Invalid page" })
+    .refine((n) => !isNaN(n) && n >= 0, { message: "Invalid page" })
     .optional()
     .default(0),
 
