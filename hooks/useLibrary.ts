@@ -6,7 +6,7 @@ import type { LibraryResponse } from "@/types/library";
 export function useLibrary({
   shouldFetch,
   selectedSourceLanguage,
-  selectedSubtitleLanguage,
+  // selectedSubtitleLanguage,
 }: {
   shouldFetch: boolean;
   selectedSourceLanguage: string;
