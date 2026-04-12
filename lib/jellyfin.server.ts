@@ -14,8 +14,7 @@ const headers = {
   "X-Emby-Token": JELLYFIN_API_KEY,
   "Content-Type": "application/json",
 };
-
-function buildUrl(
+function buildSafeUrl(
   path: string,
   options: Record<string, string | string[] | boolean | number> = {},
 ): string {
@@ -23,7 +22,6 @@ function buildUrl(
 
   for (const [key, value] of Object.entries({
     ...options,
-    api_key: JELLYFIN_API_KEY,
   })) {
     if (Array.isArray(value)) {
       params.set(key, value.join(","));
@@ -33,6 +31,13 @@ function buildUrl(
   }
 
   return `${JELLYFIN_URL}${path}?${params}`;
+}
+
+function buildUrl(
+  path: string,
+  options: Record<string, string | string[] | boolean | number> = {},
+): string {
+  return buildSafeUrl(path, { ...options, api_key: JELLYFIN_API_KEY! });
 }
 
 export async function fetchJellyfinLibrary(
@@ -82,5 +87,5 @@ export function getJellyfinStreamUrl(contentId: string): string {
 }
 
 export function getThumbnailUrl(itemId: string): string {
-  return buildUrl(`/Items/${itemId}/Images/Primary`);
+  return buildSafeUrl(`/Items/${itemId}/Images/Primary`);
 }

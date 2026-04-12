@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
   const {
     q: query,
     selectedSrc: sourceLanguage,
-    selectedSub: subtitleLanguage,
+    // selectedSub: subtitleLanguage,
     unreg: shouldShowUnregistered,
     page,
   } = parsedParams;
