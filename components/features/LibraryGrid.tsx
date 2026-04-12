@@ -16,6 +16,8 @@ export default function LibraryGrid() {
 
   const languages = useLanguages();
 
+  console.log(languages.selectedSubtitleLanguage);
+
   const library = useLibrary({
     shouldFetch:
       !!languages.data && !languages.isLoading && !languages.isFetching,
@@ -76,7 +78,7 @@ export default function LibraryGrid() {
             >
               <Link href={`/watch/${item.jellyfinItem.Id}`}>
                 <div className="aspect-video bg-background mb-3 overflow-hidden">
-                  <Image
+                  {/* <Image
                     src={item.thumbnailUrl}
                     alt={item.jellyfinItem.Name}
                     className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
@@ -84,7 +86,7 @@ export default function LibraryGrid() {
                     height={1}
                     loading="eager" // TODO: Potentially remove when we have a proper jellyfin proxy
                     unoptimized // TODO: Remove when we have a proper jellyfin proxy
-                  />
+                  /> */}
                 </div>
                 <div className="text-sm font-medium truncate">
                   {item.jellyfinItem.Name}
