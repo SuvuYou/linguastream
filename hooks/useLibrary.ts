@@ -20,7 +20,11 @@ export function useLibrary({
     queryFn: async () => {
       const searchParams = new URLSearchParams();
       if (params.q) searchParams.set("q", params.q);
-      if (params.unreg) searchParams.set("unreg", "true");
+      if (params.unreg) {
+        searchParams.set("unreg", "true");
+      } else {
+        searchParams.delete("unreg");
+      }
       searchParams.set("page", String(params.page));
       searchParams.set("selectedSrc", selectedSourceLanguage);
       // searchParams.set("selectedSub", selectedSubtitleLanguage);
