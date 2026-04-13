@@ -18,7 +18,6 @@ export default function LibraryGrid() {
 
   const library = useLibrary({
     enabled:
-      !!languages.data &&
       !languages.isLoading &&
       !languages.isFetching &&
       !!languages.selectedSourceLanguage,
@@ -28,7 +27,8 @@ export default function LibraryGrid() {
   });
 
   const isAdmin = user.data?.is_admin;
-  const isLoading = user.isLoading || library.isLoading;
+  const isLoading = user.isLoading || library.isLoading || languages.isLoading;
+
   const isError = user.isError || library.isError;
 
   const { items, total } = library.data || DEFAULT_LIBRARY_RESPONSE;
@@ -38,15 +38,15 @@ export default function LibraryGrid() {
     null,
   );
 
-  if (isError) {
+  if (isLoading) return <LibrarySkeleton />;
+
+  if (isError || !library.data) {
     return (
       <div className="p-12 text-center text-sm text-secondary-text">
         Failed to load library.
       </div>
     );
   }
-
-  if (isLoading) return <LibrarySkeleton />;
 
   return (
     <>
