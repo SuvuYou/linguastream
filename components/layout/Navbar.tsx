@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import SignOutButton from "../features/SignOutButton";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -14,25 +15,25 @@ export default function Navbar() {
     }`;
 
   return (
-    <nav className="flex items-center h-12 border-b border-primary-border">
+    <nav className="flex flex-wrap overflow-visible items-center h-12 border-b border-primary-border">
       <div className="flex items-center px-4 font-medium text-sm border-r border-primary-border h-full ">
         LinguaStream
       </div>
       <Link href="/" className={linkClass("/")}>
         Library
       </Link>
-
       <Link href="/personal" className={linkClass("/personal")}>
         Personal
       </Link>
-
       <Link href="/decks" className={linkClass("/decks")}>
         Decks
       </Link>
-
       <Link href="/study" className={linkClass("/study")}>
         Study
       </Link>
+      <div className="ml-auto mr-4">
+        <SignOutButton />
+      </div>
     </nav>
   );
 }
