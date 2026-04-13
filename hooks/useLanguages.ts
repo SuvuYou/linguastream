@@ -2,6 +2,9 @@ import { FETCH_LANGUAGES_API_PARAMS_SCHEMA } from "@/helpers/params-schema";
 import { useZodSearchParams } from "./useZodSearchParams";
 import { useQuery } from "@tanstack/react-query";
 import type { LanguagesResponse } from "@/types/languages";
+import { useAppStore } from "@/lib/store";
+import { LanguageCode } from "@/helpers/const";
+import { useEffect } from "react";
 
 export function useLanguages() {
   const { data, isLoading, isFetching, isError } = useQuery<LanguagesResponse>({
@@ -15,11 +18,25 @@ export function useLanguages() {
     },
   });
 
+  const { preferredSourceLanguage, preferredSubtitleLanguage } = useAppStore();
+
   const { availableSourceLanguages, availableSubtitleLanguages } =
     data || DEFAULT_LANGUAGES_RESPONSE;
 
-  const { params } = useZodSearchParams(FETCH_LANGUAGES_API_PARAMS_SCHEMA);
-  const { src: sourceLanguage, sub: subtitleLanguage } = params;
+  const searchParams = useZodSearchParams(FETCH_LANGUAGES_API_PARAMS_SCHEMA);
+  const { src: sourceLanguage, sub: subtitleLanguage } = searchParams.params;
+
+  useEffect(() => {
+    if (!sourceLanguage && preferredSourceLanguage) {
+      searchParams.set({ src: preferredSourceLanguage as LanguageCode });
+    }
+  }, [sourceLanguage, preferredSourceLanguage, searchParams]);
+
+  useEffect(() => {
+    if (!subtitleLanguage && preferredSubtitleLanguage) {
+      searchParams.set({ sub: preferredSubtitleLanguage as LanguageCode });
+    }
+  }, [subtitleLanguage, preferredSubtitleLanguage, searchParams]);
 
   if (
     availableSourceLanguages.length == 0
@@ -30,23 +47,6 @@ export function useLanguages() {
       selectedSubtitleLanguage: null,
       availableSourceLanguages,
       availableSubtitleLanguages,
-      data: null,
-      isLoading,
-      isFetching,
-      isError,
-    };
-  }
-
-  if (
-    !sourceLanguage
-    //|| !subtitleLanguage
-  ) {
-    return {
-      selectedSourceLanguage: null,
-      selectedSubtitleLanguage: null,
-      availableSourceLanguages,
-      availableSubtitleLanguages,
-      data: null,
       isLoading,
       isFetching,
       isError,
@@ -54,23 +54,21 @@ export function useLanguages() {
   }
 
   const selectedSourceLanguage = availableSourceLanguages.includes(
-    sourceLanguage,
+    sourceLanguage || "",
   )
     ? sourceLanguage
     : availableSourceLanguages[0];
 
-  const selectedSubtitleLanguage = availableSubtitleLanguages.includes(
-    subtitleLanguage || "",
-  )
-    ? subtitleLanguage
-    : availableSubtitleLanguages[0];
+  const selectedSubtitleLanguage = subtitleLanguage;
+  // availableSubtitleLanguages.includes(subtitleLanguage)
+  //   ? subtitleLanguage
+  //   : availableSubtitleLanguages[0];
 
   return {
     selectedSourceLanguage,
     selectedSubtitleLanguage,
     availableSourceLanguages,
     availableSubtitleLanguages,
-    data,
     isLoading,
     isFetching,
     isError,
