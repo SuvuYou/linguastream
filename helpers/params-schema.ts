@@ -79,3 +79,19 @@ export function parseSearchParams<T extends z.ZodTypeAny>(
 
   return schema.parse(obj);
 }
+
+export function parseSearchParamsSafe<T extends z.ZodTypeAny>(
+  schema: T,
+  params: URLSearchParams | Record<string, string | string[] | undefined>,
+) {
+  const obj =
+    params instanceof URLSearchParams
+      ? Object.fromEntries(params.entries())
+      : params;
+
+  try {
+    return schema.parse(obj);
+  } catch {
+    return null;
+  }
+}
