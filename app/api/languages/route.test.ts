@@ -6,6 +6,7 @@ import {
   fetchAvailableSourceLanguages,
   fetchAvailableSubtitleLanguages,
 } from "@/lib/db-helpers/languages";
+import type { User } from "@prisma/client";
 
 vi.mock("@/lib/initializations/firebase/session", () => ({
   getCurrentUser: vi.fn(),
@@ -38,7 +39,7 @@ describe("GET api/languages", () => {
   });
 
   it("returns available languages when authenticated", async () => {
-    mockedGetCurrentUser.mockResolvedValue({ id: "id" } as any);
+    mockedGetCurrentUser.mockResolvedValue({ id: "id" } as User);
 
     mockedFetchSource.mockResolvedValue(["en", "de"]);
     mockedFetchSubtitle.mockResolvedValue(["es", "fr"]);
@@ -58,7 +59,7 @@ describe("GET api/languages", () => {
   });
 
   it("returns 500 if something throws", async () => {
-    mockedGetCurrentUser.mockResolvedValue({ uid: "123" } as any);
+    mockedGetCurrentUser.mockResolvedValue({ id: "123" } as User);
 
     mockedFetchSource.mockRejectedValue(new Error("DB fail"));
 
