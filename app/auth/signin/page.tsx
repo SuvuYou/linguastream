@@ -5,7 +5,7 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
 } from "firebase/auth";
-import { auth } from "@/lib/firebase/firebase";
+import { auth } from "@/lib/initializations/firebase/firebase";
 import { useRouter } from "next/navigation";
 
 export default function SignIn() {

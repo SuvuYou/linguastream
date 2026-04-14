@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import { auth } from "@/lib/firebase/firebase";
+import { auth } from "@/lib/initializations/firebase/firebase";
 import { signOut } from "firebase/auth";
 
 export default function SignOutButton() {
