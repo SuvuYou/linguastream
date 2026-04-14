@@ -22,7 +22,11 @@ export async function POST() {
     .filter((item) => !registeredIds.has(item.Id))
     .map((item) => ({ jellyfin_id: item.Id, title: item.Name }));
 
-  const result = await bulkCreateJellyfinContent(newItems, user.id);
+  let result = { count: 0 };
+
+  if (newItems.length > 0) {
+    result = await bulkCreateJellyfinContent(newItems, user.id);
+  }
 
   return NextResponse.json({
     synced: result.count,
