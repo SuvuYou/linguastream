@@ -1,8 +1,9 @@
 import { cookies } from "next/headers";
 import { adminAuth } from "@/lib/initializations/firebase/firebase-admin";
 import { db } from "@/lib/initializations/db";
+import type { User } from "@prisma/client";
 
-export async function getCurrentUser() {
+export async function getCurrentUser(): Promise<User | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get("session")?.value;
 
