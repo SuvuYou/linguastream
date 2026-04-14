@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { db } from "@/lib/initializations/db";
 import { z } from "zod";
-import { getCurrentUser } from "@/lib/firebase/session";
+import { getCurrentUser } from "@/lib/initializations/firebase/session";
 import {
   JELLYFIN_CONTENT_TYPE,
   UNKNOWN_SOURCE_LANGUAGE,

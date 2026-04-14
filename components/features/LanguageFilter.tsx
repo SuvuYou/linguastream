@@ -4,7 +4,7 @@ import { LANGUAGES } from "@/helpers/const";
 import { PUBLIC_LIBRARY_PARAMS_SCHEMA } from "@/helpers/params-schema";
 import { useLanguages } from "@/hooks/useLanguages";
 import { useZodSearchParams } from "@/hooks/useZodSearchParams";
-import { useAppStore } from "@/lib/store";
+import { useAppStore } from "@/lib/initializations/store";
 import { useEffect } from "react";
 
 export default function LanguageFilter() {

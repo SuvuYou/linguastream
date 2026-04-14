@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/firebase/session";
-import { fetchJellyfinLibrary, getThumbnailUrl } from "@/lib/jellyfin.server";
+import { getCurrentUser } from "@/lib/initializations/firebase/session";
+import { fetchJellyfinLibrary, getThumbnailUrl } from "@/lib/db-helpers/jellyfin";
 import {
   fetchPublicMediaContent,
   fetchUnregisteredMediaContent,

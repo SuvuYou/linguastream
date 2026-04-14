@@ -2,7 +2,7 @@ import { FETCH_LANGUAGES_API_PARAMS_SCHEMA } from "@/helpers/params-schema";
 import { useZodSearchParams } from "./useZodSearchParams";
 import { useQuery } from "@tanstack/react-query";
 import type { LanguagesResponse } from "@/types/languages";
-import { useAppStore } from "@/lib/store";
+import { useAppStore } from "@/lib/initializations/store";
 import { LanguageCode } from "@/helpers/const";
 import { useEffect } from "react";
 
