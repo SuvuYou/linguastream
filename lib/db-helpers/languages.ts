@@ -1,5 +1,5 @@
 import { UNKNOWN_SOURCE_LANGUAGE } from "@/helpers/const";
-import { db } from "@/lib/db";
+import { db } from "@/lib/initializations/db";
 
 export async function fetchAvailableSourceLanguages() {
   const sourceLanguages = await db.mediaContent.findMany({

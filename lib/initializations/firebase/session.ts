@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
-import { adminAuth } from "@/lib/firebase/firebase-admin";
-import { db } from "@/lib/db";
+import { adminAuth } from "@/lib/initializations/firebase/firebase-admin";
+import { db } from "@/lib/initializations/db";
 
 export async function getCurrentUser() {
   const cookieStore = await cookies();

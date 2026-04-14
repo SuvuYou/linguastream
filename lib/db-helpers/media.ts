@@ -2,7 +2,7 @@ import {
   JELLYFIN_CONTENT_TYPE,
   UNKNOWN_SOURCE_LANGUAGE,
 } from "@/helpers/const";
-import { db } from "@/lib/db";
+import { db } from "@/lib/initializations/db";
 import { MediaContent } from "@prisma/client";
 
 export async function bulkCreateJellyfinContent(
