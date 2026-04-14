@@ -11,7 +11,7 @@ import {
 } from "@/lib/db-helpers/media";
 import { beforeEach, expect, it, vi } from "vitest";
 import { describe } from "node:test";
-import { parseSearchParams } from "@/helpers/params-schema";
+import { parseSearchParamsSafe } from "@/helpers/params-schema";
 import { NextRequest } from "next/server";
 import type { MediaContent, User } from "@prisma/client";
 import type { JellyfinItem } from "@/types";
@@ -31,7 +31,7 @@ vi.mock("@/lib/db-helpers/media", () => ({
 }));
 
 vi.mock("@/helpers/params-schema", () => ({
-  parseSearchParams: vi.fn(),
+  parseSearchParamsSafe: vi.fn(),
   FETCH_LIBRARY_API_PARAMS_SCHEMA: {},
 }));
 
@@ -45,7 +45,7 @@ const mockedFetchUnregisteredMediaContent = vi.mocked(
   fetchUnregisteredMediaContent,
 );
 
-const mockedParseSearchParams = vi.mocked(parseSearchParams);
+const mockedParseSearchParams = vi.mocked(parseSearchParamsSafe);
 
 beforeEach(() => vi.resetAllMocks());
 
