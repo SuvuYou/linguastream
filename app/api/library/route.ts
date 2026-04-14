@@ -1,15 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/initializations/firebase/session";
-import { fetchJellyfinLibrary, getThumbnailUrl } from "@/lib/db-helpers/jellyfin";
+import {
+  fetchJellyfinLibrary,
+  getThumbnailUrl,
+} from "@/lib/db-helpers/jellyfin";
 import {
   fetchPublicMediaContent,
   fetchUnregisteredMediaContent,
 } from "@/lib/db-helpers/media";
 import {
   FETCH_LIBRARY_API_PARAMS_SCHEMA,
-  parseSearchParams,
+  parseSearchParamsSafe,
 } from "@/helpers/params-schema";
 import { PAGE_SIZE } from "@/helpers/const";
+import type { JellyfinItem } from "@/types";
 
 export async function GET(req: NextRequest) {
   const user = await getCurrentUser();
@@ -19,10 +23,14 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = req.nextUrl;
 
-  const parsedParams = parseSearchParams(
+  const parsedParams = parseSearchParamsSafe(
     FETCH_LIBRARY_API_PARAMS_SCHEMA,
     searchParams,
   );
+
+  if (!parsedParams) {
+    return NextResponse.json({ error: "Invalid params" }, { status: 400 });
+  }
 
   const {
     q: query,
@@ -56,10 +64,16 @@ export async function GET(req: NextRequest) {
     .map((i) => i.jellyfin_id)
     .filter(Boolean) as string[];
 
-  const jellyfinItems =
-    jellyfinIds.length > 0
-      ? await fetchJellyfinLibrary({ ids: jellyfinIds })
-      : [];
+  let jellyfinItems: JellyfinItem[] = [];
+
+  try {
+    jellyfinItems =
+      jellyfinIds.length > 0
+        ? await fetchJellyfinLibrary({ ids: jellyfinIds })
+        : [];
+  } catch {
+    jellyfinItems = [];
+  }
 
   const jellyfinMap = new Map(jellyfinItems.map((i) => [i.Id, i]));
 
