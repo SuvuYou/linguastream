@@ -4,16 +4,11 @@ const JELLYFIN_URL = process.env.JELLYFIN_URL;
 const JELLYFIN_API_KEY = process.env.JELLYFIN_API_KEY;
 const JELLYFIN_USER_ID = process.env.JELLYFIN_USER_ID;
 
-if (!JELLYFIN_URL || !JELLYFIN_API_KEY || !JELLYFIN_USER_ID) {
-  throw new Error(
-    "Missing JELLYFIN_URL or JELLYFIN_API_KEY or JELLYFIN_USER_ID in .env.local",
-  );
-}
-
 const headers = {
-  "X-Emby-Token": JELLYFIN_API_KEY,
+  "X-Emby-Token": JELLYFIN_API_KEY!,
   "Content-Type": "application/json",
 };
+
 function buildSafeUrl(
   path: string,
   options: Record<string, string | string[] | boolean | number> = {},
@@ -83,7 +78,7 @@ export async function fetchJellyfinWatchItem(
 }
 
 export function getJellyfinStreamUrl(contentId: string): string {
-  return buildUrl(`/Videos/${contentId}/stream`, { static: true });
+  return buildSafeUrl(`/Videos/${contentId}/stream`, { static: true });
 }
 
 export function getThumbnailUrl(itemId: string): string {
