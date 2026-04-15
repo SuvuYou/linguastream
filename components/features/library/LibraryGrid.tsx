@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import AddToLibraryModal from "./AddToLibraryModal";
+import AddToLibraryModal from "../admin/AddToLibraryModal";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { UNKNOWN_SOURCE_LANGUAGE } from "@/helpers/const";

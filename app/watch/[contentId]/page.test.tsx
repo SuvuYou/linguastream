@@ -12,7 +12,7 @@ vi.mock("@/lib/db-helpers/jellyfin", () => ({
   getJellyfinStreamUrl: vi.fn(),
 }));
 
-vi.mock("@/components/features/Player", () => ({
+vi.mock("@/components/features/player/Player", () => ({
   default: ({ streamUrl, title }: { title: string; streamUrl: string }) => (
     <div data-testid="player">
       {streamUrl} - {title}
