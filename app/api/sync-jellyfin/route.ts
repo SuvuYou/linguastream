@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import {
-  bulkCreateJellyfinContent,
+  bulkPopulateMediaContentWithJellyfinItems,
   fetchAllRegisteredJellyfinIds,
 } from "@/lib/db-helpers/media";
 import { fetchJellyfinLibrary } from "@/lib/db-helpers/jellyfin";
@@ -25,7 +25,7 @@ export async function POST() {
   let result = { count: 0 };
 
   if (newItems.length > 0) {
-    result = await bulkCreateJellyfinContent(newItems, user.id);
+    result = await bulkPopulateMediaContentWithJellyfinItems(newItems, user.id);
   }
 
   return NextResponse.json({

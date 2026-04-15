@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "./route";
 import { getCurrentUser } from "@/lib/initializations/firebase/session";
 import {
-  bulkCreateJellyfinContent,
+  bulkPopulateMediaContentWithJellyfinItems,
   fetchAllRegisteredJellyfinIds,
 } from "@/lib/db-helpers/media";
 import { fetchJellyfinLibrary } from "@/lib/db-helpers/jellyfin";
@@ -14,7 +14,7 @@ vi.mock("@/lib/initializations/firebase/session", () => ({
 }));
 
 vi.mock("@/lib/db-helpers/media", () => ({
-  bulkCreateJellyfinContent: vi.fn(),
+  bulkPopulateMediaContentWithJellyfinItems: vi.fn(),
   fetchAllRegisteredJellyfinIds: vi.fn(),
 }));
 
@@ -26,7 +26,7 @@ beforeEach(() => vi.resetAllMocks());
 
 const mockedGetCurrentUser = vi.mocked(getCurrentUser);
 
-const mockedBulkCreateJellyfinContent = vi.mocked(bulkCreateJellyfinContent);
+const mockedbulkPopulateMediaContentWithJellyfinItems = vi.mocked(bulkPopulateMediaContentWithJellyfinItems);
 const mockedFetchAllRegisteredJellyfinIds = vi.mocked(
   fetchAllRegisteredJellyfinIds,
 );
@@ -67,12 +67,12 @@ describe("POST api/sync-jellyfin", () => {
       new Set(["1"]), // already exists
     );
 
-    mockedBulkCreateJellyfinContent.mockResolvedValue({ count: 1 });
+    mockedbulkPopulateMediaContentWithJellyfinItems.mockResolvedValue({ count: 1 });
 
     const res = await POST();
     const json = await res.json();
 
-    expect(mockedBulkCreateJellyfinContent).toHaveBeenCalledWith(
+    expect(mockedbulkPopulateMediaContentWithJellyfinItems).toHaveBeenCalledWith(
       [{ jellyfin_id: "2", title: "B" }],
       "u1",
     );
@@ -96,7 +96,7 @@ describe("POST api/sync-jellyfin", () => {
 
     mockedFetchAllRegisteredJellyfinIds.mockResolvedValue(new Set(["1"]));
 
-    mockedBulkCreateJellyfinContent.mockResolvedValue({ count: 0 });
+    mockedbulkPopulateMediaContentWithJellyfinItems.mockResolvedValue({ count: 0 });
 
     const res = await POST();
     const json = await res.json();
