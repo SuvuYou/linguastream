@@ -1,5 +1,5 @@
 import { USE_LIBRARY_HOOK_PARAMS_SCHEMA } from "@/helpers/params-schema";
-import { useZodSearchParams } from "./useZodSearchParams";
+import { useZodSearchParams } from "@/hooks/useZodSearchParams";
 import { useQuery } from "@tanstack/react-query";
 import type { LibraryResponse } from "@/types/library";
 
@@ -19,6 +19,7 @@ export function useLibrary({
     queryKey: ["library", { ...params, selectedSourceLanguage }],
     queryFn: async () => {
       const searchParams = new URLSearchParams();
+
       if (params.q) searchParams.set("q", params.q);
       if (params.unreg) {
         searchParams.set("unreg", "true");
