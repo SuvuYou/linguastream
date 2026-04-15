@@ -78,7 +78,11 @@ export async function fetchPublicMediaContent(
     db.mediaContent.count({ where }),
   ]);
 
-  return { items, total, pageCount: Math.ceil(total / pageSize) };
+  return {
+    items,
+    total,
+    pageCount: pageSize > 0 ? Math.ceil(total / pageSize) : 0,
+  };
 }
 
 export async function fetchUnregisteredMediaContent(options: {
@@ -112,5 +116,9 @@ export async function fetchUnregisteredMediaContent(options: {
     db.mediaContent.count({ where }),
   ]);
 
-  return { items, total, pageCount: Math.ceil(total / pageSize) };
+  return {
+    items,
+    total,
+    pageCount: pageSize > 0 ? Math.ceil(total / pageSize) : 0,
+  };
 }
