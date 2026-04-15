@@ -34,8 +34,12 @@ export default function SignIn() {
 
         router.push("/");
         router.refresh();
-      } catch (err: { message: string } | unknown) {
-        setError((err as { message: string }).message);
+      } catch (err: Error | unknown) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("Something went wrong");
+        }
       }
     });
   }
