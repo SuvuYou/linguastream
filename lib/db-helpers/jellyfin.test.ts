@@ -6,7 +6,7 @@ import {
   getThumbnailUrl,
 } from "./jellyfin";
 
-describe("jellyfin helpers", () => {
+describe("jellyfin lib", () => {
   it("builds thumbnail url", () => {
     const url = getThumbnailUrl("abc");
 

@@ -5,7 +5,7 @@ import {
 import { db } from "@/lib/initializations/db";
 import { MediaContent } from "@prisma/client";
 
-export async function bulkCreateJellyfinContent(
+export async function bulkPopulateMediaContentWithJellyfinItems(
   items: { jellyfin_id: string; title: string }[],
   userId: string,
 ) {
