@@ -9,7 +9,6 @@ import {
   signInWithEmailAndPassword,
   UserCredential,
 } from "firebase/auth";
-import { getAuth } from "firebase-admin/auth";
 
 vi.mock("firebase/auth", () => ({
   signInWithEmailAndPassword: vi.fn(),
@@ -32,7 +31,6 @@ const mockedSignInWithEmailAndPassword = vi.mocked(signInWithEmailAndPassword);
 const mockedCreateUserWithEmailAndPassword = vi.mocked(
   createUserWithEmailAndPassword,
 );
-const mockedGetAuth = vi.mocked(getAuth);
 
 describe("auth/signin page", () => {
   it("renders sign in by default", () => {
