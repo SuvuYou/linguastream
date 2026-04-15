@@ -30,6 +30,8 @@ export default function AddToLibraryModal(props: {
         setError(
           errorData.message || "An error occurred while adding to library.",
         );
+
+        return;
       }
 
       OnSuccess();
