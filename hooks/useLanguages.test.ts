@@ -1,15 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { useLanguages } from "./useLanguages";
+import { useLanguages } from "@/hooks/useLanguages";
 import { renderHook, waitFor } from "@testing-library/react";
 import { useAppStore } from "@/lib/initializations/store";
-import { useZodSearchParams } from "./useZodSearchParams";
+import { useZodSearchParams } from "@/hooks/useZodSearchParams";
 import { createWrapper } from "@/helpers/tests/providers";
 
 vi.mock("@/lib/initializations/store", () => ({
   useAppStore: vi.fn(),
 }));
 
-vi.mock("./useZodSearchParams", () => ({
+vi.mock("@/hooks/useZodSearchParams", () => ({
   useZodSearchParams: vi.fn(),
 }));
 
