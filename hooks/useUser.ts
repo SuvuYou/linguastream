@@ -1,7 +1,8 @@
+import type { User } from "@prisma/client";
 import { useQuery } from "@tanstack/react-query";
 
 export function useUser() {
-  return useQuery({
+  return useQuery<User>({
     queryKey: ["user"],
     queryFn: async () => {
       const res = await fetch("/api/user");

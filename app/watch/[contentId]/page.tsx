@@ -1,4 +1,4 @@
-import Player from "@/components/features/Player";
+import Player from "@/components/features/player/Player";
 import {
   fetchJellyfinWatchItem,
   getJellyfinStreamUrl,

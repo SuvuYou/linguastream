@@ -1,11 +1,11 @@
 "use client";
 
-import SyncButton from "@/components/features/SyncButton";
-import UnregisteredCheckbox from "@/components/features/UnregisteredCheckbox";
-import LanguageFilter from "@/components/features/LanguageFilter";
-import SearchBar from "@/components/features/SearchBar";
+import SyncButton from "@/components/features/admin/SyncButton";
+import UnregisteredCheckbox from "@/components/features/admin/UnregisteredCheckbox";
+import LanguageFilter from "@/components/features/library/LanguageFilter";
+import SearchBar from "@/components/features/library/SearchBar";
 import { useUser } from "@/hooks/useUser";
-import LibraryGrid from "../features/LibraryGrid";
+import LibraryGrid from "../features/library/LibraryGrid";
 
 export default function LibraryPage() {
   const userData = useUser();

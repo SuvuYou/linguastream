@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import SignOutButton from "../features/SignOutButton";
+import SignOutButton from "../features/signin/SignOutButton";
 
 export default function Navbar() {
   const pathname = usePathname();
