@@ -3,6 +3,7 @@ import {
   FETCH_LANGUAGES_API_PARAMS_SCHEMA,
   FETCH_LIBRARY_API_PARAMS_SCHEMA,
   parseSearchParams,
+  parseSearchParamsSafe,
   PUBLIC_LIBRARY_PARAMS_SCHEMA,
   USE_LIBRARY_HOOK_PARAMS_SCHEMA,
 } from "./params-schema";
@@ -207,5 +208,40 @@ describe("USE_LIBRARY_HOOK_PARAMS_SCHEMA", () => {
         parseSearchParams(FETCH_LANGUAGES_API_PARAMS_SCHEMA, params2),
       ).toThrow();
     });
+  });
+});
+
+describe("parseSearchParamsSafe", () => {
+  it("parses valid params", () => {
+    const params = new URLSearchParams({
+      src: "de",
+      sub: "en",
+    });
+
+    const result = parseSearchParamsSafe(
+      FETCH_LANGUAGES_API_PARAMS_SCHEMA,
+      params,
+    );
+
+    expect(result!.src).toBe("de");
+    expect(result!.sub).toBe("en");
+  });
+
+  it("returns null if params are not valid", () => {
+    const params = new URLSearchParams({
+      src: "xx",
+      sub: "xx",
+    });
+
+    expect(() =>
+      parseSearchParamsSafe(FETCH_LANGUAGES_API_PARAMS_SCHEMA, params),
+    ).not.toThrow();
+
+    const result = parseSearchParamsSafe(
+      FETCH_LANGUAGES_API_PARAMS_SCHEMA,
+      params,
+    );
+
+    expect(result).toBe(null);
   });
 });
