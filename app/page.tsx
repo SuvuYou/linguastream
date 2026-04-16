@@ -1,5 +1,9 @@
-export default function Home() {
-  console.log(process.env.JELLYFIN_URL);
+import LibraryPage from "@/components/pages/LibraryPage";
 
-  return <div>Library</div>;
+export default async function Library() {
+  return (
+    <>
+      <LibraryPage />
+    </>
+  );
 }

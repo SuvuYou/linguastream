@@ -1,0 +1,118 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id              String   @id @default(uuid())
+  firebase_uid    String   @unique
+  email           String   @unique
+  display_name    String?
+  native_language String
+  is_admin        Boolean  @default(false)
+  created_at      DateTime @default(now())
+
+  media_content MediaContent[]
+  decks         Deck[]
+  cards         Card[]
+}
+
+model MediaContent {
+  id              String   @id @default(uuid())
+  user_id         String
+  title           String
+  type            String
+  source_language String
+  jellyfin_id     String?
+  file_path       String?
+  youtube_video_id String?
+  created_at      DateTime @default(now())
+
+  user            User           @relation(fields: [user_id], references: [id])
+  subtitle_tracks SubtitleTrack[]
+  subtitle_lines  SubtitleLine[]
+  cards           Card[]
+}
+
+model SubtitleTrack {
+  id               String   @id @default(uuid())
+  media_content_id String
+  subtitle_language  String
+  created_at       DateTime @default(now())
+
+  media_content  MediaContent   @relation(fields: [media_content_id], references: [id])
+  subtitle_lines SubtitleLine[]
+
+  @@unique([media_content_id, subtitle_language])
+}
+
+model SubtitleLine {
+  id                String @id @default(uuid())
+  media_content_id  String
+  subtitle_track_id String
+  index             Int
+  start_ms          Int
+  end_ms            Int
+  text              String
+
+  media_content  MediaContent  @relation(fields: [media_content_id], references: [id])
+  subtitle_track SubtitleTrack @relation(fields: [subtitle_track_id], references: [id])
+  cards          Card[]
+}
+
+model Deck {
+  id         String   @id @default(uuid())
+  user_id    String
+  name       String
+  language   String
+  created_at DateTime @default(now())
+
+  user  User   @relation(fields: [user_id], references: [id])
+  cards Card[]
+}
+
+model WordProfile {
+  id              String   @id @default(uuid())
+  word            String
+  source_language String
+  part_of_speech  String
+  forms           Json
+  lexical_family  String[]
+  collocations    String[]
+  generated_at    DateTime @default(now())
+
+  cards Card[]
+
+  @@unique([word, source_language])
+}
+
+model Card {
+  id               String   @id @default(uuid())
+  user_id          String
+  deck_id          String
+  subtitle_line_id String
+  media_content_id String
+  word_profile_id  String?
+  word             String
+  source_language  String
+  subtitle_language  String
+  timestamp_ms     Int
+  next_review      DateTime @default(now())
+  interval_days    Int      @default(1)
+  ease_factor      Float    @default(2.5)
+  created_at       DateTime @default(now())
+
+  user          User         @relation(fields: [user_id], references: [id])
+  deck          Deck         @relation(fields: [deck_id], references: [id])
+  subtitle_line SubtitleLine @relation(fields: [subtitle_line_id], references: [id])
+  media_content MediaContent @relation(fields: [media_content_id], references: [id])
+  word_profile  WordProfile? @relation(fields: [word_profile_id], references: [id])
+}
