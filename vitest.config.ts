@@ -19,12 +19,12 @@ export default defineConfig({
         "helpers/**/*.{ts,tsx}",
       ],
       exclude: ["**/*.test.*", "lib/initializations/**", "helpers/tests/**"],
-      // thresholds: { TODO: add when covered
-      //   lines: 80,
-      //   functions: 80,
-      //   branches: 70,
-      //   statements: 80,
-      // },
+      thresholds: {
+        lines: 75,
+        functions: 75,
+        branches: 70,
+        statements: 75,
+      },
     },
   },
   resolve: {

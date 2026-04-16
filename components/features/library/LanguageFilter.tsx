@@ -81,7 +81,7 @@ export default function LanguageFilter() {
         <select
           value={languages.selectedSubtitleLanguage || ""}
           onChange={(e) => updateFilter("sub", e.target.value)}
-          className="bg-transparent text-xs text- outline-none cursor-pointer"
+          className="bg-transparent text-xs text-active-border outline-none cursor-pointer"
         >
           {availableSubtitleLanguages.map((code) => (
             <option key={code} value={code} className="bg-background">
