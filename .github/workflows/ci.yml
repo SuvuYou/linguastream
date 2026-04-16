@@ -33,6 +33,8 @@ jobs:
 
       - name: Lint
         run: npm run lint
+      - name: Generate DB types
+        run: npx prisma generate
       - name: Typecheck
         run: npm run typecheck
       - name: Coverage
