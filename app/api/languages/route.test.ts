@@ -1,5 +1,4 @@
-import { describe } from "node:test";
-import { beforeEach, expect, it, vi } from "vitest";
+import { describe, beforeEach, expect, it, vi } from "vitest";
 import { getCurrentUser } from "@/lib/initializations/firebase/session";
 import { GET } from "./route";
 import {
