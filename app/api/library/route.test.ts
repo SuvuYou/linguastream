@@ -9,8 +9,7 @@ import {
   fetchPublicMediaContent,
   fetchUnregisteredMediaContent,
 } from "@/lib/db-helpers/media";
-import { beforeEach, expect, it, vi } from "vitest";
-import { describe } from "node:test";
+import { describe, beforeEach, expect, it, vi } from "vitest";
 import { parseSearchParamsSafe } from "@/helpers/params-schema";
 import { NextRequest } from "next/server";
 import type { MediaContent, User } from "@prisma/client";
