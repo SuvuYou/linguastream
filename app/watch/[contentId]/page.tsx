@@ -1,3 +1,9 @@
+import Player from "@/components/features/player/Player";
+import {
+  fetchJellyfinWatchItem,
+  getJellyfinStreamUrl,
+} from "@/lib/db-helpers/jellyfin";
+
 export default async function Watch({
   params,
 }: {
@@ -5,5 +11,14 @@ export default async function Watch({
 }) {
   const { contentId } = await params;
 
-  return <div>Watch {contentId}</div>;
+  const videoItemData = await fetchJellyfinWatchItem(contentId);
+  const videoUrl = getJellyfinStreamUrl(contentId);
+
+  return (
+    <>
+      <div className="flex items-center justify-center bg-black mt-1">
+        <Player streamUrl={videoUrl} title={videoItemData.Name} />
+      </div>
+    </>
+  );
 }
