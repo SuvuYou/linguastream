@@ -9,7 +9,7 @@ export default function AddToLibraryModal(props: {
 }) {
   const { jellyfinId, title, OnSuccess, OnClose } = props;
 
-  const [sourceLanguage, setSourceLanguage] = useState("de");
+  const [sourceLanguage, setSourceLanguage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -60,7 +60,7 @@ export default function AddToLibraryModal(props: {
               Source language
             </label>
             <select
-              value={sourceLanguage}
+              value={sourceLanguage || ""}
               onChange={(e) => setSourceLanguage(e.target.value)}
               className="bg-background border border-primary-border text-sm text-primary-text px-3 py-2 outline-none"
             >
