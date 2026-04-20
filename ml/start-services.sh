@@ -34,13 +34,28 @@ fi
 source "$VENV_PATH/bin/activate"
 echo "✅  Virtual environment activated"
 
+UVICORN="$VENV_PATH/bin/uvicorn"
+LIBRETRANSLATE_BIN="$VENV_PATH/bin/libretranslate"
+
+if [ ! -f "$UVICORN" ]; then
+  echo "❌  uvicorn not found in venv. Run:"
+  echo "    source $VENV_PATH/bin/activate && pip install fastapi uvicorn"
+  exit 1
+fi
+
+if [ ! -f "$LIBRETRANSLATE_BIN" ]; then
+  echo "❌  libretranslate not found in venv. Run:"
+  echo "    source $VENV_PATH/bin/activate && pip install libretranslate"
+  exit 1
+fi
+
 # ── WhisperX service ───────────────────────────────────────────────────────────
 
 if check_port $WHISPER_PORT; then
   print_status "⚠️  WhisperX service already running on port $WHISPER_PORT — skipping"
 else
   print_status "🎙  Starting WhisperX service on port $WHISPER_PORT..."
-  uvicorn ml.whisper_service:app \
+  "$UVICORN" ml.whisper_service:app \
     --port $WHISPER_PORT \
     --log-level info \
     > "$LOG_DIR/whisper.log" 2>&1 &
@@ -67,7 +82,7 @@ if check_port $LIBRETRANSLATE_PORT; then
   print_status "⚠️  LibreTranslate already running on port $LIBRETRANSLATE_PORT — skipping"
 else
   print_status "🌍  Starting LibreTranslate on port $LIBRETRANSLATE_PORT (EN + DE)..."
-  libretranslate \
+  "$LIBRETRANSLATE_BIN" \
     --load-only en,de \
     --port $LIBRETRANSLATE_PORT \
     > "$LOG_DIR/libretranslate.log" 2>&1 &

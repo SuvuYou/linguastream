@@ -43,6 +43,7 @@ next-env.d.ts
 /lib/generated/prisma
 
 # Local ML uploads
+__pycache__/
 /linguastream-uploads/
 *.log
 ml/logs/
