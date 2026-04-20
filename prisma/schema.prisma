@@ -26,14 +26,17 @@ model User {
 }
 
 model MediaContent {
-  id              String   @id @default(uuid())
-  user_id         String
-  title           String
-  type            String
-  source_language String
-  jellyfin_id     String?
-  file_path       String?
+  id               String   @id @default(uuid())
+  user_id          String
+  title            String
+  type             String
+  source_language  String
+  jellyfin_id      String?
+  file_path        String?
   youtube_video_id String?
+  job_status       String?  // null | "pending" | "running" | "done" | "error"
+  job_progress     Int?     // 0-100
+  job_logs         String?  // absolute path to log file on disk
   created_at      DateTime @default(now())
 
   user            User           @relation(fields: [user_id], references: [id])

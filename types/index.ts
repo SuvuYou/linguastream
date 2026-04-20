@@ -22,3 +22,12 @@ export interface JellyfinMediaSource {
   Container: string;
   Size: number;
 }
+
+export const JOB_STATUS = {
+  PENDING: "pending",
+  RUNNING: "running",
+  DONE: "done",
+  ERROR: "error",
+} as const;
+
+export type JobStatus = (typeof JOB_STATUS)[keyof typeof JOB_STATUS];
