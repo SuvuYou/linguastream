@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 LinguaStream — subtitle ingestion pipeline
 
@@ -64,6 +65,35 @@ def set_job_status(media_id: str, status: str, progress: int):
                 WHERE id = %s
                 """,
                 (status, progress, media_id),
+            )
+        conn.commit()
+
+def detect_language(lines: list[dict], fallback: str) -> str:
+    """Detect language from subtitle text. Falls back to provided value if uncertain."""
+    try:
+        from langdetect import detect, DetectorFactory
+        from langdetect.lang_detect_exception import LangDetectException
+        DetectorFactory.seed = 0  # deterministic results
+        sample = " ".join(line["text"] for line in lines[:20])
+        detected = detect(sample)
+        log(f"Language detected: {detected}")
+        return detected
+    except Exception as e:
+        log(f"Language detection failed ({e}), falling back to {fallback}")
+        return fallback
+
+def update_media_content(media_id: str, source_language: str, acquisition_method: str):
+    """Write detected language + acquisition method back to MediaContent."""
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                UPDATE "MediaContent"
+                SET source_language = %s,
+                    source_subtitle_acquisition_method = %s
+                WHERE id = %s
+                """,
+                (source_language, acquisition_method, media_id),
             )
         conn.commit()
 
@@ -218,22 +248,22 @@ def whisperx_segments_to_lines(segments: list[dict]) -> list[dict]:
 
 # ── transcription ──────────────────────────────────────────────────────────────
 
-def transcribe_with_whisperx(video_path: str, language: str) -> list[dict]:
+def transcribe_with_whisperx(video_path: str) -> tuple[list[dict], str]:
+    """Returns (lines, detected_language)."""
     import time
 
-    log(f"Sending {video_path} to WhisperX service...")
+    log(f"Sending {video_path} to WhisperX service (autodetect language)...")
     job_id = str(uuid.uuid4())
 
     resp = requests.post(
         f"{WHISPER_SERVICE_URL}/transcribe",
-        json={"file_path": video_path, "language": language, "job_id": job_id},
+        json={"file_path": video_path, "language": None, "job_id": job_id},
         timeout=10,
     )
     resp.raise_for_status()
 
     log(f"WhisperX job started: {job_id}")
 
-    # poll until done
     while True:
         time.sleep(3)
         status_resp = requests.get(f"{WHISPER_SERVICE_URL}/job/{job_id}", timeout=5)
@@ -242,8 +272,9 @@ def transcribe_with_whisperx(video_path: str, language: str) -> list[dict]:
         status = data.get("status")
 
         if status == "done":
-            log(f"WhisperX transcription complete — {len(data['result'])} segments")
-            return whisperx_segments_to_lines(data["result"])
+            detected_lang = data.get("detected_language", "unknown")
+            log(f"WhisperX transcription complete — {len(data['result'])} segments, language: {detected_lang}")
+            return whisperx_segments_to_lines(data["result"]), detected_lang
         elif status == "error":
             raise RuntimeError(f"WhisperX error: {data.get('error')}")
         else:
@@ -328,7 +359,7 @@ def main():
 
     parser = argparse.ArgumentParser(description="LinguaStream subtitle ingestion pipeline")
     parser.add_argument("--media-id", required=True)
-    parser.add_argument("--source-lang", required=True)
+    parser.add_argument("--source-lang", required=True)  # fallback if detection fails
     parser.add_argument("--acquisition-method", required=True, choices=["upload", "whisperx"])
     parser.add_argument("--source-file", default=None)
     parser.add_argument("--video-file", default=None)
@@ -348,28 +379,36 @@ def main():
 
         # ── source subtitles ───────────────────────────────────────────────────
 
-        if args.source_method == "upload":
+        detected_lang: str
+
+        if args.acquisition_method == "upload":
             if not args.source_file:
                 raise ValueError("--source-file required when acquisition-method=upload")
             log(f"Parsing source subtitle file: {args.source_file}")
             source_lines = parse_subtitle_file(args.source_file)
             log(f"Parsed {len(source_lines)} source lines")
+            detected_lang = detect_language(source_lines, fallback=args.source_lang)
 
-        elif args.source_method == "whisperx":
+        elif args.acquisition_method == "whisperx":
             if not args.video_file:
                 raise ValueError("--video-file required when acquisition-method=whisperx")
             log("Starting WhisperX transcription...")
-            source_lines = transcribe_with_whisperx(args.video_file, args.source_lang)
+            source_lines, detected_lang = transcribe_with_whisperx(args.video_file)
 
         set_job_status(args.media_id, "running", 30)
-        log(f"Source subtitles ready — {len(source_lines)} lines")
+        log(f"Source subtitles ready — {len(source_lines)} lines, language: {detected_lang}")
+
+        # ── write detected language + acquisition method back to MediaContent ──
+
+        log(f"Updating MediaContent: source_language={detected_lang}, acquisition_method={args.acquisition_method}")
+        update_media_content(args.media_id, detected_lang, args.acquisition_method)
 
         # ── store source track ─────────────────────────────────────────────────
 
-        log(f"Writing source track ({args.source_lang}) to DB...")
+        log(f"Writing source track ({detected_lang}) to DB...")
         with get_conn() as conn:
-            delete_subtitle_track(conn, args.media_id, args.source_lang)
-            insert_track_and_lines(conn, args.media_id, args.source_lang, source_lines)
+            delete_subtitle_track(conn, args.media_id, detected_lang)
+            insert_track_and_lines(conn, args.media_id, detected_lang, source_lines)
             conn.commit()
         log("Source track saved")
 
@@ -389,7 +428,7 @@ def main():
 
             total_langs = len(translate_langs)
             for lang_index, target_lang in enumerate(translate_langs):
-                log(f"Processing translation: {args.source_lang} → {target_lang}")
+                log(f"Processing translation: {detected_lang} → {target_lang}")
 
                 if args.translate_method == "upload":
                     path = translate_files_map.get(target_lang)
