@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/initializations/firebase/session";
 import { db } from "@/lib/initializations/db";
-import { JOB_STATUS } from "@/types";
+import { JOB_STATUS } from "@/helpers/const";
 import { spawnIngest } from "@/lib/scripts/spawn-ingest";
 import { POST_INGEST_SUBTITLES_API_PARAMS_SCHEMA } from "@/helpers/params-schema";
 
@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
     const { logFile } = spawnIngest({
       mediaId: data.mediaId,
       sourceLang: data.sourceLang,
-      sourceMethod: data.sourceMethod,
+      acquisitionMethod: data.acquisitionMethod,
       sourceFile: "sourceFile" in data ? data.sourceFile : undefined,
       videoFile: "videoFile" in data ? data.videoFile : undefined,
       translateLangs: data.translateLangs,

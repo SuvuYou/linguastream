@@ -31,6 +31,7 @@ model MediaContent {
   title            String
   type             String
   source_language  String
+  source_subtitle_acquisition_method  String?  // null | "upload" | "whisperx"
   jellyfin_id      String?
   file_path        String?
   youtube_video_id String?

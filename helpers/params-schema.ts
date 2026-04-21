@@ -69,12 +69,12 @@ export const FETCH_LANGUAGES_API_PARAMS_SCHEMA = z.object({
 });
 
 export const POST_INGEST_SUBTITLES_API_PARAMS_SCHEMA = z.discriminatedUnion(
-  "sourceMethod",
+  "acquisitionMethod",
   [
     z.object({
       mediaId: z.string().uuid(),
       sourceLang: z.string().min(2),
-      sourceMethod: z.literal("upload"),
+      acquisitionMethod: z.literal("upload"),
       sourceFile: z.string().min(1),
       translateLangs: z.array(z.string()).optional(),
       translateMethod: z.enum(["libretranslate", "deepl", "upload"]).optional(),
@@ -83,7 +83,7 @@ export const POST_INGEST_SUBTITLES_API_PARAMS_SCHEMA = z.discriminatedUnion(
     z.object({
       mediaId: z.string().uuid(),
       sourceLang: z.string().min(2),
-      sourceMethod: z.literal("whisperx"),
+      acquisitionMethod: z.literal("whisperx"),
       videoFile: z.string().min(1),
       translateLangs: z.array(z.string()).optional(),
       translateMethod: z.enum(["libretranslate", "deepl", "upload"]).optional(),

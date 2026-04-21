@@ -16,9 +16,9 @@ const LOG_DIR = path.join(process.cwd(), "ml", "logs");
 export interface IngestArgs {
   mediaId: string;
   sourceLang: string;
-  sourceMethod: "upload" | "whisperx";
-  sourceFile?: string; // path on disk — required if sourceMethod=upload
-  videoFile?: string; // path on disk — required if sourceMethod=whisperx
+  acquisitionMethod: "upload" | "whisperx";
+  sourceFile?: string; // path on disk — required if acquisitionMethod=upload
+  videoFile?: string; // path on disk — required if acquisitionMethod=whisperx
   translateLangs?: string[];
   translateMethod?: "libretranslate" | "deepl" | "upload";
   translateFiles?: Record<string, string>; // { de: "/path/to/de.srt" }
@@ -39,19 +39,19 @@ export function spawnIngest(args: IngestArgs): { logFile: string } {
     args.mediaId,
     "--source-lang",
     args.sourceLang,
-    "--source-method",
-    args.sourceMethod,
+    "--acquisition-method",
+    args.acquisitionMethod,
     "--log-file",
     logFile,
   ];
 
-  if (args.sourceMethod === "upload") {
+  if (args.acquisitionMethod === "upload") {
     if (!args.sourceFile)
       throw new Error("sourceFile required for upload method");
     argv.push("--source-file", args.sourceFile);
   }
 
-  if (args.sourceMethod === "whisperx") {
+  if (args.acquisitionMethod === "whisperx") {
     if (!args.videoFile)
       throw new Error("videoFile required for whisperx method");
     argv.push("--video-file", args.videoFile);

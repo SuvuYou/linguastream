@@ -5,9 +5,9 @@ Usage:
   python ml/ingest-subtitles.py \
     --media-id <uuid> \
     --source-lang <en|de|...> \
-    --source-method <upload|whisperx> \
-    [--source-file /path/to/file.srt]       # if source-method=upload
-    [--video-file /path/to/video.mp4]       # if source-method=whisperx
+    --acquisition-method <upload|whisperx> \
+    [--source-file /path/to/file.srt]       # if acquisition-method=upload
+    [--video-file /path/to/video.mp4]       # if acquisition-method=whisperx
     [--translate-langs de,fr,...]           # comma separated, omit for source only
     [--translate-method libretranslate|deepl|upload]
     [--translate-files de:/path/to/de.srt,...] # if translate-method=upload
@@ -329,7 +329,7 @@ def main():
     parser = argparse.ArgumentParser(description="LinguaStream subtitle ingestion pipeline")
     parser.add_argument("--media-id", required=True)
     parser.add_argument("--source-lang", required=True)
-    parser.add_argument("--source-method", required=True, choices=["upload", "whisperx"])
+    parser.add_argument("--acquisition-method", required=True, choices=["upload", "whisperx"])
     parser.add_argument("--source-file", default=None)
     parser.add_argument("--video-file", default=None)
     parser.add_argument("--translate-langs", default=None)  # comma separated
@@ -350,14 +350,14 @@ def main():
 
         if args.source_method == "upload":
             if not args.source_file:
-                raise ValueError("--source-file required when source-method=upload")
+                raise ValueError("--source-file required when acquisition-method=upload")
             log(f"Parsing source subtitle file: {args.source_file}")
             source_lines = parse_subtitle_file(args.source_file)
             log(f"Parsed {len(source_lines)} source lines")
 
         elif args.source_method == "whisperx":
             if not args.video_file:
-                raise ValueError("--video-file required when source-method=whisperx")
+                raise ValueError("--video-file required when acquisition-method=whisperx")
             log("Starting WhisperX transcription...")
             source_lines = transcribe_with_whisperx(args.video_file, args.source_lang)
 

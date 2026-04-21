@@ -12,3 +12,20 @@ export const YOUTUBE_CONTENT_TYPE = "youtube";
 export const UPLOAD_CONTENT_TYPE = "upload";
 
 export const PAGE_SIZE = 20;
+
+export const JOB_STATUS = {
+  PENDING: "pending",
+  RUNNING: "running",
+  DONE: "done",
+  ERROR: "error",
+} as const;
+
+export type JobStatus = (typeof JOB_STATUS)[keyof typeof JOB_STATUS];
+
+export const SUBTITLE_ACQUISITION_METHOD = {
+  UPLOAD: "upload",
+  WHISPERX: "whisperx",
+} as const;
+
+export type SubtitleAcquisitionMethod =
+  (typeof SUBTITLE_ACQUISITION_METHOD)[keyof typeof SUBTITLE_ACQUISITION_METHOD];
