@@ -2,7 +2,7 @@ import { z } from "zod";
 import { LANGUAGES } from "./const";
 import type { LanguageCode } from "./const";
 
-const LanguageCodeSchema = z.enum(
+export const LanguageCodeSchema = z.enum(
   LANGUAGES.map((l) => l.code) as [LanguageCode, ...LanguageCode[]],
 );
 
@@ -67,6 +67,30 @@ export const FETCH_LANGUAGES_API_PARAMS_SCHEMA = z.object({
   src: LanguageCodeSchema.optional(),
   sub: LanguageCodeSchema.optional(),
 });
+
+export const POST_INGEST_SUBTITLES_API_PARAMS_SCHEMA = z.discriminatedUnion(
+  "sourceMethod",
+  [
+    z.object({
+      mediaId: z.string().uuid(),
+      sourceLang: z.string().min(2),
+      sourceMethod: z.literal("upload"),
+      sourceFile: z.string().min(1),
+      translateLangs: z.array(z.string()).optional(),
+      translateMethod: z.enum(["libretranslate", "deepl", "upload"]).optional(),
+      translateFiles: z.record(LanguageCodeSchema, z.string()).optional(),
+    }),
+    z.object({
+      mediaId: z.string().uuid(),
+      sourceLang: z.string().min(2),
+      sourceMethod: z.literal("whisperx"),
+      videoFile: z.string().min(1),
+      translateLangs: z.array(z.string()).optional(),
+      translateMethod: z.enum(["libretranslate", "deepl", "upload"]).optional(),
+      translateFiles: z.record(LanguageCodeSchema, z.string()).optional(),
+    }),
+  ],
+);
 
 export function parseSearchParams<T extends z.ZodTypeAny>(
   schema: T,
