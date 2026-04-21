@@ -24,7 +24,7 @@ MODEL_SIZE = "medium"
 
 class TranscribeRequest(BaseModel):
     file_path: str
-    language: str
+    language: str | None = None  # None = autodetect
     job_id: str | None = None
 
 
@@ -49,14 +49,15 @@ async def get_job(job_id: str):
     return job
 
 
-def run_transcription(job_id: str, file_path: str, language: str):
+def run_transcription(job_id: str, file_path: str, language: str | None):
     try:
         jobs[job_id]["status"] = "running"
 
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"File not found: {file_path}")
 
-        print(f"[{job_id}] Loading WhisperX model ({MODEL_SIZE})...")
+        lang_label = language or "autodetect"
+        print(f"[{job_id}] Loading WhisperX model ({MODEL_SIZE}, language={lang_label})...")
         model = whisperx.load_model(MODEL_SIZE, device=DEVICE, language=language)
 
         print(f"[{job_id}] Loading audio from {file_path}...")
@@ -65,9 +66,12 @@ def run_transcription(job_id: str, file_path: str, language: str):
         print(f"[{job_id}] Transcribing...")
         result = model.transcribe(audio, batch_size=8)
 
+        detected_language = result.get("language", language or "unknown")
+        print(f"[{job_id}] Detected language: {detected_language}")
+
         print(f"[{job_id}] Aligning timestamps...")
         model_a, metadata = whisperx.load_align_model(
-            language_code=language, device=DEVICE
+            language_code=detected_language, device=DEVICE
         )
         result = whisperx.align(
             result["segments"], model_a, metadata, audio, device=DEVICE,
@@ -77,6 +81,7 @@ def run_transcription(job_id: str, file_path: str, language: str):
         print(f"[{job_id}] Done. {len(result['segments'])} segments found.")
         jobs[job_id]["status"] = "done"
         jobs[job_id]["result"] = result["segments"]
+        jobs[job_id]["detected_language"] = detected_language
 
     except Exception as e:
         print(f"[{job_id}] Error: {e}")
