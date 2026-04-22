@@ -57,7 +57,6 @@ export default function LibraryGrid() {
           <LibraryCard
             key={item.id}
             item={item}
-            libraryQueryKey={library.useLibraryQueryKey}
             onAddToLibrary={(id, title) => setAddModal({ id, title })}
             onOpenSubtitleModal={(id, title) => setSubtitleModal({ id, title })}
           />

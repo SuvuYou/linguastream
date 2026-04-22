@@ -9,14 +9,12 @@ import { useUser } from "@/hooks/useUser";
 
 interface LibraryCardProps {
   item: MergedContentItem;
-  libraryQueryKey: unknown[];
   onAddToLibrary?: (id: string, title: string) => void;
   onOpenSubtitleModal?: (id: string, title: string) => void;
 }
 
 export default function LibraryCard({
   item,
-  libraryQueryKey,
   onAddToLibrary,
   onOpenSubtitleModal,
 }: LibraryCardProps) {
@@ -31,7 +29,6 @@ export default function LibraryCard({
     item.id,
     item.job_status,
     item.job_progress,
-    libraryQueryKey,
   );
 
   const isProcessing =

@@ -3,6 +3,8 @@ import { useZodSearchParams } from "@/hooks/useZodSearchParams";
 import { useQuery } from "@tanstack/react-query";
 import type { LibraryResponse } from "@/types/library";
 
+export const LIBRARY_QUERY_KEY = "library";
+
 export function useLibrary({
   enabled,
   selectedSourceLanguage,
@@ -14,34 +16,29 @@ export function useLibrary({
 }) {
   const { params } = useZodSearchParams(USE_LIBRARY_HOOK_PARAMS_SCHEMA);
 
-  const useLibraryQueryKey = ["library", { ...params, selectedSourceLanguage }];
+  return useQuery<LibraryResponse>({
+    enabled,
+    queryKey: [LIBRARY_QUERY_KEY, { ...params, selectedSourceLanguage }],
+    queryFn: async () => {
+      const searchParams = new URLSearchParams();
 
-  return {
-    ...useQuery<LibraryResponse>({
-      enabled,
-      queryKey: useLibraryQueryKey,
-      queryFn: async () => {
-        const searchParams = new URLSearchParams();
+      if (params.q) searchParams.set("q", params.q);
+      if (params.unreg) {
+        searchParams.set("unreg", "true");
+      } else {
+        searchParams.delete("unreg");
+      }
+      searchParams.set("page", String(params.page));
+      searchParams.set("selectedSrc", selectedSourceLanguage);
+      // searchParams.set("selectedSub", selectedSubtitleLanguage);
 
-        if (params.q) searchParams.set("q", params.q);
-        if (params.unreg) {
-          searchParams.set("unreg", "true");
-        } else {
-          searchParams.delete("unreg");
-        }
-        searchParams.set("page", String(params.page));
-        searchParams.set("selectedSrc", selectedSourceLanguage);
-        // searchParams.set("selectedSub", selectedSubtitleLanguage);
+      const response = await fetch(`/api/library?${searchParams}`);
 
-        const response = await fetch(`/api/library?${searchParams}`);
+      if (!response.ok) throw new Error("Failed to fetch library");
 
-        if (!response.ok) throw new Error("Failed to fetch library");
-
-        return response.json();
-      },
-    }),
-    useLibraryQueryKey,
-  };
+      return response.json();
+    },
+  });
 }
 
 export const DEFAULT_LIBRARY_RESPONSE: LibraryResponse = {

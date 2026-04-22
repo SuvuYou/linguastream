@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { JOB_STATUS } from "@/helpers/const";
+import { LIBRARY_QUERY_KEY } from "./useLibrary";
 
 const POLL_INTERVAL_MS = 2000;
 
@@ -16,7 +17,6 @@ export function useJobPolling(
   mediaId: string,
   initialStatus: string | null,
   initialProgress: number | null,
-  libraryQueryKey: unknown[],
 ) {
   const queryClient = useQueryClient();
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -54,12 +54,12 @@ export function useJobPolling(
 
       if (data.status === JOB_STATUS.DONE || data.status === JOB_STATUS.ERROR) {
         stopPolling();
-        queryClient.invalidateQueries({ queryKey: libraryQueryKey });
+        queryClient.invalidateQueries({ queryKey: [LIBRARY_QUERY_KEY] });
       }
     } catch {
       // silently ignore network errors
     }
-  }, [mediaId, libraryQueryKey, queryClient, stopPolling]);
+  }, [mediaId, queryClient, stopPolling]);
 
   const startPolling = useCallback(() => {
     if (intervalRef.current) return;
