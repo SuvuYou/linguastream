@@ -14,29 +14,34 @@ export function useLibrary({
 }) {
   const { params } = useZodSearchParams(USE_LIBRARY_HOOK_PARAMS_SCHEMA);
 
-  return useQuery<LibraryResponse>({
-    enabled,
-    queryKey: ["library", { ...params, selectedSourceLanguage }],
-    queryFn: async () => {
-      const searchParams = new URLSearchParams();
+  const useLibraryQueryKey = ["library", { ...params, selectedSourceLanguage }];
 
-      if (params.q) searchParams.set("q", params.q);
-      if (params.unreg) {
-        searchParams.set("unreg", "true");
-      } else {
-        searchParams.delete("unreg");
-      }
-      searchParams.set("page", String(params.page));
-      searchParams.set("selectedSrc", selectedSourceLanguage);
-      // searchParams.set("selectedSub", selectedSubtitleLanguage);
+  return {
+    ...useQuery<LibraryResponse>({
+      enabled,
+      queryKey: useLibraryQueryKey,
+      queryFn: async () => {
+        const searchParams = new URLSearchParams();
 
-      const response = await fetch(`/api/library?${searchParams}`);
+        if (params.q) searchParams.set("q", params.q);
+        if (params.unreg) {
+          searchParams.set("unreg", "true");
+        } else {
+          searchParams.delete("unreg");
+        }
+        searchParams.set("page", String(params.page));
+        searchParams.set("selectedSrc", selectedSourceLanguage);
+        // searchParams.set("selectedSub", selectedSubtitleLanguage);
 
-      if (!response.ok) throw new Error("Failed to fetch library");
+        const response = await fetch(`/api/library?${searchParams}`);
 
-      return response.json();
-    },
-  });
+        if (!response.ok) throw new Error("Failed to fetch library");
+
+        return response.json();
+      },
+    }),
+    useLibraryQueryKey,
+  };
 }
 
 export const DEFAULT_LIBRARY_RESPONSE: LibraryResponse = {

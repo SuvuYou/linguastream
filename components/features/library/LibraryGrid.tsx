@@ -1,39 +1,40 @@
 "use client";
 
-import AddToLibraryModal from "@/components/features/admin/AddToLibraryModal";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import AddToLibraryModal from "@/components/features/admin/AddToLibraryModal";
 import LibrarySkeleton from "@/components/features/library/LibrarySkeleton";
+import LibraryCard from "@/components/features/library/LibraryCard";
 import { useUser } from "@/hooks/useUser";
 import { DEFAULT_LIBRARY_RESPONSE, useLibrary } from "@/hooks/useLibrary";
 import { useLanguages } from "@/hooks/useLanguages";
-import LibraryCard from "@/components/features/library/LibraryCard";
 
 export default function LibraryGrid() {
   const user = useUser();
-
   const languages = useLanguages();
-
   const library = useLibrary({
     enabled:
       !languages.isLoading &&
       !languages.isFetching &&
       !!languages.selectedSourceLanguage,
-    // !!languages.selectedSubtitleLanguage,
     selectedSourceLanguage: languages.selectedSourceLanguage!,
     selectedSubtitleLanguage: languages.selectedSubtitleLanguage!,
   });
 
   const isLoading = user.isLoading || library.isLoading || languages.isLoading;
-
   const isError = user.isError || library.isError;
-
   const { items, total } = library.data || DEFAULT_LIBRARY_RESPONSE;
 
   const router = useRouter();
-  const [modal, setModal] = useState<{ id: string; title: string } | null>(
-    null,
-  );
+
+  const [addModal, setAddModal] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
+  const [subtitleModal, setSubtitleModal] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
 
   if (isLoading) return <LibrarySkeleton />;
 
@@ -47,22 +48,18 @@ export default function LibraryGrid() {
 
   return (
     <>
-      <>
-        <span className="w-full relative right-0 text-xs text-secondary-text">
-          {total} titles
-        </span>
-      </>
+      <span className="w-full relative right-0 text-xs text-secondary-text">
+        {total} titles
+      </span>
+
       <div className="grid grid-cols-3 border-l border-t border-primary-border">
         {items.map((item) => (
           <LibraryCard
             key={item.id}
             item={item}
-            onAdd={() =>
-              setModal({
-                id: item.jellyfinItem!.Id,
-                title: item.jellyfinItem!.Name,
-              })
-            }
+            libraryQueryKey={library.useLibraryQueryKey}
+            onAddToLibrary={(id, title) => setAddModal({ id, title })}
+            onOpenSubtitleModal={(id, title) => setSubtitleModal({ id, title })}
           />
         ))}
 
@@ -72,17 +69,21 @@ export default function LibraryGrid() {
           </div>
         )}
       </div>
-      {modal && (
+
+      {addModal && (
         <AddToLibraryModal
-          jellyfinId={modal.id}
-          title={modal.title}
-          OnClose={() => setModal(null)}
+          jellyfinId={addModal.id}
+          title={addModal.title}
+          OnClose={() => setAddModal(null)}
           OnSuccess={() => {
-            setModal(null);
+            setAddModal(null);
             router.refresh();
           }}
         />
       )}
+
+      {/* subtitle modal — TODO: wire up in next step */}
+      {subtitleModal && <div>{/* SubtitleModal coming next */}</div>}
     </>
   );
 }
