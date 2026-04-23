@@ -3,20 +3,18 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useJobPolling } from "@/hooks/useJobPolling";
-import { JOB_STATUS, UNKNOWN_SOURCE_LANGUAGE } from "@/helpers/const";
+import { JOB_STATUS } from "@/helpers/const";
 import type { MergedContentItem } from "@/types";
 import { useUser } from "@/hooks/useUser";
 
 interface LibraryCardProps {
   item: MergedContentItem;
-  onAddToLibrary?: (id: string, title: string) => void;
-  onOpenSubtitleModal?: (id: string, title: string) => void;
+  onOpenConfigModal?: (id: string, title: string) => void;
 }
 
 export default function LibraryCard({
   item,
-  onAddToLibrary,
-  onOpenSubtitleModal,
+  onOpenConfigModal,
 }: LibraryCardProps) {
   const user = useUser();
 
@@ -60,10 +58,10 @@ export default function LibraryCard({
               <span className="text-xs text-red-400">
                 Subtitle ingestion failed
               </span>
-              {isAdmin && onOpenSubtitleModal && (
+              {isAdmin && onOpenConfigModal && (
                 <button
                   onClick={() =>
-                    onOpenSubtitleModal(item.id, item.jellyfinItem!.Name)
+                    onOpenConfigModal(item.id, item.jellyfinItem!.Name)
                   }
                   className="text-xs px-3 py-1 border border-primary-border text-secondary-text hover:text-primary-text transition-colors"
                 >
@@ -139,31 +137,16 @@ export default function LibraryCard({
         </div>
       </Link>
 
-      {isAdmin &&
-        item.source_language === UNKNOWN_SOURCE_LANGUAGE &&
-        onAddToLibrary && (
-          <button
-            onClick={() =>
-              onAddToLibrary(item.jellyfinItem!.Id, item.jellyfinItem!.Name)
-            }
-            className="absolute top-2 right-2 text-xs px-2 py-1 border border-primary-border text-secondary-text hover:text-primary-text bg-background opacity-0 group-hover:opacity-100 transition-all"
-          >
-            + Add
-          </button>
-        )}
-
-      {isAdmin &&
-        item.source_language !== UNKNOWN_SOURCE_LANGUAGE &&
-        onOpenSubtitleModal && (
-          <button
-            onClick={() =>
-              onOpenSubtitleModal(item.id, item.jellyfinItem!.Name)
-            }
-            className="absolute top-2 right-2 text-xs px-2 py-1 border border-primary-border text-secondary-text hover:text-primary-text bg-background opacity-0 group-hover:opacity-100 transition-all"
-          >
-            Subtitles
-          </button>
-        )}
+      {isAdmin && onOpenConfigModal && (
+        <button
+          onClick={() =>
+            onOpenConfigModal(item.jellyfinItem!.Id, item.jellyfinItem!.Name)
+          }
+          className="absolute top-2 right-2 text-xs px-2 py-1 border border-primary-border text-secondary-text hover:text-primary-text bg-background opacity-0 group-hover:opacity-100 transition-all"
+        >
+          Configure
+        </button>
+      )}
     </div>
   );
 }

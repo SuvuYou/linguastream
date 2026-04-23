@@ -1,13 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import AddToLibraryModal from "@/components/features/admin/AddToLibraryModal";
 import LibrarySkeleton from "@/components/features/library/LibrarySkeleton";
 import LibraryCard from "@/components/features/library/LibraryCard";
 import { useUser } from "@/hooks/useUser";
 import { DEFAULT_LIBRARY_RESPONSE, useLibrary } from "@/hooks/useLibrary";
 import { useLanguages } from "@/hooks/useLanguages";
+import ContentConfigurationModal from "./ContentConfigurationModal";
+
+interface ModalTarget {
+  id: string;
+  title: string;
+  sourceLanguage: string | null;
+  acquisitionMethod: string | null;
+  existingTracks: { subtitle_language: string }[];
+}
 
 export default function LibraryGrid() {
   const user = useUser();
@@ -25,16 +32,7 @@ export default function LibraryGrid() {
   const isError = user.isError || library.isError;
   const { items, total } = library.data || DEFAULT_LIBRARY_RESPONSE;
 
-  const router = useRouter();
-
-  const [addModal, setAddModal] = useState<{
-    id: string;
-    title: string;
-  } | null>(null);
-  const [subtitleModal, setSubtitleModal] = useState<{
-    id: string;
-    title: string;
-  } | null>(null);
+  const [configModal, setConfigModal] = useState<ModalTarget | null>(null);
 
   if (isLoading) return <LibrarySkeleton />;
 
@@ -57,8 +55,16 @@ export default function LibraryGrid() {
           <LibraryCard
             key={item.id}
             item={item}
-            onAddToLibrary={(id, title) => setAddModal({ id, title })}
-            onOpenSubtitleModal={(id, title) => setSubtitleModal({ id, title })}
+            onOpenConfigModal={(id, title) =>
+              setConfigModal({
+                id,
+                title,
+                sourceLanguage: item.source_language,
+                acquisitionMethod:
+                  item.source_subtitle_acquisition_method ?? null,
+                existingTracks: item.subtitle_tracks,
+              })
+            }
           />
         ))}
 
@@ -69,20 +75,17 @@ export default function LibraryGrid() {
         )}
       </div>
 
-      {addModal && (
-        <AddToLibraryModal
-          jellyfinId={addModal.id}
-          title={addModal.title}
-          OnClose={() => setAddModal(null)}
-          OnSuccess={() => {
-            setAddModal(null);
-            router.refresh();
-          }}
+      {configModal && (
+        <ContentConfigurationModal
+          mediaId={configModal.id}
+          title={configModal.title}
+          currentSourceLanguage={configModal.sourceLanguage}
+          currentAcquisitionMethod={configModal.acquisitionMethod}
+          existingTracks={configModal.existingTracks}
+          onClose={() => setConfigModal(null)}
+          onSuccess={() => setConfigModal(null)}
         />
       )}
-
-      {/* subtitle modal — TODO: wire up in next step */}
-      {subtitleModal && <div>{/* SubtitleModal coming next */}</div>}
     </>
   );
 }
