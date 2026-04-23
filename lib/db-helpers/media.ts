@@ -74,6 +74,11 @@ export async function fetchPublicMediaContent(
       take: pageSize,
       skip: page * pageSize,
       orderBy: { created_at: "desc" },
+      include: {
+        subtitle_tracks: {
+          select: { subtitle_language: true },
+        },
+      },
     }),
     db.mediaContent.count({ where }),
   ]);
@@ -112,6 +117,11 @@ export async function fetchUnregisteredMediaContent(options: {
       take: pageSize,
       skip: page * pageSize,
       orderBy: { created_at: "desc" },
+      include: {
+        subtitle_tracks: {
+          select: { subtitle_language: true },
+        },
+      },
     }),
     db.mediaContent.count({ where }),
   ]);

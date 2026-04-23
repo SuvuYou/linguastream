@@ -38,12 +38,12 @@ model MediaContent {
   job_status       String?  // null | "pending" | "running" | "done" | "error"
   job_progress     Int?     // 0-100
   job_logs         String?  // absolute path to log file on disk
-  created_at      DateTime @default(now())
+  created_at       DateTime @default(now())
 
-  user            User           @relation(fields: [user_id], references: [id])
-  subtitle_tracks SubtitleTrack[]
-  subtitle_lines  SubtitleLine[]
-  cards           Card[]
+  user             User           @relation(fields: [user_id], references: [id])
+  subtitle_tracks  SubtitleTrack[]
+  subtitle_lines   SubtitleLine[]
+  cards            Card[]
 }
 
 model SubtitleTrack {
