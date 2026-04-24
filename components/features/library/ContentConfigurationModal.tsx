@@ -197,6 +197,10 @@ export default function ContentConfigurationModal({
           sourceLang,
           sourceMethod,
           sourceFile: sourceFileUpload?.path,
+          videoFilePath:
+            item.jellyfinItem?.MediaSources?.[0].Path ??
+            item.file_path ??
+            undefined,
           translateLangs: Array.from(selectedTranslateLangs),
           translateMethod: effectiveTranslateMethod,
           translateFiles,

@@ -17,15 +17,16 @@ function tailFile(filePath: string, n: number): string[] {
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { mediaId: string } },
+  { params }: { params: Promise<{ mediaId: string }> },
 ) {
+  const { mediaId } = await params;
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const media = await db.mediaContent.findUnique({
-    where: { id: params.mediaId },
+    where: { id: mediaId },
     select: {
       id: true,
       user_id: true,

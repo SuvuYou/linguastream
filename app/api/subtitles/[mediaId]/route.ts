@@ -9,6 +9,7 @@ const BodySchema = z.object({
   sourceLang: z.string(),
   sourceMethod: z.enum(["upload", "whisperx"]),
   sourceFile: z.string().optional(), // disk path from upload-file route
+  videoFilePath: z.string().optional(), // client passes jellyfinItem.Path or file_path
   translateLangs: z.array(z.string()),
   translateMethod: z.enum(["libretranslate", "deepl", "upload"]),
   translateFiles: z.record(z.string(), z.string()).optional(), // { de: "/path" }
@@ -17,8 +18,10 @@ const BodySchema = z.object({
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { mediaId: string } },
+  { params }: { params: Promise<{ mediaId: string }> },
 ) {
+  const { mediaId } = await params;
+
   const user = await getCurrentUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -49,13 +52,10 @@ export async function PUT(
   }
 
   const media = await db.mediaContent.findUnique({
-    where: { id: params.mediaId },
+    where: { id: mediaId },
     select: {
-      id: true,
       user_id: true,
-      file_path: true,
       job_status: true,
-      subtitle_tracks: { select: { subtitle_language: true } },
     },
   });
 
@@ -84,9 +84,11 @@ export async function PUT(
     );
   }
 
-  if (data.sourceMethod === "whisperx" && !media.file_path) {
+  const videoFilePath = data.videoFilePath;
+
+  if (data.sourceMethod === "whisperx" && !videoFilePath) {
     return NextResponse.json(
-      { error: "No video file found for this media item" },
+      { error: "No video file path available for this item" },
       { status: 400 },
     );
   }
@@ -94,7 +96,7 @@ export async function PUT(
   if (data.removeLangs && data.removeLangs.length > 0) {
     const tracksToRemove = await db.subtitleTrack.findMany({
       where: {
-        media_content_id: params.mediaId,
+        media_content_id: mediaId,
         subtitle_language: { in: data.removeLangs },
       },
       select: { id: true },
@@ -114,35 +116,35 @@ export async function PUT(
 
   if (data.sourceLang !== AUTO_DETECT) {
     await db.mediaContent.update({
-      where: { id: params.mediaId },
+      where: { id: mediaId },
       data: { source_language: data.sourceLang },
     });
   }
 
   await db.mediaContent.update({
-    where: { id: params.mediaId },
+    where: { id: mediaId },
     data: { job_status: JOB_STATUS.PENDING, job_progress: 0 },
   });
 
   try {
     const { logFile } = spawnIngest({
-      mediaId: params.mediaId,
+      mediaId: mediaId,
       sourceLang: data.sourceLang,
       acquisitionMethod: data.sourceMethod,
       sourceFile: data.sourceFile,
-      videoFile: media.file_path ?? undefined,
+      videoFile: videoFilePath,
       translateLangs: data.translateLangs,
       translateMethod: data.translateMethod,
       translateFiles: data.translateFiles,
     });
 
     await db.mediaContent.update({
-      where: { id: params.mediaId },
+      where: { id: mediaId },
       data: { job_logs: logFile },
     });
   } catch {
     await db.mediaContent.update({
-      where: { id: params.mediaId },
+      where: { id: mediaId },
       data: { job_status: JOB_STATUS.ERROR, job_progress: 0 },
     });
     return NextResponse.json(
