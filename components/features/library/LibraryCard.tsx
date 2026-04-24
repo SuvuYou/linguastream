@@ -9,7 +9,7 @@ import { useUser } from "@/hooks/useUser";
 
 interface LibraryCardProps {
   item: MergedContentItem;
-  onOpenConfigModal?: (id: string, title: string) => void;
+  onOpenConfigModal?: (item: MergedContentItem) => void;
 }
 
 export default function LibraryCard({
@@ -60,9 +60,7 @@ export default function LibraryCard({
               </span>
               {isAdmin && onOpenConfigModal && (
                 <button
-                  onClick={() =>
-                    onOpenConfigModal(item.id, item.jellyfinItem!.Name)
-                  }
+                  onClick={() => onOpenConfigModal(item)}
                   className="text-xs px-3 py-1 border border-primary-border text-secondary-text hover:text-primary-text transition-colors"
                 >
                   Reconfigure
@@ -139,9 +137,7 @@ export default function LibraryCard({
 
       {isAdmin && onOpenConfigModal && (
         <button
-          onClick={() =>
-            onOpenConfigModal(item.jellyfinItem!.Id, item.jellyfinItem!.Name)
-          }
+          onClick={() => onOpenConfigModal(item)}
           className="absolute top-2 right-2 text-xs px-2 py-1 border border-primary-border text-secondary-text hover:text-primary-text bg-background opacity-0 group-hover:opacity-100 transition-all"
         >
           Configure

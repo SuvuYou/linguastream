@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/initializations/firebase/session";
 import { db } from "@/lib/initializations/db";
-import { JOB_STATUS } from "@/helpers/const";
+import { AUTO_DETECT, JOB_STATUS } from "@/helpers/const";
 import { spawnIngest } from "@/lib/scripts/spawn-ingest";
 
 const BodySchema = z.object({
-  sourceLang: z.string().nullable(), // null = auto-detect
+  sourceLang: z.string(),
   sourceMethod: z.enum(["upload", "whisperx"]),
   sourceFile: z.string().optional(), // disk path from upload-file route
   translateLangs: z.array(z.string()),
@@ -112,7 +112,7 @@ export async function PUT(
     ]);
   }
 
-  if (data.sourceLang) {
+  if (data.sourceLang !== AUTO_DETECT) {
     await db.mediaContent.update({
       where: { id: params.mediaId },
       data: { source_language: data.sourceLang },
@@ -127,7 +127,7 @@ export async function PUT(
   try {
     const { logFile } = spawnIngest({
       mediaId: params.mediaId,
-      sourceLang: data.sourceLang ?? "auto",
+      sourceLang: data.sourceLang,
       acquisitionMethod: data.sourceMethod,
       sourceFile: data.sourceFile,
       videoFile: media.file_path ?? undefined,

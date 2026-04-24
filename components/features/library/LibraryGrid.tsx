@@ -7,14 +7,7 @@ import { useUser } from "@/hooks/useUser";
 import { DEFAULT_LIBRARY_RESPONSE, useLibrary } from "@/hooks/useLibrary";
 import { useLanguages } from "@/hooks/useLanguages";
 import ContentConfigurationModal from "./ContentConfigurationModal";
-
-interface ModalTarget {
-  id: string;
-  title: string;
-  sourceLanguage: string | null;
-  acquisitionMethod: string | null;
-  existingTracks: { subtitle_language: string }[];
-}
+import type { MergedContentItem } from "@/types";
 
 export default function LibraryGrid() {
   const user = useUser();
@@ -32,7 +25,9 @@ export default function LibraryGrid() {
   const isError = user.isError || library.isError;
   const { items, total } = library.data || DEFAULT_LIBRARY_RESPONSE;
 
-  const [configModal, setConfigModal] = useState<ModalTarget | null>(null);
+  const [configModal, setConfigModal] = useState<MergedContentItem | null>(
+    null,
+  );
 
   if (isLoading) return <LibrarySkeleton />;
 
@@ -55,16 +50,7 @@ export default function LibraryGrid() {
           <LibraryCard
             key={item.id}
             item={item}
-            onOpenConfigModal={(id, title) =>
-              setConfigModal({
-                id,
-                title,
-                sourceLanguage: item.source_language,
-                acquisitionMethod:
-                  item.source_subtitle_acquisition_method ?? null,
-                existingTracks: item.subtitle_tracks,
-              })
-            }
+            onOpenConfigModal={(item) => setConfigModal(item)}
           />
         ))}
 
@@ -77,11 +63,7 @@ export default function LibraryGrid() {
 
       {configModal && (
         <ContentConfigurationModal
-          mediaId={configModal.id}
-          title={configModal.title}
-          currentSourceLanguage={configModal.sourceLanguage}
-          currentAcquisitionMethod={configModal.acquisitionMethod}
-          existingTracks={configModal.existingTracks}
+          item={configModal}
           onClose={() => setConfigModal(null)}
           onSuccess={() => setConfigModal(null)}
         />

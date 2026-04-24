@@ -22,10 +22,12 @@ export const JOB_STATUS = {
 
 export type JobStatus = (typeof JOB_STATUS)[keyof typeof JOB_STATUS];
 
-export const SUBTITLE_ACQUISITION_METHOD = {
-  UPLOAD: "upload",
-  WHISPERX: "whisperx",
-} as const;
+export const SUBTITLE_ACQUISITION_METHOD = [
+  { type: "upload", label: "Upload" },
+  { type: "whisperx", label: "WhisperX" },
+] as const;
 
 export type SubtitleAcquisitionMethod =
-  (typeof SUBTITLE_ACQUISITION_METHOD)[keyof typeof SUBTITLE_ACQUISITION_METHOD];
+  (typeof SUBTITLE_ACQUISITION_METHOD)[number]["type"];
+
+export const AUTO_DETECT = "auto";
