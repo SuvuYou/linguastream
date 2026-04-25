@@ -28,9 +28,9 @@ from dotenv import load_dotenv
 
 # ── env ────────────────────────────────────────────────────────────────────────
 
-# look for .env.local in project root (two levels up from ml/)
+# look for .env.local in project root (one level up from ml/)
 script_dir = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.abspath(os.path.join(script_dir, "..", ".."))
+project_root = os.path.abspath(os.path.join(script_dir, ".."))
 load_dotenv(os.path.join(project_root, ".env.local"))
 
 DATABASE_URL = os.environ["DATABASE_URL"]
@@ -248,7 +248,7 @@ def whisperx_segments_to_lines(segments: list[dict]) -> list[dict]:
 
 # ── transcription ──────────────────────────────────────────────────────────────
 
-def transcribe_with_whisperx(video_path: str) -> tuple[list[dict], str]:
+def transcribe_with_whisperx(video_path: str, media_id: str) -> tuple[list[dict], str]:
     """Returns (lines, detected_language)."""
     import time
 
@@ -261,11 +261,17 @@ def transcribe_with_whisperx(video_path: str) -> tuple[list[dict], str]:
         timeout=10,
     )
     resp.raise_for_status()
-
     log(f"WhisperX job started: {job_id}")
 
+    # progress simulation: crawl from 5% → 28% while waiting
+    # stays just below the 30% we set after transcription completes
+    simulated = 5
+    target = 78
+    poll_interval = 5
+
     while True:
-        time.sleep(3)
+        time.sleep(poll_interval)
+
         status_resp = requests.get(f"{WHISPER_SERVICE_URL}/job/{job_id}", timeout=5)
         status_resp.raise_for_status()
         data = status_resp.json()
@@ -278,7 +284,10 @@ def transcribe_with_whisperx(video_path: str) -> tuple[list[dict], str]:
         elif status == "error":
             raise RuntimeError(f"WhisperX error: {data.get('error')}")
         else:
-            log(f"WhisperX status: {status}...")
+            if simulated < target:
+                simulated = min(simulated + 1, target)
+                set_job_status(media_id, "running", simulated)
+            log(f"WhisperX status: {status} ({simulated}%)...")
 
 # ── translation ────────────────────────────────────────────────────────────────
 
@@ -393,9 +402,9 @@ def main():
             if not args.video_file:
                 raise ValueError("--video-file required when acquisition-method=whisperx")
             log("Starting WhisperX transcription...")
-            source_lines, detected_lang = transcribe_with_whisperx(args.video_file)
+            source_lines, detected_lang = transcribe_with_whisperx(args.video_file, args.media_id)
 
-        set_job_status(args.media_id, "running", 30)
+        set_job_status(args.media_id, "running", 80)
         log(f"Source subtitles ready — {len(source_lines)} lines, language: {detected_lang}")
 
         # ── write detected language + acquisition method back to MediaContent ──
@@ -412,7 +421,7 @@ def main():
             conn.commit()
         log("Source track saved")
 
-        set_job_status(args.media_id, "running", 50)
+        set_job_status(args.media_id, "running", 90)
 
         # ── translated tracks ──────────────────────────────────────────────────
 
@@ -452,7 +461,7 @@ def main():
                 log(f"{target_lang} track saved")
 
                 # progress: 50–90 spread across translation langs
-                progress = 50 + int(40 * (lang_index + 1) / total_langs)
+                progress = 90 + int(9 * (lang_index + 1) / total_langs)
                 set_job_status(args.media_id, "running", progress)
 
         # ── done ──────────────────────────────────────────────────────────────
