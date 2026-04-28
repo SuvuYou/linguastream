@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/lib/initializations/db";
 import {
   fetchAvailableSourceLanguages,
-  fetchAvailableSubtitleLanguages,
+  fetchAvailableTranslationLanguages,
 } from "./languages";
 import { UNKNOWN_SOURCE_LANGUAGE } from "@/helpers/const";
 import type { MediaContent, SubtitleTrack } from "@prisma/client";
@@ -56,21 +56,21 @@ describe("languages lib", () => {
     expect(result).toEqual(["en", "de"]);
   });
 
-  it("returns subtitle languages", async () => {
+  it("returns translation languages", async () => {
     mockedDb.subtitleTrack.findMany.mockResolvedValue([
-      { subtitle_language: "en" },
-      { subtitle_language: "es" },
+      { translation_language: "en" },
+      { translation_language: "es" },
     ] as SubtitleTrack[]);
 
-    const result = await fetchAvailableSubtitleLanguages();
+    const result = await fetchAvailableTranslationLanguages();
 
     expect(result).toEqual(["en", "es"]);
   });
 
-  it("returns empty array when no subtitle languages", async () => {
+  it("returns empty array when no translation languages", async () => {
     mockedDb.subtitleTrack.findMany.mockResolvedValue([]);
 
-    const result = await fetchAvailableSubtitleLanguages();
+    const result = await fetchAvailableTranslationLanguages();
 
     expect(result).toEqual([]);
   });

@@ -42,7 +42,7 @@ describe("useLangauges hook", () => {
 
     mockedUseAppStore.mockReturnValue({
       preferredSourceLanguage: null,
-      preferredSubtitleLanguage: null,
+      preferredTranslationLanguage: null,
     });
 
     mockedUseZodSearchParams.mockReturnValue({
@@ -68,14 +68,14 @@ describe("useLangauges hook", () => {
           json: () =>
             Promise.resolve({
               availableSourceLanguages: ["en", "de"],
-              availableSubtitleLanguages: ["es"],
+              availableTranslationLanguages: ["es"],
             }),
         }) as Promise<Response>,
     );
 
     mockedUseAppStore.mockReturnValue({
       preferredSourceLanguage: null,
-      preferredSubtitleLanguage: null,
+      preferredTranslationLanguage: null,
     });
 
     mockedUseZodSearchParams.mockReturnValue({
@@ -102,7 +102,7 @@ describe("useLangauges hook", () => {
           json: () =>
             Promise.resolve({
               availableSourceLanguages: ["en", "de"],
-              availableSubtitleLanguages: [],
+              availableTranslationLanguages: [],
             }),
         }) as Promise<Response>,
     );
@@ -133,14 +133,14 @@ describe("useLangauges hook", () => {
           json: () =>
             Promise.resolve({
               availableSourceLanguages: ["en"],
-              availableSubtitleLanguages: [],
+              availableTranslationLanguages: [],
             }),
         }) as Promise<Response>,
     );
 
     mockedUseAppStore.mockReturnValue({
       preferredSourceLanguage: "en",
-      preferredSubtitleLanguage: "en",
+      preferredTranslationLanguage: "en",
     });
 
     mockedUseZodSearchParams.mockReturnValue({

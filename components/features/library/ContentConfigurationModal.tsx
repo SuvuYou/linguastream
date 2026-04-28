@@ -48,7 +48,7 @@ export default function ContentConfigurationModal({
   const isAdmin = user.data?.is_admin;
 
   const existingTranslationLangs = item.subtitle_tracks
-    .map((t) => t.subtitle_language)
+    .map((t) => t.translation_language)
     .filter((l) => l !== currentSourceLanguage);
 
   const [sourceLang, setSourceLang] = useState<string>(
@@ -314,9 +314,11 @@ export default function ContentConfigurationModal({
           )}
         </div>
 
-        {/* section 3 — translations */}
+        {/* section 3 — translation subtitles */}
         <div className="flex flex-col gap-2">
-          <label className="text-xs text-secondary-text">Translations</label>
+          <label className="text-xs text-secondary-text">
+            Translation subtitles
+          </label>
           <div className="flex gap-2">
             {(
               [

@@ -27,7 +27,7 @@ describe("useLibrary hook", () => {
         useLibrary({
           enabled: false,
           selectedSourceLanguage: "en",
-          selectedSubtitleLanguage: "en",
+          selectedTranslationLanguage: "en",
         }),
       { wrapper: createWrapper() },
     );
@@ -60,7 +60,7 @@ describe("useLibrary hook", () => {
         useLibrary({
           enabled: true,
           selectedSourceLanguage: "en",
-          selectedSubtitleLanguage: "en",
+          selectedTranslationLanguage: "en",
         }),
       { wrapper: createWrapper() },
     );
@@ -92,7 +92,7 @@ describe("useLibrary hook", () => {
         useLibrary({
           enabled: true,
           selectedSourceLanguage: "en",
-          selectedSubtitleLanguage: "en",
+          selectedTranslationLanguage: "en",
         }),
       { wrapper: createWrapper() },
     );
@@ -127,7 +127,7 @@ describe("useLibrary hook", () => {
         useLibrary({
           enabled: true,
           selectedSourceLanguage: "en",
-          selectedSubtitleLanguage: "en",
+          selectedTranslationLanguage: "en",
         }),
       { wrapper: createWrapper() },
     );
@@ -159,7 +159,7 @@ describe("useLibrary hook", () => {
         useLibrary({
           enabled: true,
           selectedSourceLanguage: q,
-          selectedSubtitleLanguage: "en",
+          selectedTranslationLanguage: "en",
         }),
       {
         wrapper: createWrapper(),

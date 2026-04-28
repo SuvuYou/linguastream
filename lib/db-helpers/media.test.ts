@@ -97,7 +97,7 @@ describe("media lib", () => {
     await fetchPublicMediaContent({
       searchTerm: "test",
       sourceLanguage: "en",
-      subtitleLanguage: "de",
+      translationLanguage: "de",
       page: 1,
       pageSize: 10,
     });
@@ -111,7 +111,7 @@ describe("media lib", () => {
             mode: "insensitive",
           },
           subtitle_tracks: {
-            some: { subtitle_language: "de" },
+            some: { translation_language: "de" },
           },
         }),
         skip: 10,

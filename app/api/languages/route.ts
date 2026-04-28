@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/initializations/firebase/session";
 import {
   fetchAvailableSourceLanguages,
-  fetchAvailableSubtitleLanguages,
+  fetchAvailableTranslationLanguages,
 } from "@/lib/db-helpers/languages";
 
 export async function GET() {
@@ -12,15 +12,15 @@ export async function GET() {
     if (!user)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const [availableSourceLanguages, availableSubtitleLanguages] =
+    const [availableSourceLanguages, availableTranslationLanguages] =
       await Promise.all([
         fetchAvailableSourceLanguages(),
-        fetchAvailableSubtitleLanguages(),
+        fetchAvailableTranslationLanguages(),
       ]);
 
     return NextResponse.json({
       availableSourceLanguages,
-      availableSubtitleLanguages,
+      availableTranslationLanguages,
     });
   } catch (err) {
     console.error(err);

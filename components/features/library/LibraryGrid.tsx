@@ -18,7 +18,7 @@ export default function LibraryGrid() {
       !languages.isFetching &&
       !!languages.selectedSourceLanguage,
     selectedSourceLanguage: languages.selectedSourceLanguage!,
-    selectedSubtitleLanguage: languages.selectedSubtitleLanguage!,
+    selectedTranslationLanguage: languages.selectedTranslationLanguage!,
   });
 
   const isLoading = user.isLoading || library.isLoading || languages.isLoading;

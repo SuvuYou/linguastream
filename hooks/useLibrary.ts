@@ -8,11 +8,11 @@ export const LIBRARY_QUERY_KEY = "library";
 export function useLibrary({
   enabled,
   selectedSourceLanguage,
-  // selectedSubtitleLanguage,
+  // selectedTranslationLanguage,
 }: {
   enabled: boolean;
   selectedSourceLanguage: string;
-  selectedSubtitleLanguage: string;
+  selectedTranslationLanguage: string;
 }) {
   const { params } = useZodSearchParams(USE_LIBRARY_HOOK_PARAMS_SCHEMA);
 
@@ -30,7 +30,7 @@ export function useLibrary({
       }
       searchParams.set("page", String(params.page));
       searchParams.set("selectedSrc", selectedSourceLanguage);
-      // searchParams.set("selectedSub", selectedSubtitleLanguage);
+      // searchParams.set("selectedSub", selectedTranslationLanguage);
 
       const response = await fetch(`/api/library?${searchParams}`);
 

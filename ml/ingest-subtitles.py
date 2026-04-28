@@ -104,7 +104,7 @@ def delete_subtitle_track(conn, media_id: str, language: str):
         cur.execute(
             """
             SELECT id FROM "SubtitleTrack"
-            WHERE media_content_id = %s AND subtitle_language = %s
+            WHERE media_content_id = %s AND translation_language = %s
             """,
             (media_id, language),
         )
@@ -120,7 +120,7 @@ def insert_track_and_lines(conn, media_id: str, language: str, lines: list[dict]
     with conn.cursor() as cur:
         cur.execute(
             """
-            INSERT INTO "SubtitleTrack" (id, media_content_id, subtitle_language, created_at)
+            INSERT INTO "SubtitleTrack" (id, media_content_id, translation_language, created_at)
             VALUES (%s, %s, %s, %s)
             """,
             (track_id, media_id, language, datetime.now(timezone.utc)),

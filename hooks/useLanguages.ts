@@ -18,13 +18,14 @@ export function useLanguages() {
     },
   });
 
-  const { preferredSourceLanguage, preferredSubtitleLanguage } = useAppStore();
+  const { preferredSourceLanguage, preferredTranslationLanguage } =
+    useAppStore();
 
-  const { availableSourceLanguages, availableSubtitleLanguages } =
+  const { availableSourceLanguages, availableTranslationLanguages } =
     data || DEFAULT_LANGUAGES_RESPONSE;
 
   const searchParams = useZodSearchParams(FETCH_LANGUAGES_API_PARAMS_SCHEMA);
-  const { src: sourceLanguage, sub: subtitleLanguage } = searchParams.params;
+  const { src: sourceLanguage, sub: translationLanguage } = searchParams.params;
 
   useEffect(() => {
     if (!sourceLanguage && preferredSourceLanguage) {
@@ -33,20 +34,20 @@ export function useLanguages() {
   }, [sourceLanguage, preferredSourceLanguage, searchParams]);
 
   useEffect(() => {
-    if (!subtitleLanguage && preferredSubtitleLanguage) {
-      searchParams.set({ sub: preferredSubtitleLanguage as LanguageCode });
+    if (!translationLanguage && preferredTranslationLanguage) {
+      searchParams.set({ sub: preferredTranslationLanguage as LanguageCode });
     }
-  }, [subtitleLanguage, preferredSubtitleLanguage, searchParams]);
+  }, [translationLanguage, preferredTranslationLanguage, searchParams]);
 
   if (
     availableSourceLanguages.length == 0
-    // availableSubtitleLanguages.length == 0
+    // availableTranslationLanguages.length == 0
   ) {
     return {
       selectedSourceLanguage: null,
-      selectedSubtitleLanguage: null,
+      selectedTranslationLanguage: null,
       availableSourceLanguages,
-      availableSubtitleLanguages,
+      availableTranslationLanguages,
       isLoading,
       isFetching,
       isError,
@@ -59,16 +60,16 @@ export function useLanguages() {
     ? sourceLanguage
     : availableSourceLanguages[0];
 
-  const selectedSubtitleLanguage = subtitleLanguage;
-  // availableSubtitleLanguages.includes(subtitleLanguage)
-  //   ? subtitleLanguage
-  //   : availableSubtitleLanguages[0];
+  const selectedTranslationLanguage = translationLanguage;
+  // availableTranslationLanguages.includes(translationLanguage)
+  //   ? translationLanguage
+  //   : availableTranslationLanguages[0];
 
   return {
     selectedSourceLanguage,
-    selectedSubtitleLanguage,
+    selectedTranslationLanguage,
     availableSourceLanguages,
-    availableSubtitleLanguages,
+    availableTranslationLanguages,
     isLoading,
     isFetching,
     isError,
@@ -77,5 +78,5 @@ export function useLanguages() {
 
 export const DEFAULT_LANGUAGES_RESPONSE: LanguagesResponse = {
   availableSourceLanguages: [],
-  availableSubtitleLanguages: [],
+  availableTranslationLanguages: [],
 };

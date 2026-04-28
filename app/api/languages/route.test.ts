@@ -3,7 +3,7 @@ import { getCurrentUser } from "@/lib/initializations/firebase/session";
 import { GET } from "./route";
 import {
   fetchAvailableSourceLanguages,
-  fetchAvailableSubtitleLanguages,
+  fetchAvailableTranslationLanguages,
 } from "@/lib/db-helpers/languages";
 import type { User } from "@prisma/client";
 
@@ -13,13 +13,15 @@ vi.mock("@/lib/initializations/firebase/session", () => ({
 
 vi.mock("@/lib/db-helpers/languages", () => ({
   fetchAvailableSourceLanguages: vi.fn(),
-  fetchAvailableSubtitleLanguages: vi.fn(),
+  fetchAvailableTranslationLanguages: vi.fn(),
 }));
 
 beforeEach(() => vi.resetAllMocks());
 
 const mockedFetchSource = vi.mocked(fetchAvailableSourceLanguages);
-const mockedFetchSubtitle = vi.mocked(fetchAvailableSubtitleLanguages);
+const mockedFetchTranslationLanguages = vi.mocked(
+  fetchAvailableTranslationLanguages,
+);
 
 const mockedGetCurrentUser = vi.mocked(getCurrentUser);
 
@@ -34,14 +36,14 @@ describe("GET api/languages", () => {
     expect(json).toEqual({ error: "Unauthorized" });
 
     expect(mockedFetchSource).not.toHaveBeenCalled();
-    expect(mockedFetchSubtitle).not.toHaveBeenCalled();
+    expect(mockedFetchTranslationLanguages).not.toHaveBeenCalled();
   });
 
   it("returns available languages when authenticated", async () => {
     mockedGetCurrentUser.mockResolvedValue({ id: "id" } as User);
 
     mockedFetchSource.mockResolvedValue(["en", "de"]);
-    mockedFetchSubtitle.mockResolvedValue(["es", "fr"]);
+    mockedFetchTranslationLanguages.mockResolvedValue(["es", "fr"]);
 
     const res = await GET();
     const json = await res.json();
@@ -50,11 +52,11 @@ describe("GET api/languages", () => {
 
     expect(json).toEqual({
       availableSourceLanguages: ["en", "de"],
-      availableSubtitleLanguages: ["es", "fr"],
+      availableTranslationLanguages: ["es", "fr"],
     });
 
     expect(mockedFetchSource).toHaveBeenCalled();
-    expect(mockedFetchSubtitle).toHaveBeenCalled();
+    expect(mockedFetchTranslationLanguages).toHaveBeenCalled();
   });
 
   it("returns 500 if something throws", async () => {

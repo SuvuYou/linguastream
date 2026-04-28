@@ -84,7 +84,7 @@ export async function PUT(
     const tracksToRemove = await db.subtitleTrack.findMany({
       where: {
         media_content_id: mediaId,
-        subtitle_language: { in: data.removeLangs },
+        translation_language: { in: data.removeLangs },
       },
       select: { id: true },
     });

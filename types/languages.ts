@@ -1,4 +1,4 @@
 export interface LanguagesResponse {
   availableSourceLanguages: string[];
-  availableSubtitleLanguages: string[];
+  availableTranslationLanguages: string[];
 }

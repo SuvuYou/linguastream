@@ -61,13 +61,13 @@ model MediaContent {
 model SubtitleTrack {
   id               String   @id @default(uuid())
   media_content_id String
-  subtitle_language  String
+  translation_language  String
   created_at       DateTime @default(now())
 
   media_content  MediaContent   @relation(fields: [media_content_id], references: [id])
   subtitle_lines SubtitleLine[]
 
-  @@unique([media_content_id, subtitle_language])
+  @@unique([media_content_id, translation_language])
 }
 
 model SubtitleLine {
@@ -119,7 +119,7 @@ model Card {
   word_profile_id  String?
   word             String
   source_language  String
-  subtitle_language  String
+  translation_language  String
   timestamp_ms     Int
   next_review      DateTime @default(now())
   interval_days    Int      @default(1)

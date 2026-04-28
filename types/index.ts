@@ -3,7 +3,7 @@ import type { MediaContent, SubtitleTrack } from "@prisma/client";
 export interface MergedContentItem extends MediaContent {
   jellyfinItem?: JellyfinItem;
   thumbnailUrl: string;
-  subtitle_tracks: Pick<SubtitleTrack, "subtitle_language">[];
+  subtitle_tracks: Pick<SubtitleTrack, "translation_language">[];
 }
 
 export interface JellyfinItem {

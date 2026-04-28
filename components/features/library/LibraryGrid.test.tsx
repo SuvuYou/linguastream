@@ -49,9 +49,9 @@ const DEFAULT_LANGUAGE_RESPONSE = {
   isLoading: false,
   isFetching: false,
   selectedSourceLanguage: "",
-  selectedSubtitleLanguage: undefined,
+  selectedTranslationLanguage: undefined,
   availableSourceLanguages: [],
-  availableSubtitleLanguages: [],
+  availableTranslationLanguages: [],
 };
 
 describe("LibraryGrid", () => {
@@ -95,7 +95,7 @@ describe("LibraryGrid", () => {
     mockedUseLanguages.mockReturnValue({
       ...DEFAULT_LANGUAGE_RESPONSE,
       selectedSourceLanguage: "en",
-      selectedSubtitleLanguage: "en",
+      selectedTranslationLanguage: "en",
     });
 
     mockedUseLibrary.mockReturnValue({
@@ -158,7 +158,7 @@ describe("LibraryGrid", () => {
     mockedUseLanguages.mockReturnValue({
       ...DEFAULT_LANGUAGE_RESPONSE,
       selectedSourceLanguage: "en",
-      selectedSubtitleLanguage: "en",
+      selectedTranslationLanguage: "en",
     });
 
     mockedUseLibrary.mockReturnValue({

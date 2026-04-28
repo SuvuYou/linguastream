@@ -12,26 +12,26 @@ export default function LanguageFilter() {
 
   const searchParams = useZodSearchParams(PUBLIC_LIBRARY_PARAMS_SCHEMA);
 
-  const { availableSourceLanguages, availableSubtitleLanguages } = languages;
+  const { availableSourceLanguages, availableTranslationLanguages } = languages;
 
-  const { setPreferredSourceLanguage, setPreferredSubtitleLanguage } =
+  const { setPreferredSourceLanguage, setPreferredTranslationLanguage } =
     useAppStore();
 
   useEffect(() => {
     if (languages.selectedSourceLanguage)
       setPreferredSourceLanguage(languages.selectedSourceLanguage);
-    if (languages.selectedSubtitleLanguage)
-      setPreferredSubtitleLanguage(languages.selectedSubtitleLanguage);
+    if (languages.selectedTranslationLanguage)
+      setPreferredTranslationLanguage(languages.selectedTranslationLanguage);
   }, [
     languages.selectedSourceLanguage,
-    languages.selectedSubtitleLanguage,
+    languages.selectedTranslationLanguage,
     setPreferredSourceLanguage,
-    setPreferredSubtitleLanguage,
+    setPreferredTranslationLanguage,
   ]);
 
   const updateFilter = (type: "src" | "sub", value: string) => {
     if (type === "src") setPreferredSourceLanguage(value);
-    if (type === "sub") setPreferredSubtitleLanguage(value);
+    if (type === "sub") setPreferredTranslationLanguage(value);
 
     searchParams.set({ [type]: value });
   };
@@ -51,7 +51,7 @@ export default function LanguageFilter() {
   if (
     languages.isError ||
     !languages.selectedSourceLanguage
-    // || !languages.selectedSubtitleLanguage
+    // || !languages.selectedTranslationLanguage
   )
     return (
       <div className="p-12 text-center text-sm text-secondary-text">
@@ -77,13 +77,13 @@ export default function LanguageFilter() {
       </div>
 
       <div className="flex items-center gap-2 px-4 h-full">
-        <span className="text-xs text-secondary-text">Subtitles</span>
+        <span className="text-xs text-secondary-text">Translations</span>
         <select
-          value={languages.selectedSubtitleLanguage || ""}
+          value={languages.selectedTranslationLanguage || ""}
           onChange={(e) => updateFilter("sub", e.target.value)}
           className="bg-transparent text-xs text-active-border outline-none cursor-pointer"
         >
-          {availableSubtitleLanguages.map((code) => (
+          {availableTranslationLanguages.map((code) => (
             <option key={code} value={code} className="bg-background">
               {getLabel(code)}
             </option>

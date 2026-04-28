@@ -9,12 +9,12 @@ vi.mock("@/hooks/useLanguages", () => ({
 }));
 
 const setPreferredSourceLanguage = vi.fn();
-const setPreferredSubtitleLanguage = vi.fn();
+const setPreferredTranslationLanguage = vi.fn();
 
 vi.mock("@/lib/initializations/store", () => ({
   useAppStore: () => ({
     setPreferredSourceLanguage,
-    setPreferredSubtitleLanguage,
+    setPreferredTranslationLanguage,
   }),
 }));
 
@@ -35,9 +35,9 @@ const DEFAULT_LANGUAGE_RESPONSE = {
   isLoading: false,
   isFetching: false,
   selectedSourceLanguage: "",
-  selectedSubtitleLanguage: undefined,
+  selectedTranslationLanguage: undefined,
   availableSourceLanguages: [],
-  availableSubtitleLanguages: [],
+  availableTranslationLanguages: [],
 };
 
 describe("LanguageFilter", () => {
@@ -69,9 +69,9 @@ describe("LanguageFilter", () => {
     mockedUseLanguages.mockReturnValue({
       ...DEFAULT_LANGUAGE_RESPONSE,
       selectedSourceLanguage: "en",
-      selectedSubtitleLanguage: "de",
+      selectedTranslationLanguage: "de",
       availableSourceLanguages: ["en", "de"],
-      availableSubtitleLanguages: ["en", "de"],
+      availableTranslationLanguages: ["en", "de"],
     });
 
     render(<LanguageFilter />);
@@ -87,15 +87,15 @@ describe("LanguageFilter", () => {
     expect(setPreferredSourceLanguage).toHaveBeenCalledWith("de");
   });
 
-  it("updates filters when subtitle language changes", async () => {
+  it("updates filters when translation language changes", async () => {
     const user = userEvent.setup();
 
     mockedUseLanguages.mockReturnValue({
       ...DEFAULT_LANGUAGE_RESPONSE,
       selectedSourceLanguage: "en",
-      selectedSubtitleLanguage: "de",
+      selectedTranslationLanguage: "de",
       availableSourceLanguages: ["en", "de"],
-      availableSubtitleLanguages: ["en", "de"],
+      availableTranslationLanguages: ["en", "de"],
     });
 
     render(<LanguageFilter />);
@@ -108,6 +108,6 @@ describe("LanguageFilter", () => {
       sub: "de",
     });
 
-    expect(setPreferredSubtitleLanguage).toHaveBeenCalledWith("de");
+    expect(setPreferredTranslationLanguage).toHaveBeenCalledWith("de");
   });
 });
