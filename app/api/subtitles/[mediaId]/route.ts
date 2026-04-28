@@ -1,20 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 import { getCurrentUser } from "@/lib/initializations/firebase/session";
 import { db } from "@/lib/initializations/db";
 import { AUTO_DETECT, JOB_STATUS } from "@/helpers/const";
 import { spawnIngest } from "@/lib/scripts/spawn-ingest";
-
-const BodySchema = z.object({
-  sourceLang: z.string(),
-  sourceMethod: z.enum(["upload", "whisperx"]),
-  sourceFile: z.string().optional(), // disk path from upload-file route
-  videoFilePath: z.string().optional(), // client passes jellyfinItem.Path or file_path
-  translateLangs: z.array(z.string()),
-  translateMethod: z.enum(["libretranslate", "deepl", "upload"]),
-  translateFiles: z.record(z.string(), z.string()).optional(), // { de: "/path" }
-  removeLangs: z.array(z.string()).optional(),
-});
+import { PUT_INGEST_SUBTITLES_API_PARAMS_SCHEMA } from "@/helpers/params-schema";
 
 export async function PUT(
   req: NextRequest,
@@ -34,7 +23,7 @@ export async function PUT(
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const parsed = BodySchema.safeParse(body);
+  const parsed = PUT_INGEST_SUBTITLES_API_PARAMS_SCHEMA.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
       { error: "Invalid request", details: parsed.error.flatten() },
@@ -77,16 +66,14 @@ export async function PUT(
     );
   }
 
-  if (data.sourceMethod === "upload" && !data.sourceFile) {
+  if (data.acquisitionMethod === "upload" && !data.sourceFile) {
     return NextResponse.json(
-      { error: "sourceFile required when sourceMethod is upload" },
+      { error: "sourceFile required when acquisitionMethod is upload" },
       { status: 400 },
     );
   }
 
-  const videoFilePath = data.videoFilePath;
-
-  if (data.sourceMethod === "whisperx" && !videoFilePath) {
+  if (data.acquisitionMethod === "whisperx" && !data.videoFilePath) {
     return NextResponse.json(
       { error: "No video file path available for this item" },
       { status: 400 },
@@ -130,9 +117,9 @@ export async function PUT(
     const { logFile } = spawnIngest({
       mediaId: mediaId,
       sourceLang: data.sourceLang,
-      acquisitionMethod: data.sourceMethod,
-      sourceFile: data.sourceFile,
-      videoFile: videoFilePath,
+      acquisitionMethod: data.acquisitionMethod,
+      sourceFile: data.acquisitionMethod == "upload" ? data.sourceFile : "",
+      videoFile: data.acquisitionMethod == "whisperx" ? data.videoFilePath : "",
       translateLangs: data.translateLangs,
       translateMethod: data.translateMethod,
       translateFiles: data.translateFiles,

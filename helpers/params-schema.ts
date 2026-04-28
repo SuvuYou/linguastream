@@ -68,26 +68,26 @@ export const FETCH_LANGUAGES_API_PARAMS_SCHEMA = z.object({
   sub: LanguageCodeSchema.optional(),
 });
 
-export const POST_INGEST_SUBTITLES_API_PARAMS_SCHEMA = z.discriminatedUnion(
+export const PUT_INGEST_SUBTITLES_API_PARAMS_SCHEMA = z.discriminatedUnion(
   "acquisitionMethod",
   [
     z.object({
-      mediaId: z.string().uuid(),
       sourceLang: z.string().min(2),
       acquisitionMethod: z.literal("upload"),
       sourceFile: z.string().min(1),
-      translateLangs: z.array(z.string()).optional(),
-      translateMethod: z.enum(["libretranslate", "deepl", "upload"]).optional(),
+      translateLangs: z.array(z.string()),
+      translateMethod: z.enum(["libretranslate", "deepl", "upload"]),
       translateFiles: z.record(LanguageCodeSchema, z.string()).optional(),
+      removeLangs: z.array(z.string()).optional(),
     }),
     z.object({
-      mediaId: z.string().uuid(),
       sourceLang: z.string().min(2),
       acquisitionMethod: z.literal("whisperx"),
-      videoFile: z.string().min(1),
-      translateLangs: z.array(z.string()).optional(),
-      translateMethod: z.enum(["libretranslate", "deepl", "upload"]).optional(),
+      videoFilePath: z.string().min(1),
+      translateLangs: z.array(z.string()),
+      translateMethod: z.enum(["libretranslate", "deepl", "upload"]),
       translateFiles: z.record(LanguageCodeSchema, z.string()).optional(),
+      removeLangs: z.array(z.string()).optional(),
     }),
   ],
 );

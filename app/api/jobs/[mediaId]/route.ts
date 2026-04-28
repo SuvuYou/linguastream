@@ -56,3 +56,41 @@ export async function GET(
     logs,
   });
 }
+
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ mediaId: string }> },
+) {
+  const { mediaId } = await params;
+
+  const user = await getCurrentUser();
+  if (!user)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const media = await db.mediaContent.findUnique({
+    where: { id: mediaId },
+    select: { user_id: true, job_status: true },
+  });
+
+  if (!media) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!user.is_admin && media.user_id !== user.id)
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  if (media.job_status === "running") {
+    return NextResponse.json(
+      { error: "Cannot reset a running job" },
+      { status: 409 },
+    );
+  }
+
+  await db.mediaContent.update({
+    where: { id: mediaId },
+    data: {
+      job_status: null,
+      job_progress: null,
+      job_logs: null,
+    },
+  });
+
+  return NextResponse.json({ ok: true });
+}

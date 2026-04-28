@@ -89,5 +89,10 @@ export function useJobPolling(
     };
   }, [isTerminal, startPolling, stopPolling]);
 
-  return { jobState, elementRef };
+  async function resetJob() {
+    await fetch(`/api/jobs/${mediaId}`, { method: "DELETE" });
+    queryClient.invalidateQueries({ queryKey: [LIBRARY_QUERY_KEY] });
+  }
+
+  return { jobState, elementRef, resetJob };
 }

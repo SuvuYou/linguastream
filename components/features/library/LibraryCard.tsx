@@ -23,7 +23,7 @@ export default function LibraryCard({
   const hasActiveJob =
     item.job_status !== null && item.job_status !== JOB_STATUS.DONE;
 
-  const { jobState, elementRef } = useJobPolling(
+  const { jobState, elementRef, resetJob } = useJobPolling(
     item.id,
     item.job_status,
     item.job_progress,
@@ -69,6 +69,14 @@ export default function LibraryCard({
             </>
           ) : (
             <>
+              {isAdmin && (
+                <button
+                  onClick={() => resetJob()}
+                  className="text-xs px-3 py-1 border border-primary-border text-secondary-text hover:text-primary-text transition-colors"
+                >
+                  Reset job
+                </button>
+              )}
               <svg
                 className="animate-spin w-5 h-5 text-active-border"
                 viewBox="0 0 24 24"
