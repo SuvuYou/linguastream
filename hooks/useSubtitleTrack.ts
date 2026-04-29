@@ -13,9 +13,7 @@ async function fetchSubtitleTrack(
   mediaContentId: string,
   lang: string,
 ): Promise<SubtitleLine[]> {
-  const res = await fetch(
-    `/api/subtitles/track/${mediaContentId}?lang=${lang}`,
-  );
+  const res = await fetch(`/api/subtitles/${mediaContentId}?lang=${lang}`);
   if (!res.ok) throw new Error(`Failed to fetch subtitle track: ${lang}`);
   const data = await res.json();
   return data.lines;
