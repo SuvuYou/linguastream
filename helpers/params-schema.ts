@@ -68,6 +68,10 @@ export const FETCH_LANGUAGES_API_PARAMS_SCHEMA = z.object({
   sub: LanguageCodeSchema.optional(),
 });
 
+export const FETCH_SUBTITLES_API_PARAMS_SCHEMA = z.object({
+  lang: LanguageCodeSchema.optional(),
+});
+
 export const PUT_INGEST_SUBTITLES_API_PARAMS_SCHEMA = z.discriminatedUnion(
   "acquisitionMethod",
   [

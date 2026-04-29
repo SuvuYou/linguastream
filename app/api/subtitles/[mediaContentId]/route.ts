@@ -3,13 +3,83 @@ import { getCurrentUser } from "@/lib/initializations/firebase/session";
 import { db } from "@/lib/initializations/db";
 import { AUTO_DETECT, JOB_STATUS } from "@/helpers/const";
 import { spawnIngest } from "@/lib/scripts/spawn-ingest";
-import { PUT_INGEST_SUBTITLES_API_PARAMS_SCHEMA } from "@/helpers/params-schema";
+import {
+  FETCH_SUBTITLES_API_PARAMS_SCHEMA,
+  parseSearchParamsSafe,
+  PUT_INGEST_SUBTITLES_API_PARAMS_SCHEMA,
+} from "@/helpers/params-schema";
 
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: Promise<{ mediaId: string }> },
-) {
-  const { mediaId } = await params;
+interface Params {
+  params: Promise<{ mediaContentId: string }>;
+}
+
+export async function GET(req: NextRequest, { params }: Params) {
+  const { mediaContentId } = await params;
+
+  const user = await getCurrentUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { searchParams } = req.nextUrl;
+
+  const parsedParams = parseSearchParamsSafe(
+    FETCH_SUBTITLES_API_PARAMS_SCHEMA,
+    searchParams,
+  );
+
+  const { lang: translationLanguage } = parsedParams || {};
+
+  if (!parsedParams || !translationLanguage) {
+    return NextResponse.json({ error: "Invalid params" }, { status: 400 });
+  }
+
+  const media = await db.mediaContent.findUnique({
+    where: { id: mediaContentId },
+    select: { user_id: true },
+  });
+
+  if (!media) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  if (!user.is_admin && media.user_id !== user.id) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const track = await db.subtitleTrack.findUnique({
+    where: {
+      media_content_id_translation_language: {
+        media_content_id: mediaContentId,
+        translation_language: translationLanguage,
+      },
+    },
+    select: { id: true },
+  });
+
+  if (!track) {
+    return NextResponse.json(
+      { error: `No subtitle track found for language: ${translationLanguage}` },
+      { status: 404 },
+    );
+  }
+
+  const lines = await db.subtitleLine.findMany({
+    where: { subtitle_track_id: track.id },
+    select: {
+      index: true,
+      start_ms: true,
+      end_ms: true,
+      text: true,
+    },
+    orderBy: { index: "asc" },
+  });
+
+  return NextResponse.json({ translationLanguage, lines });
+}
+
+export async function PUT(req: NextRequest, { params }: Params) {
+  const { mediaContentId } = await params;
 
   const user = await getCurrentUser();
   if (!user) {
@@ -41,7 +111,7 @@ export async function PUT(
   }
 
   const media = await db.mediaContent.findUnique({
-    where: { id: mediaId },
+    where: { id: mediaContentId },
     select: {
       user_id: true,
       job_status: true,
@@ -83,7 +153,7 @@ export async function PUT(
   if (data.removeLangs && data.removeLangs.length > 0) {
     const tracksToRemove = await db.subtitleTrack.findMany({
       where: {
-        media_content_id: mediaId,
+        media_content_id: mediaContentId,
         translation_language: { in: data.removeLangs },
       },
       select: { id: true },
@@ -103,19 +173,19 @@ export async function PUT(
 
   if (data.sourceLang !== AUTO_DETECT) {
     await db.mediaContent.update({
-      where: { id: mediaId },
+      where: { id: mediaContentId },
       data: { source_language: data.sourceLang },
     });
   }
 
   await db.mediaContent.update({
-    where: { id: mediaId },
+    where: { id: mediaContentId },
     data: { job_status: JOB_STATUS.PENDING, job_progress: 0 },
   });
 
   try {
     const { logFile } = spawnIngest({
-      mediaId: mediaId,
+      mediaId: mediaContentId,
       sourceLang: data.sourceLang,
       acquisitionMethod: data.acquisitionMethod,
       sourceFile: data.acquisitionMethod == "upload" ? data.sourceFile : "",
@@ -126,12 +196,12 @@ export async function PUT(
     });
 
     await db.mediaContent.update({
-      where: { id: mediaId },
+      where: { id: mediaContentId },
       data: { job_logs: logFile },
     });
   } catch {
     await db.mediaContent.update({
-      where: { id: mediaId },
+      where: { id: mediaContentId },
       data: { job_status: JOB_STATUS.ERROR, job_progress: 0 },
     });
     return NextResponse.json(
