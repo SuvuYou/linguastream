@@ -8,9 +8,9 @@ import { useAppStore } from "@/lib/initializations/store";
 import { useEffect } from "react";
 
 export default function LanguageFilter() {
-  const languages = useLanguages();
-
   const searchParams = useZodSearchParams(PUBLIC_LIBRARY_PARAMS_SCHEMA);
+
+  const languages = useLanguages();
 
   const { availableSourceLanguages, availableTranslationLanguages } = languages;
 
@@ -47,6 +47,17 @@ export default function LanguageFilter() {
       </div>
     );
   }
+
+  if (
+    !languages.isError &&
+    availableSourceLanguages.length === 0
+    // || !languages.selectedTranslationLanguage
+  )
+    return (
+      <div className="p-12 text-center text-sm text-secondary-text">
+        No languages to select from.
+      </div>
+    );
 
   if (
     languages.isError ||

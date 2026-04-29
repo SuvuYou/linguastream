@@ -13,10 +13,6 @@ export default function LibraryGrid() {
   const user = useUser();
   const languages = useLanguages();
   const library = useLibrary({
-    enabled:
-      !languages.isLoading &&
-      !languages.isFetching &&
-      !!languages.selectedSourceLanguage,
     selectedSourceLanguage: languages.selectedSourceLanguage!,
     selectedTranslationLanguage: languages.selectedTranslationLanguage!,
   });
@@ -31,7 +27,7 @@ export default function LibraryGrid() {
 
   if (isLoading) return <LibrarySkeleton />;
 
-  if (isError || !library.data) {
+  if (isError) {
     return (
       <div className="p-12 text-center text-sm text-secondary-text">
         Failed to load library.

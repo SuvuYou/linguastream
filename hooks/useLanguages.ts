@@ -28,16 +28,34 @@ export function useLanguages() {
   const { src: sourceLanguage, sub: translationLanguage } = searchParams.params;
 
   useEffect(() => {
-    if (!sourceLanguage && preferredSourceLanguage) {
+    if (
+      !sourceLanguage &&
+      preferredSourceLanguage &&
+      availableSourceLanguages.includes(preferredSourceLanguage)
+    ) {
       searchParams.set({ src: preferredSourceLanguage as LanguageCode });
     }
-  }, [sourceLanguage, preferredSourceLanguage, searchParams]);
+  }, [
+    sourceLanguage,
+    availableSourceLanguages,
+    preferredSourceLanguage,
+    searchParams,
+  ]);
 
   useEffect(() => {
-    if (!translationLanguage && preferredTranslationLanguage) {
+    if (
+      !translationLanguage &&
+      preferredTranslationLanguage &&
+      availableTranslationLanguages.includes(preferredTranslationLanguage)
+    ) {
       searchParams.set({ sub: preferredTranslationLanguage as LanguageCode });
     }
-  }, [translationLanguage, preferredTranslationLanguage, searchParams]);
+  }, [
+    translationLanguage,
+    availableTranslationLanguages,
+    preferredTranslationLanguage,
+    searchParams,
+  ]);
 
   if (
     availableSourceLanguages.length == 0

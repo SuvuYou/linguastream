@@ -57,7 +57,7 @@ export default function ContentConfigurationModal({
       : AUTO_DETECT,
   );
 
-  const [sourceMethod, setSourceMethod] = useState<AcquisitionMethod>(
+  const [acquisitionMethod, setAcquisitionMethod] = useState<AcquisitionMethod>(
     item.source_subtitle_acquisition_method ?? "upload",
   );
 
@@ -91,12 +91,12 @@ export default function ContentConfigurationModal({
 
   // if user switches source to whisperx and translate was upload, reset
   const effectiveTranslateMethod: TranslateMethod =
-    sourceMethod === "whisperx" && translateMethod === "upload"
+    acquisitionMethod === "whisperx" && translateMethod === "upload"
       ? "libretranslate"
       : translateMethod;
 
   const allFileUploadsReady = (() => {
-    if (sourceMethod === "upload") {
+    if (acquisitionMethod === "upload") {
       if (!sourceFileUpload || sourceFileUpload.status !== "done") return false;
     }
     if (effectiveTranslateMethod === "upload") {
@@ -186,6 +186,7 @@ export default function ContentConfigurationModal({
     setError(null);
     startTransition(async () => {
       const translateFiles: Record<string, string> = {};
+
       for (const [lang, u] of Object.entries(translateFileUploads)) {
         if (u.path) translateFiles[lang] = u.path;
       }
@@ -195,7 +196,7 @@ export default function ContentConfigurationModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           sourceLang,
-          sourceMethod,
+          acquisitionMethod,
           sourceFile: sourceFileUpload?.path,
           videoFilePath:
             item.jellyfinItem?.MediaSources?.[0].Path ??
@@ -203,8 +204,10 @@ export default function ContentConfigurationModal({
             undefined,
           translateLangs: Array.from(selectedTranslateLangs),
           translateMethod: effectiveTranslateMethod,
-          translateFiles,
           removeLangs: removedLangs,
+          ...(translateFiles && Object.entries(translateFiles).length > 0
+            ? { translateFiles }
+            : {}),
         }),
       });
 
@@ -263,9 +266,9 @@ export default function ContentConfigurationModal({
             {SUBTITLE_ACQUISITION_METHOD.map((method) => (
               <button
                 key={method.type}
-                onClick={() => setSourceMethod(method.type)}
+                onClick={() => setAcquisitionMethod(method.type)}
                 className={`flex-1 px-3 py-2 text-xs border transition-colors ${
-                  sourceMethod === method.type
+                  acquisitionMethod === method.type
                     ? "border-active-border text-primary-text"
                     : "border-primary-border text-secondary-text hover:text-primary-text"
                 }`}
@@ -277,7 +280,7 @@ export default function ContentConfigurationModal({
             ))}
           </div>
 
-          {sourceMethod === "upload" && (
+          {acquisitionMethod === "upload" && (
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-3">
                 <button
@@ -306,7 +309,7 @@ export default function ContentConfigurationModal({
             </div>
           )}
 
-          {sourceMethod === "whisperx" && (
+          {acquisitionMethod === "whisperx" && (
             <p className="text-xs text-secondary-text">
               Audio will be transcribed locally using WhisperX. This may take
               several minutes.
@@ -327,7 +330,9 @@ export default function ContentConfigurationModal({
                 "upload",
               ] as TranslateMethod[]
             )
-              .filter((m) => !(sourceMethod === "whisperx" && m === "upload"))
+              .filter(
+                (m) => !(acquisitionMethod === "whisperx" && m === "upload"),
+              )
               .map((method) => (
                 <button
                   key={method}

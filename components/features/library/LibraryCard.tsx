@@ -123,7 +123,7 @@ export default function LibraryCard({
 
   return (
     <div className="relative border-r border-b border-primary-border p-4 hover:bg-background-hover transition-colors group">
-      <Link href={`/watch/${item.jellyfinItem.Id}`}>
+      <Link href={`/watch/${item.id}`}>
         <div className="aspect-video bg-background mb-3 overflow-hidden">
           <Image
             src={item.thumbnailUrl}

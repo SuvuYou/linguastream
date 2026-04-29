@@ -35,10 +35,17 @@ export async function GET(req: NextRequest) {
   const {
     q: query,
     selectedSrc: sourceLanguage,
-    // selectedSub: translationLanguage,
+    // selectedTrans: translationLanguage,
     unreg: shouldShowUnregistered,
     page,
   } = parsedParams;
+
+  if (!sourceLanguage && (!user.is_admin || !shouldShowUnregistered)) {
+    return NextResponse.json(
+      { error: "Source language not specified" },
+      { status: 400 },
+    );
+  }
 
   // Fetch DB items based on mode
   const {

@@ -47,7 +47,7 @@ export const FETCH_LIBRARY_API_PARAMS_SCHEMA = z.object({
   q: z.string().optional(),
 
   selectedSrc: LanguageCodeSchema.optional(),
-  selectedSub: LanguageCodeSchema.optional(),
+  selectedTrans: LanguageCodeSchema.optional(),
 
   page: z
     .string()

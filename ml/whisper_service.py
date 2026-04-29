@@ -18,7 +18,7 @@ app.add_middleware(
 # Jobs are short-lived (minutes), so this is fine
 jobs: dict[str, dict] = {}
 
-DEVICE = "mps"
+DEVICE = "cpu"
 MODEL_SIZE = "medium"
 
 

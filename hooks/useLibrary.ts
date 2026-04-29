@@ -2,19 +2,29 @@ import { USE_LIBRARY_HOOK_PARAMS_SCHEMA } from "@/helpers/params-schema";
 import { useZodSearchParams } from "@/hooks/useZodSearchParams";
 import { useQuery } from "@tanstack/react-query";
 import type { LibraryResponse } from "@/types/library";
+import { useUser } from "./useUser";
+import { useLanguages } from "./useLanguages";
 
 export const LIBRARY_QUERY_KEY = "library";
 
 export function useLibrary({
-  enabled,
   selectedSourceLanguage,
   // selectedTranslationLanguage,
 }: {
-  enabled: boolean;
   selectedSourceLanguage: string;
   selectedTranslationLanguage: string;
 }) {
   const { params } = useZodSearchParams(USE_LIBRARY_HOOK_PARAMS_SCHEMA);
+
+  const user = useUser();
+  const languages = useLanguages();
+
+  const shouldAllowUnselectedLanguages = user.data?.is_admin && params.unreg;
+
+  const enabled =
+    !languages.isLoading &&
+    !languages.isFetching &&
+    (!!languages.selectedSourceLanguage || shouldAllowUnselectedLanguages);
 
   return useQuery<LibraryResponse>({
     enabled,
@@ -29,8 +39,9 @@ export function useLibrary({
         searchParams.delete("unreg");
       }
       searchParams.set("page", String(params.page));
-      searchParams.set("selectedSrc", selectedSourceLanguage);
-      // searchParams.set("selectedSub", selectedTranslationLanguage);
+      if (selectedSourceLanguage)
+        searchParams.set("selectedSrc", selectedSourceLanguage);
+      // searchParams.set("selectedTrans", selectedTranslationLanguage);
 
       const response = await fetch(`/api/library?${searchParams}`);
 

@@ -123,7 +123,7 @@ describe("USE_LIBRARY_HOOK_PARAMS_SCHEMA", () => {
       const params = new URLSearchParams({
         q: "dark",
         selectedSrc: "de",
-        selectedSub: "en",
+        selectedTrans: "en",
         page: "2",
         unreg: "true",
       });
@@ -132,7 +132,7 @@ describe("USE_LIBRARY_HOOK_PARAMS_SCHEMA", () => {
 
       expect(result.q).toBe("dark");
       expect(result.selectedSrc).toBe("de");
-      expect(result.selectedSub).toBe("en");
+      expect(result.selectedTrans).toBe("en");
       expect(result.page).toBe(2);
       expect(result.unreg).toBe(true);
     });
