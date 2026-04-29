@@ -23,7 +23,7 @@ describe("useLangauges hook", () => {
     global.fetch = vi.fn(() => new Promise(() => {}) as Promise<Response>);
     mockedUseAppStore.mockReturnValue({});
     mockedUseZodSearchParams.mockReturnValue({
-      params: { src: "en", sub: "en" },
+      params: { src: "en", trans: "en" },
       set: vi.fn(),
       remove: vi.fn(),
     });
@@ -46,7 +46,7 @@ describe("useLangauges hook", () => {
     });
 
     mockedUseZodSearchParams.mockReturnValue({
-      params: { src: "en", sub: "en" },
+      params: { src: "en", trans: "en" },
       set: vi.fn(),
       remove: vi.fn(),
     });
@@ -155,7 +155,7 @@ describe("useLangauges hook", () => {
 
     await waitFor(() => {
       expect(setMock).toHaveBeenCalledWith({ src: "en" });
-      expect(setMock).toHaveBeenCalledWith({ sub: "en" });
+      expect(setMock).toHaveBeenCalledWith({ trans: "en" });
     });
   });
 });

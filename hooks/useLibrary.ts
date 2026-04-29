@@ -9,7 +9,7 @@ export const LIBRARY_QUERY_KEY = "library";
 
 export function useLibrary({
   selectedSourceLanguage,
-  // selectedTranslationLanguage,
+  selectedTranslationLanguage,
 }: {
   selectedSourceLanguage: string;
   selectedTranslationLanguage: string;
@@ -20,15 +20,21 @@ export function useLibrary({
   const languages = useLanguages();
 
   const shouldAllowUnselectedLanguages = user.data?.is_admin && params.unreg;
+  const areLanguagesSelected =
+    !!languages.selectedSourceLanguage &&
+    !!languages.selectedTranslationLanguage;
 
   const enabled =
     !languages.isLoading &&
     !languages.isFetching &&
-    (!!languages.selectedSourceLanguage || shouldAllowUnselectedLanguages);
+    (areLanguagesSelected || shouldAllowUnselectedLanguages);
 
   return useQuery<LibraryResponse>({
     enabled,
-    queryKey: [LIBRARY_QUERY_KEY, { ...params, selectedSourceLanguage }],
+    queryKey: [
+      LIBRARY_QUERY_KEY,
+      { ...params, selectedSourceLanguage, selectedTranslationLanguage },
+    ],
     queryFn: async () => {
       const searchParams = new URLSearchParams();
 
@@ -41,7 +47,8 @@ export function useLibrary({
       searchParams.set("page", String(params.page));
       if (selectedSourceLanguage)
         searchParams.set("selectedSrc", selectedSourceLanguage);
-      // searchParams.set("selectedTrans", selectedTranslationLanguage);
+      if (selectedTranslationLanguage)
+        searchParams.set("selectedTrans", selectedTranslationLanguage);
 
       const response = await fetch(`/api/library?${searchParams}`);
 

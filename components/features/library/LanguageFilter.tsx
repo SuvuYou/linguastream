@@ -29,9 +29,9 @@ export default function LanguageFilter() {
     setPreferredTranslationLanguage,
   ]);
 
-  const updateFilter = (type: "src" | "sub", value: string) => {
+  const updateFilter = (type: "src" | "trans", value: string) => {
     if (type === "src") setPreferredSourceLanguage(value);
-    if (type === "sub") setPreferredTranslationLanguage(value);
+    if (type === "trans") setPreferredTranslationLanguage(value);
 
     searchParams.set({ [type]: value });
   };
@@ -50,8 +50,8 @@ export default function LanguageFilter() {
 
   if (
     !languages.isError &&
-    availableSourceLanguages.length === 0
-    // || !languages.selectedTranslationLanguage
+    (availableSourceLanguages.length === 0 ||
+      availableTranslationLanguages.length === 0)
   )
     return (
       <div className="p-12 text-center text-sm text-secondary-text">
@@ -61,8 +61,8 @@ export default function LanguageFilter() {
 
   if (
     languages.isError ||
-    !languages.selectedSourceLanguage
-    // || !languages.selectedTranslationLanguage
+    !languages.selectedSourceLanguage ||
+    !languages.selectedTranslationLanguage
   )
     return (
       <div className="p-12 text-center text-sm text-secondary-text">
@@ -91,7 +91,7 @@ export default function LanguageFilter() {
         <span className="text-xs text-secondary-text">Translations</span>
         <select
           value={languages.selectedTranslationLanguage || ""}
-          onChange={(e) => updateFilter("sub", e.target.value)}
+          onChange={(e) => updateFilter("trans", e.target.value)}
           className="bg-transparent text-xs text-active-border outline-none cursor-pointer"
         >
           {availableTranslationLanguages.map((code) => (

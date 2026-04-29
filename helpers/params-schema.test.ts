@@ -13,7 +13,7 @@ describe("PUBLIC_LIBRARY_PARAMS_SCHEMA", () => {
     const params = new URLSearchParams({
       q: "dark",
       src: "de",
-      sub: "en",
+      trans: "en",
       page: "2",
       unreg: "true",
     });
@@ -22,7 +22,7 @@ describe("PUBLIC_LIBRARY_PARAMS_SCHEMA", () => {
 
     expect(result.q).toBe("dark");
     expect(result.src).toBe("de");
-    expect(result.sub).toBe("en");
+    expect(result.trans).toBe("en");
     expect(result.page).toBe(2);
     expect(result.unreg).toBe(true);
   });
@@ -183,7 +183,7 @@ describe("USE_LIBRARY_HOOK_PARAMS_SCHEMA", () => {
     it("parses valid params", () => {
       const params = new URLSearchParams({
         src: "de",
-        sub: "en",
+        trans: "en",
       });
 
       const result = parseSearchParams(
@@ -192,7 +192,7 @@ describe("USE_LIBRARY_HOOK_PARAMS_SCHEMA", () => {
       );
 
       expect(result.src).toBe("de");
-      expect(result.sub).toBe("en");
+      expect(result.trans).toBe("en");
     });
 
     it("rejects invalid language code", () => {
@@ -202,7 +202,7 @@ describe("USE_LIBRARY_HOOK_PARAMS_SCHEMA", () => {
         parseSearchParams(FETCH_LANGUAGES_API_PARAMS_SCHEMA, params),
       ).toThrow();
 
-      const params2 = new URLSearchParams({ sub: "xx" });
+      const params2 = new URLSearchParams({ trans: "xx" });
 
       expect(() =>
         parseSearchParams(FETCH_LANGUAGES_API_PARAMS_SCHEMA, params2),
@@ -215,7 +215,7 @@ describe("parseSearchParamsSafe", () => {
   it("parses valid params", () => {
     const params = new URLSearchParams({
       src: "de",
-      sub: "en",
+      trans: "en",
     });
 
     const result = parseSearchParamsSafe(
@@ -224,13 +224,13 @@ describe("parseSearchParamsSafe", () => {
     );
 
     expect(result!.src).toBe("de");
-    expect(result!.sub).toBe("en");
+    expect(result!.trans).toBe("en");
   });
 
   it("returns null if params are not valid", () => {
     const params = new URLSearchParams({
       src: "xx",
-      sub: "xx",
+      trans: "xx",
     });
 
     expect(() =>

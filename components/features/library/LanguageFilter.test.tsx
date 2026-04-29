@@ -105,7 +105,7 @@ describe("LanguageFilter", () => {
     await user.selectOptions(selects[1], "de");
 
     expect(setMock).toHaveBeenCalledWith({
-      sub: "de",
+      trans: "de",
     });
 
     expect(setPreferredTranslationLanguage).toHaveBeenCalledWith("de");

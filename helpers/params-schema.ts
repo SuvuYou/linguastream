@@ -10,7 +10,7 @@ export const PUBLIC_LIBRARY_PARAMS_SCHEMA = z.object({
   q: z.string().optional(),
 
   src: LanguageCodeSchema.optional(),
-  sub: LanguageCodeSchema.optional(),
+  trans: LanguageCodeSchema.optional(),
 
   page: z
     .string()
@@ -65,7 +65,7 @@ export const FETCH_LIBRARY_API_PARAMS_SCHEMA = z.object({
 
 export const FETCH_LANGUAGES_API_PARAMS_SCHEMA = z.object({
   src: LanguageCodeSchema.optional(),
-  sub: LanguageCodeSchema.optional(),
+  trans: LanguageCodeSchema.optional(),
 });
 
 export const FETCH_SUBTITLES_API_PARAMS_SCHEMA = z.object({

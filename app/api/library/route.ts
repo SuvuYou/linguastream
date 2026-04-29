@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
   const {
     q: query,
     selectedSrc: sourceLanguage,
-    // selectedTrans: translationLanguage,
+    selectedTrans: translationLanguage,
     unreg: shouldShowUnregistered,
     page,
   } = parsedParams;
@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
     : await fetchPublicMediaContent({
         searchTerm: query,
         sourceLanguage,
-        // translationLanguage, // TODO: re-enable translation language filter when we have more subtitle data
+        translationLanguage,
         page,
         pageSize: PAGE_SIZE,
       });

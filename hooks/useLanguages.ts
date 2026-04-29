@@ -25,7 +25,8 @@ export function useLanguages() {
     data || DEFAULT_LANGUAGES_RESPONSE;
 
   const searchParams = useZodSearchParams(FETCH_LANGUAGES_API_PARAMS_SCHEMA);
-  const { src: sourceLanguage, sub: translationLanguage } = searchParams.params;
+  const { src: sourceLanguage, trans: translationLanguage } =
+    searchParams.params;
 
   useEffect(() => {
     if (
@@ -48,7 +49,7 @@ export function useLanguages() {
       preferredTranslationLanguage &&
       availableTranslationLanguages.includes(preferredTranslationLanguage)
     ) {
-      searchParams.set({ sub: preferredTranslationLanguage as LanguageCode });
+      searchParams.set({ trans: preferredTranslationLanguage as LanguageCode });
     }
   }, [
     translationLanguage,
@@ -58,8 +59,8 @@ export function useLanguages() {
   ]);
 
   if (
-    availableSourceLanguages.length == 0
-    // availableTranslationLanguages.length == 0
+    availableSourceLanguages.length == 0 ||
+    availableTranslationLanguages.length == 0
   ) {
     return {
       selectedSourceLanguage: null,
@@ -78,10 +79,11 @@ export function useLanguages() {
     ? sourceLanguage
     : availableSourceLanguages[0];
 
-  const selectedTranslationLanguage = translationLanguage;
-  // availableTranslationLanguages.includes(translationLanguage)
-  //   ? translationLanguage
-  //   : availableTranslationLanguages[0];
+  const selectedTranslationLanguage = availableTranslationLanguages.includes(
+    translationLanguage || "",
+  )
+    ? translationLanguage
+    : availableTranslationLanguages[0];
 
   return {
     selectedSourceLanguage,
