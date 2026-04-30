@@ -56,9 +56,7 @@ function SubtitleLine({
 
   return (
     <div className="relative inline-block max-w-[90%] text-center">
-      {/* background layer */}
       <div className="absolute inset-0 rounded" style={bgStyle} />
-      {/* text layer */}
       <span
         className="relative px-2 py-0.5 rounded"
         style={{

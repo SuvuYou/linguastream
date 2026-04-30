@@ -22,11 +22,11 @@ export default function SubtitleSidebar({
   onSeek,
 }: SubtitleSidebarProps) {
   const [query, setQuery] = useState("");
-  const [autoScroll, setAutoScroll] = useState(true);
+  const isAutoScrollEnabled = useRef(true);
   const scrollRef = useRef<HTMLDivElement>(null);
   const activeRef = useRef<HTMLDivElement>(null);
   const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isUserScrollingRef = useRef(false);
+  const isProgrammaticScrollRef = useRef(false);
 
   const showSource = settings.showSource && sourceLines.length > 0;
   const showTranslation =
@@ -34,6 +34,7 @@ export default function SubtitleSidebar({
 
   const pairs = useMemo(() => {
     const maxLen = Math.max(sourceLines.length, translationLines.length);
+
     return Array.from({ length: maxLen }, (_, i) => ({
       source: sourceLines[i] ?? null,
       translation: translationLines[i] ?? null,
@@ -70,23 +71,31 @@ export default function SubtitleSidebar({
   }, [pairs, query, showSource, showTranslation]);
 
   useEffect(() => {
-    if (!autoScroll || activePairIndex === null || query.trim()) return;
+    if (
+      !isAutoScrollEnabled.current ||
+      activePairIndex === null ||
+      query.trim()
+    )
+      return;
     if (activeRef.current && scrollRef.current) {
+      isProgrammaticScrollRef.current = true;
       activeRef.current.scrollIntoView({ block: "center", behavior: "smooth" });
+
+      setTimeout(() => {
+        isProgrammaticScrollRef.current = false;
+      }, 500);
     }
-  }, [activePairIndex, autoScroll, query]);
+  }, [activePairIndex, query]);
 
   const handleScroll = useCallback(() => {
-    if (isUserScrollingRef.current) return;
+    if (isProgrammaticScrollRef.current) return;
 
-    isUserScrollingRef.current = true;
-    setAutoScroll(false);
+    isAutoScrollEnabled.current = false;
 
     if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
 
     resumeTimerRef.current = setTimeout(() => {
-      isUserScrollingRef.current = false;
-      setAutoScroll(true);
+      isAutoScrollEnabled.current = true;
     }, RESUME_AUTOSCROLL_DELAY_MS);
   }, []);
 
