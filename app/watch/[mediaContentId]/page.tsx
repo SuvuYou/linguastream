@@ -6,5 +6,6 @@ export default async function Watch({
   params: Promise<{ mediaContentId: string }>;
 }) {
   const { mediaContentId } = await params;
+
   return <WatchPage mediaContentId={mediaContentId} />;
 }
