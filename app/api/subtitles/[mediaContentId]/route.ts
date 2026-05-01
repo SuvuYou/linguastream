@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/initializations/firebase/session";
 import { db } from "@/lib/initializations/db";
-import { AUTO_DETECT, JOB_STATUS } from "@/helpers/const";
+import { JOB_STATUS } from "@/helpers/const";
 import { spawnIngest } from "@/lib/scripts/spawn-ingest";
 import {
   FETCH_SUBTITLES_API_PARAMS_SCHEMA,
@@ -172,15 +172,6 @@ export async function PUT(req: NextRequest, { params }: Params) {
     ]);
   }
 
-  const mediaHaveSourceLang = !!media.source_language;
-
-  if (data.sourceLang !== AUTO_DETECT) {
-    await db.mediaContent.update({
-      where: { id: mediaContentId },
-      data: { source_language: data.sourceLang },
-    });
-  }
-
   await db.mediaContent.update({
     where: { id: mediaContentId },
     data: { job_status: JOB_STATUS.PENDING, job_progress: 0 },
@@ -207,13 +198,6 @@ export async function PUT(req: NextRequest, { params }: Params) {
       where: { id: mediaContentId },
       data: { job_status: JOB_STATUS.ERROR, job_progress: 0 },
     });
-
-    if (!mediaHaveSourceLang) {
-      await db.mediaContent.update({
-        where: { id: mediaContentId },
-        data: { source_language: undefined },
-      });
-    }
 
     return NextResponse.json(
       { error: "Failed to start ingestion job" },
