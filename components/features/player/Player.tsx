@@ -17,7 +17,6 @@ interface PlayerProps {
   activeTranslationLang: string | null;
   onTranslationLangChange: (lang: string) => void;
   onTimeUpdate: (timeMs: number) => void;
-  onSeekReady: (seekFn: (ms: number) => void) => void;
 }
 
 export default function Player({
@@ -29,7 +28,6 @@ export default function Player({
   activeTranslationLang,
   onTranslationLangChange,
   onTimeUpdate,
-  onSeekReady,
 }: PlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const plyrRef = useRef<Plyr | null>(null);
@@ -39,7 +37,7 @@ export default function Player({
   const [showSettings, setShowSettings] = useState(false);
   const [isHoveringPlayer, setIsHoveringPlayer] = useState(false);
 
-  const { subtitleSettings, setSubtitleSettings } = useAppStore();
+  const { subtitleSettings, setSubtitleSettings, events } = useAppStore();
 
   useEffect(() => {
     const setup = async () => {
@@ -78,12 +76,16 @@ export default function Player({
   }, [streamUrl]);
 
   useEffect(() => {
-    onSeekReady((ms: number) => {
+    const onJump = ({ ms }: { ms: number }) => {
       if (videoRef.current) {
         videoRef.current.currentTime = ms / 1000;
       }
-    });
-  }, [onSeekReady]);
+    };
+
+    const unsubscribe = events.onJumpTo(onJump);
+
+    return () => unsubscribe();
+  }, [events]);
 
   useAnimationTick(
     () => {

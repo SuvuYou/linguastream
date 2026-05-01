@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useCallback } from "react";
 import Player from "@/components/features/player/Player";
 import SubtitleSidebar from "@/components/features/watch/SubtitleSidebar";
 import { useWatchData } from "@/hooks/useWatchData";
@@ -21,7 +21,6 @@ export default function WatchPage({
   const { data, isLoading, isError } = useWatchData(mediaContentId);
 
   const [currentTimeMs, setCurrentTimeMs] = useState(0);
-  const seekRef = useRef<((ms: number) => void) | null>(null);
 
   const activeTranslationLang = (() => {
     if (!data) return null;
@@ -49,12 +48,6 @@ export default function WatchPage({
     [],
   );
 
-  const handleSeekReady = useCallback((fn: (ms: number) => void) => {
-    seekRef.current = fn;
-  }, []);
-
-  const handleSeek = useCallback((ms: number) => seekRef.current?.(ms), []);
-
   if (isLoading)
     return (
       <div className="flex items-center justify-center h-64 text-secondary-text text-sm">
@@ -81,7 +74,6 @@ export default function WatchPage({
           activeTranslationLang={activeTranslationLang}
           onTranslationLangChange={setPreferredTranslationLanguage}
           onTimeUpdate={handleTimeUpdate}
-          onSeekReady={handleSeekReady}
         />
       </div>
 
@@ -91,7 +83,6 @@ export default function WatchPage({
           sourceLines={sourceTracks.data ?? []}
           translationLines={translationTracks.data ?? []}
           settings={subtitleSettings}
-          onSeek={handleSeek}
         />
       </div>
     </div>

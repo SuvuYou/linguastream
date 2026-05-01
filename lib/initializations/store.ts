@@ -1,3 +1,5 @@
+import { createEventBus } from "@/helpers/eventBus";
+import { AppEvents } from "@/types";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -30,26 +32,41 @@ interface AppState {
   setPreferredTranslationLanguage: (language: string) => void;
   subtitleSettings: SubtitleSettings;
   setSubtitleSettings: (settings: Partial<SubtitleSettings>) => void;
+  events: {
+    triggerJumpTo: (ms: number) => void;
+    onJumpTo: (callback: ({ ms }: { ms: number }) => void) => () => void;
+  };
 }
 
 export const useAppStore = create<AppState>()(
   persist(
-    (set) => ({
-      preferredSourceLanguage: null,
-      preferredTranslationLanguage: null,
-      subtitleSettings: DEFAULT_SUBTITLE_SETTINGS,
+    (set) => {
+      const playerEvents = createEventBus<AppEvents>();
 
-      setPreferredSourceLanguage: (language) =>
-        set({ preferredSourceLanguage: language }),
+      return {
+        preferredSourceLanguage: null,
+        preferredTranslationLanguage: null,
+        subtitleSettings: DEFAULT_SUBTITLE_SETTINGS,
 
-      setPreferredTranslationLanguage: (language) =>
-        set({ preferredTranslationLanguage: language }),
+        setPreferredSourceLanguage: (language) =>
+          set({ preferredSourceLanguage: language }),
 
-      setSubtitleSettings: (settings) =>
-        set((state) => ({
-          subtitleSettings: { ...state.subtitleSettings, ...settings },
-        })),
-    }),
+        setPreferredTranslationLanguage: (language) =>
+          set({ preferredTranslationLanguage: language }),
+
+        setSubtitleSettings: (settings) =>
+          set((state) => ({
+            subtitleSettings: { ...state.subtitleSettings, ...settings },
+          })),
+
+        events: {
+          triggerJumpTo: (ms: number) =>
+            playerEvents.trigger("jump-to", { ms }),
+          onJumpTo: (callback: ({ ms }: { ms: number }) => void) =>
+            playerEvents.on("jump-to", callback),
+        },
+      };
+    },
     {
       name: "linguastream-store",
     },
