@@ -47,3 +47,6 @@ __pycache__/
 /linguastream-uploads/
 *.log
 ml/logs/
+
+# Meilisearch
+/data.ms
