@@ -7,7 +7,7 @@ export interface SubtitleSearchDocument {
   text: string;
   start_ms: number;
   end_ms: number;
-  translation_language: string;
+  language: string;
   media_content_id: string;
   media_title: string;
   jellyfin_id: string;
@@ -17,6 +17,7 @@ export interface SubtitleSearchDocument {
 
 export async function indexAllSubtitleLines() {
   const lines = await db.subtitleLine.findMany({
+    where: { subtitle_track: { is_source: true } },
     select: {
       id: true,
       text: true,
@@ -24,7 +25,7 @@ export async function indexAllSubtitleLines() {
       end_ms: true,
       media_content_id: true,
       subtitle_track: {
-        select: { translation_language: true },
+        select: { language: true },
       },
       media_content: {
         select: { title: true, jellyfin_id: true, type: true, user_id: true },
@@ -37,7 +38,7 @@ export async function indexAllSubtitleLines() {
     text: line.text,
     start_ms: line.start_ms,
     end_ms: line.end_ms,
-    translation_language: line.subtitle_track.translation_language,
+    language: line.subtitle_track.language,
     media_content_id: line.media_content_id,
     media_title: line.media_content.title,
     jellyfin_id: line.media_content.jellyfin_id ?? "",
@@ -50,7 +51,7 @@ export async function indexAllSubtitleLines() {
   await index.updateSettings({
     searchableAttributes: ["text"],
     filterableAttributes: [
-      "translation_language",
+      "language",
       "media_content_id",
       "is_global",
       "owner_user_id",

@@ -26,7 +26,7 @@ export async function GET(
       source_language: true,
       jellyfin_id: true,
       subtitle_tracks: {
-        select: { translation_language: true },
+        select: { language: true },
       },
     },
   });
@@ -50,7 +50,7 @@ export async function GET(
   const jellyfinItem = await fetchJellyfinWatchItem(media.jellyfin_id);
 
   const translationLanguages = media.subtitle_tracks
-    .map((t) => t.translation_language)
+    .map((t) => t.language)
     .filter((l) => l !== media.source_language);
 
   return NextResponse.json({

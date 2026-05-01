@@ -58,8 +58,8 @@ describe("languages lib", () => {
 
   it("returns translation languages", async () => {
     mockedDb.subtitleTrack.findMany.mockResolvedValue([
-      { translation_language: "en" },
-      { translation_language: "es" },
+      { language: "en" },
+      { language: "es" },
     ] as SubtitleTrack[]);
 
     const result = await fetchAvailableTranslationLanguages();

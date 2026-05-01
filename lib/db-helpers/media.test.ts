@@ -111,7 +111,7 @@ describe("media lib", () => {
             mode: "insensitive",
           },
           subtitle_tracks: {
-            some: { translation_language: "de" },
+            some: { language: "de" },
           },
         }),
         skip: 10,

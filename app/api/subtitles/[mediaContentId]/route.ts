@@ -28,9 +28,9 @@ export async function GET(req: NextRequest, { params }: Params) {
     searchParams,
   );
 
-  const { lang: translationLanguage } = parsedParams || {};
+  const { lang: language } = parsedParams || {};
 
-  if (!parsedParams || !translationLanguage) {
+  if (!parsedParams || !language) {
     return NextResponse.json({ error: "Invalid params" }, { status: 400 });
   }
 
@@ -49,9 +49,9 @@ export async function GET(req: NextRequest, { params }: Params) {
 
   const track = await db.subtitleTrack.findUnique({
     where: {
-      media_content_id_translation_language: {
+      media_content_id_language: {
         media_content_id: mediaContentId,
-        translation_language: translationLanguage,
+        language: language,
       },
     },
     select: { id: true },
@@ -59,7 +59,7 @@ export async function GET(req: NextRequest, { params }: Params) {
 
   if (!track) {
     return NextResponse.json(
-      { error: `No subtitle track found for language: ${translationLanguage}` },
+      { error: `No subtitle track found for language: ${language}` },
       { status: 404 },
     );
   }
@@ -75,7 +75,7 @@ export async function GET(req: NextRequest, { params }: Params) {
     orderBy: { index: "asc" },
   });
 
-  return NextResponse.json({ translationLanguage, lines });
+  return NextResponse.json({ language, lines });
 }
 
 export async function PUT(req: NextRequest, { params }: Params) {
@@ -154,7 +154,7 @@ export async function PUT(req: NextRequest, { params }: Params) {
     const tracksToRemove = await db.subtitleTrack.findMany({
       where: {
         media_content_id: mediaContentId,
-        translation_language: { in: data.removeLangs },
+        language: { in: data.removeLangs },
       },
       select: { id: true },
     });

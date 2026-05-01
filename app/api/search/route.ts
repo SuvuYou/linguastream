@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
 
   const filters = [`(is_global = true OR owner_user_id = "${user.id}")`];
 
-  if (lang) filters.push(`translation_language = "${lang}"`);
+  if (lang) filters.push(`language = "${lang}"`);
 
   const result = await meili
     .index(SUBTITLE_INDEX)

@@ -22,9 +22,9 @@ export async function fetchAvailableSourceLanguages() {
 
 export async function fetchAvailableTranslationLanguages() {
   const translationLanguages = await db.subtitleTrack.findMany({
-    select: { translation_language: true },
-    distinct: ["translation_language"],
+    select: { language: true },
+    distinct: ["language"],
   });
 
-  return translationLanguages.map((item) => item.translation_language);
+  return translationLanguages.map((item) => item.language);
 }

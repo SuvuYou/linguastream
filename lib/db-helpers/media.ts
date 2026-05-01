@@ -58,7 +58,7 @@ export async function fetchPublicMediaContent(
     ...(sourceLanguage ? { source_language: sourceLanguage } : {}),
     ...(translationLanguage
       ? {
-          subtitle_tracks: { some: { translation_language: translationLanguage } },
+          subtitle_tracks: { some: { language: translationLanguage } },
         }
       : {}),
     ...(searchTerm
@@ -76,7 +76,7 @@ export async function fetchPublicMediaContent(
       orderBy: { created_at: "desc" },
       include: {
         subtitle_tracks: {
-          select: { translation_language: true },
+          select: { language: true },
         },
       },
     }),
@@ -119,7 +119,7 @@ export async function fetchUnregisteredMediaContent(options: {
       orderBy: { created_at: "desc" },
       include: {
         subtitle_tracks: {
-          select: { translation_language: true },
+          select: { language: true },
         },
       },
     }),

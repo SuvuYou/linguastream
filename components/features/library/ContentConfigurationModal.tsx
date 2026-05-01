@@ -48,7 +48,7 @@ export default function ContentConfigurationModal({
   const isAdmin = user.data?.is_admin;
 
   const existingTranslationLangs = item.subtitle_tracks
-    .map((t) => t.translation_language)
+    .map((t) => t.language)
     .filter((l) => l !== currentSourceLanguage);
 
   const [sourceLang, setSourceLang] = useState<string>(
