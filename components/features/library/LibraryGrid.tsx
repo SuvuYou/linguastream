@@ -56,6 +56,7 @@ export default function LibraryGrid() {
           </div>
         )}
       </div>
+      {/* TODO: Pagination controls should go here */}
 
       {configModal && (
         <ContentConfigurationModal
