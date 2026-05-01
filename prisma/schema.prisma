@@ -61,13 +61,14 @@ model MediaContent {
 model SubtitleTrack {
   id               String   @id @default(uuid())
   media_content_id String
-  translation_language  String
+  language         String
+  is_source        Boolean
   created_at       DateTime @default(now())
 
   media_content  MediaContent   @relation(fields: [media_content_id], references: [id])
   subtitle_lines SubtitleLine[]
 
-  @@unique([media_content_id, translation_language])
+  @@unique([media_content_id, language])
 }
 
 model SubtitleLine {

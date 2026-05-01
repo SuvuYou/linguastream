@@ -104,7 +104,7 @@ def delete_subtitle_track(conn, media_id: str, language: str):
         cur.execute(
             """
             SELECT id FROM "SubtitleTrack"
-            WHERE media_content_id = %s AND translation_language = %s
+            WHERE media_content_id = %s AND language = %s
             """,
             (media_id, language),
         )
@@ -114,16 +114,16 @@ def delete_subtitle_track(conn, media_id: str, language: str):
             cur.execute('DELETE FROM "SubtitleLine" WHERE subtitle_track_id = %s', (track_id,))
             cur.execute('DELETE FROM "SubtitleTrack" WHERE id = %s', (track_id,))
 
-def insert_track_and_lines(conn, media_id: str, language: str, lines: list[dict]):
+def insert_track_and_lines(conn, media_id: str, language: str, lines: list[dict], is_source: bool) -> str:
     """Insert a SubtitleTrack and all its SubtitleLines in one transaction."""
     track_id = str(uuid.uuid4())
     with conn.cursor() as cur:
         cur.execute(
             """
-            INSERT INTO "SubtitleTrack" (id, media_content_id, translation_language, created_at)
-            VALUES (%s, %s, %s, %s)
+            INSERT INTO "SubtitleTrack" (id, media_content_id, language, is_source, created_at)
+            VALUES (%s, %s, %s, %s, %s)
             """,
-            (track_id, media_id, language, datetime.now(timezone.utc)),
+            (track_id, media_id, language, is_source, datetime.now(timezone.utc)),
         )
         for line in lines:
             cur.execute(
@@ -417,7 +417,7 @@ def main():
         log(f"Writing source track ({detected_lang}) to DB...")
         with get_conn() as conn:
             delete_subtitle_track(conn, args.media_id, detected_lang)
-            insert_track_and_lines(conn, args.media_id, detected_lang, source_lines)
+            insert_track_and_lines(conn, args.media_id, detected_lang, source_lines, is_source=True)
             conn.commit()
         log("Source track saved")
 
@@ -456,7 +456,7 @@ def main():
                 log(f"Writing {target_lang} track to DB...")
                 with get_conn() as conn:
                     delete_subtitle_track(conn, args.media_id, target_lang)
-                    insert_track_and_lines(conn, args.media_id, target_lang, translated_lines)
+                    insert_track_and_lines(conn, args.media_id, target_lang, translated_lines, is_source=False)
                     conn.commit()
                 log(f"{target_lang} track saved")
 
