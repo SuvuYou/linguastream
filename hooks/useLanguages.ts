@@ -79,17 +79,21 @@ export function useLanguages() {
     ? sourceLanguage
     : availableSourceLanguages[0];
 
-  const selectedTranslationLanguage = availableTranslationLanguages.includes(
-    translationLanguage || "",
-  )
-    ? translationLanguage
-    : availableTranslationLanguages[0];
+  const filteredAvailableTranslationLanguages =
+    availableTranslationLanguages.filter(
+      (lang) => lang !== selectedSourceLanguage,
+    );
+
+  const selectedTranslationLanguage =
+    filteredAvailableTranslationLanguages.includes(translationLanguage || "")
+      ? translationLanguage
+      : filteredAvailableTranslationLanguages[0];
 
   return {
     selectedSourceLanguage,
     selectedTranslationLanguage,
     availableSourceLanguages,
-    availableTranslationLanguages,
+    availableTranslationLanguages: filteredAvailableTranslationLanguages,
     isLoading,
     isFetching,
     isError,
