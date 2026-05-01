@@ -7,6 +7,7 @@ import SubtitleSettingsPanel from "@/components/features/watch/SubtitleSettings"
 import { useAppStore } from "@/lib/initializations/store";
 import type { SubtitleLine } from "@/hooks/useSubtitleTrack";
 import { useAnimationTick } from "@/hooks/useAnimationTick";
+import Events from "@/events";
 
 interface PlayerProps {
   streamUrl: string;
@@ -37,7 +38,7 @@ export default function Player({
   const [showSettings, setShowSettings] = useState(false);
   const [isHoveringPlayer, setIsHoveringPlayer] = useState(false);
 
-  const { subtitleSettings, setSubtitleSettings, events } = useAppStore();
+  const { subtitleSettings, setSubtitleSettings } = useAppStore();
 
   useEffect(() => {
     const setup = async () => {
@@ -82,10 +83,10 @@ export default function Player({
       }
     };
 
-    const unsubscribe = events.onJumpTo(onJump);
+    const unsubscribe = Events.player.onJumpTo(onJump);
 
     return () => unsubscribe();
-  }, [events]);
+  }, []);
 
   useAnimationTick(
     () => {

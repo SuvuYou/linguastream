@@ -23,5 +23,3 @@ export interface JellyfinMediaSource {
   Container: string;
   Size: number;
 }
-
-export type AppEvents = { "jump-to": { ms: number } };

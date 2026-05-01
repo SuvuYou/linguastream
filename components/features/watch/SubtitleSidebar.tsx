@@ -2,10 +2,8 @@
 
 import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import type { SubtitleLine } from "@/hooks/useSubtitleTrack";
-import {
-  useAppStore,
-  type SubtitleSettings,
-} from "@/lib/initializations/store";
+import { type SubtitleSettings } from "@/lib/initializations/store";
+import Events from "@/events";
 
 interface SubtitleSidebarProps {
   currentTimeMs: number;
@@ -22,7 +20,6 @@ export default function SubtitleSidebar({
   translationLines,
   settings,
 }: SubtitleSidebarProps) {
-  const { events } = useAppStore();
   const [query, setQuery] = useState("");
   const isAutoScrollEnabled = useRef(true);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -167,7 +164,7 @@ export default function SubtitleSidebar({
               <div
                 key={pair.index}
                 ref={isActive ? activeRef : undefined}
-                onClick={() => events.triggerJumpTo(pair.start_ms)}
+                onClick={() => Events.player.triggerJumpTo(pair.start_ms)}
                 className={`
                   px-3 py-2.5 cursor-pointer border-b border-primary-border/50
                   transition-colors hover:bg-background-hover

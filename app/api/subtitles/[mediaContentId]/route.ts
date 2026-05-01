@@ -115,6 +115,7 @@ export async function PUT(req: NextRequest, { params }: Params) {
     select: {
       user_id: true,
       job_status: true,
+      source_language: true,
     },
   });
 
@@ -171,6 +172,8 @@ export async function PUT(req: NextRequest, { params }: Params) {
     ]);
   }
 
+  const mediaHaveSourceLang = !!media.source_language;
+
   if (data.sourceLang !== AUTO_DETECT) {
     await db.mediaContent.update({
       where: { id: mediaContentId },
@@ -204,6 +207,14 @@ export async function PUT(req: NextRequest, { params }: Params) {
       where: { id: mediaContentId },
       data: { job_status: JOB_STATUS.ERROR, job_progress: 0 },
     });
+
+    if (!mediaHaveSourceLang) {
+      await db.mediaContent.update({
+        where: { id: mediaContentId },
+        data: { source_language: undefined },
+      });
+    }
+
     return NextResponse.json(
       { error: "Failed to start ingestion job" },
       { status: 500 },
