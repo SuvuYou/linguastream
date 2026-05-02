@@ -14,21 +14,17 @@ interface PlayerProps {
   currentTimeMs: number;
   streamUrl: string;
   title: string;
-  sourceLines: SubtitleLine[];
-  translationLines: SubtitleLine[];
-  translationLanguages: string[];
-  activeTranslationLang: string | null;
-  onTranslationLangChange: (lang: string) => void;
+  sourceLine: SubtitleLine;
+  translationLine: SubtitleLine;
   setCurrentTimeMs: (timeMs: number) => void;
 }
 
-export default function Player({
+export default function PlayerSmall({
   initialTimeMs = 0,
   streamUrl,
   title,
-  sourceLines,
-  translationLines,
-  currentTimeMs,
+  sourceLine,
+  translationLine,
   setCurrentTimeMs,
 }: PlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -134,9 +130,9 @@ export default function Player({
       </video>
 
       <SubtitleOverlay
-        currentTimeMs={currentTimeMs}
-        sourceLines={sourceLines}
-        translationLines={translationLines}
+        currentTimeMs={initialTimeMs}
+        sourceLines={[sourceLine]}
+        translationLines={[translationLine]}
         settings={subtitleSettings}
       />
 

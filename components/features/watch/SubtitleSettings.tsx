@@ -1,18 +1,10 @@
 "use client";
 
-import { LANGUAGES } from "@/helpers/const";
 import type { SubtitleSettings } from "@/lib/initializations/store";
 
 interface SubtitleSettingsPanelProps {
   settings: SubtitleSettings;
-  translationLanguages: string[];
-  activeTranslationLang: string | null;
   onSettingsChange: (s: Partial<SubtitleSettings>) => void;
-  onTranslationLangChange: (lang: string) => void;
-}
-
-function getLangLabel(code: string) {
-  return LANGUAGES.find((l) => l.code === code)?.label ?? code;
 }
 
 type FontSize = "small" | "medium" | "large";
@@ -20,10 +12,7 @@ const FONT_SIZES: FontSize[] = ["small", "medium", "large"];
 
 export default function SubtitleSettingsPanel({
   settings,
-  translationLanguages,
-  activeTranslationLang,
   onSettingsChange,
-  onTranslationLangChange,
 }: SubtitleSettingsPanelProps) {
   return (
     <div className="absolute bottom-14 right-0 w-72 bg-background border border-primary-border p-4 flex flex-col gap-4 z-20 shadow-xl">
@@ -31,7 +20,6 @@ export default function SubtitleSettingsPanel({
         Subtitle Settings
       </div>
 
-      {/* toggles */}
       <div className="flex flex-col gap-2">
         <Toggle
           label="Show source"
@@ -45,8 +33,7 @@ export default function SubtitleSettingsPanel({
         />
       </div>
 
-      {/* translation language switcher */}
-      {translationLanguages.length > 0 && (
+      {/* {translationLanguages.length > 0 && (
         <div className="flex flex-col gap-1">
           <label className="text-xs text-secondary-text">
             Translation language
@@ -63,9 +50,8 @@ export default function SubtitleSettingsPanel({
             ))}
           </select>
         </div>
-      )}
+      )} */}
 
-      {/* font sizes */}
       <div className="flex flex-col gap-2">
         <div className="flex flex-col gap-1">
           <label className="text-xs text-secondary-text">
@@ -87,7 +73,6 @@ export default function SubtitleSettingsPanel({
         </div>
       </div>
 
-      {/* colors */}
       <div className="flex gap-3">
         <div className="flex flex-col gap-1 flex-1">
           <label className="text-xs text-secondary-text">Font color</label>
@@ -113,7 +98,6 @@ export default function SubtitleSettingsPanel({
         </div>
       </div>
 
-      {/* opacities */}
       <div className="flex flex-col gap-2">
         <div className="flex flex-col gap-1">
           <label className="text-xs text-secondary-text">

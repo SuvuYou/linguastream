@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/initializations/firebase/session";
 import { meili, SUBTITLE_INDEX } from "@/lib/initializations/meilisearch";
-import type { SubtitleSearchDocument } from "@/lib/db-helpers/search";
+import { SubtitleSearchDocument } from "@/lib/db-helpers/search";
 
 export async function GET(req: NextRequest) {
   const user = await getCurrentUser();
+
   if (!user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -15,7 +16,7 @@ export async function GET(req: NextRequest) {
 
   const filters = [`(is_global = true OR owner_user_id = "${user.id}")`];
 
-  if (lang) filters.push(`language = "${lang}"`);
+  if (lang) filters.push(`source_language = "${lang}"`);
 
   const result = await meili
     .index(SUBTITLE_INDEX)
