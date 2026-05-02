@@ -92,7 +92,7 @@ export default function WatchPage({
         />
       </div>
 
-      {isOpen && <OverlayPlayer onClose={close} />}
+      <OverlayPlayer isOpen={isOpen} onCloseIconPress={close} />
     </div>
   );
 }

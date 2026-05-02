@@ -30,6 +30,8 @@ interface AppState {
   setPreferredTranslationLanguage: (language: string) => void;
   subtitleSettings: SubtitleSettings;
   setSubtitleSettings: (settings: Partial<SubtitleSettings>) => void;
+  autoPlay: boolean;
+  setAutoPlay: (v: boolean) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -39,6 +41,9 @@ export const useAppStore = create<AppState>()(
         preferredSourceLanguage: null,
         preferredTranslationLanguage: null,
         subtitleSettings: DEFAULT_SUBTITLE_SETTINGS,
+
+        autoPlay: true,
+        setAutoPlay: (v) => set({ autoPlay: v }),
 
         setPreferredSourceLanguage: (language) =>
           set({ preferredSourceLanguage: language }),
