@@ -1,11 +1,14 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import Player from "@/components/features/player/Player";
 import SubtitleSidebar from "@/components/features/watch/SubtitleSidebar";
 import { useWatchData } from "@/hooks/useWatchData";
 import { useSubtitleTrack } from "@/hooks/useSubtitleTrack";
 import { useAppStore } from "@/lib/initializations/store";
+import OverlayPlayer from "../features/overlay-player/OverlayPlayer";
+import { useZodSearchParams } from "@/hooks/useZodSearchParams";
+import { WATCH_PAGE_PARAMS_SCHEMA } from "@/helpers/params-schema";
 
 export default function WatchPage({
   mediaContentId,
@@ -18,9 +21,11 @@ export default function WatchPage({
     subtitleSettings,
   } = useAppStore();
 
+  const { params } = useZodSearchParams(WATCH_PAGE_PARAMS_SCHEMA);
+
   const { data, isLoading, isError } = useWatchData(mediaContentId);
 
-  const [currentTimeMs, setCurrentTimeMs] = useState(0);
+  const [currentTimeMs, setCurrentTimeMs] = useState(params.t);
 
   const activeTranslationLang = (() => {
     if (!data) return null;
@@ -37,15 +42,11 @@ export default function WatchPage({
     data?.sourceLanguage ?? null,
     !!data,
   );
+
   const translationTracks = useSubtitleTrack(
     mediaContentId,
     activeTranslationLang,
     !!activeTranslationLang,
-  );
-
-  const handleTimeUpdate = useCallback(
-    (ms: number) => setCurrentTimeMs(ms),
-    [],
   );
 
   if (isLoading)
@@ -72,8 +73,10 @@ export default function WatchPage({
           translationLines={translationTracks.data ?? []}
           translationLanguages={data.translationLanguages}
           activeTranslationLang={activeTranslationLang}
+          initialTimeMs={params.t}
+          currentTimeMs={currentTimeMs}
           onTranslationLangChange={setPreferredTranslationLanguage}
-          onTimeUpdate={handleTimeUpdate}
+          setCurrentTimeMs={setCurrentTimeMs}
         />
       </div>
 
@@ -85,6 +88,8 @@ export default function WatchPage({
           settings={subtitleSettings}
         />
       </div>
+
+      <OverlayPlayer />
     </div>
   );
 }
