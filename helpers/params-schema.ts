@@ -6,6 +6,15 @@ export const LanguageCodeSchema = z.enum(
   LANGUAGES.map((l) => l.code) as [LanguageCode, ...LanguageCode[]],
 );
 
+export const WATCH_PAGE_PARAMS_SCHEMA = z.object({
+  t: z
+    .string()
+    .transform((v) => Number(v))
+    .refine((n) => !isNaN(n) && n >= 0, { message: "Invalid timestamp" })
+    .optional()
+    .default(0),
+});
+
 export const PUBLIC_LIBRARY_PARAMS_SCHEMA = z.object({
   q: z.string().optional(),
 
