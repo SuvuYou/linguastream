@@ -103,22 +103,24 @@ export default function PlayerSmall({
   }
 
   return (
-    <div ref={containerRef} className="relative w-full h-full">
-      <video
-        ref={videoRef}
-        title={title}
-        playsInline
-        className="w-full h-full object-contain"
-      >
-        <source src={streamUrl} type="video/mp4" />
-      </video>
+    <div
+      ref={containerRef}
+      className="relative w-full h-full grid content-center"
+    >
+      <div className="w-full h-full object-contain col-start-1 row-start-1">
+        <video ref={videoRef} title={title} playsInline>
+          <source src={streamUrl} type="video/mp4" />
+        </video>
+      </div>
 
-      <SubtitleOverlay
-        currentTimeMs={currentTimeMs}
-        sourceLines={sourceLine ? [sourceLine] : []}
-        translationLines={translationLine ? [translationLine] : []}
-        settings={subtitleSettings}
-      />
+      <div className="relative col-start-1 row-start-1 self-end">
+        <SubtitleOverlay
+          currentTimeMs={currentTimeMs}
+          sourceLines={sourceLine ? [sourceLine] : []}
+          translationLines={translationLine ? [translationLine] : []}
+          settings={subtitleSettings}
+        />
+      </div>
 
       {hasEnded && (
         <div className="absolute inset-0 flex items-center justify-center bg-background/40">
