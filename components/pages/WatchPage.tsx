@@ -9,6 +9,7 @@ import { useAppStore } from "@/lib/initializations/store";
 import OverlayPlayer from "../features/overlay-player/OverlayPlayer";
 import { useZodSearchParams } from "@/hooks/useZodSearchParams";
 import { WATCH_PAGE_PARAMS_SCHEMA } from "@/helpers/params-schema";
+import { useSearchOverlay } from "@/hooks/useSearchOverlay";
 
 export default function WatchPage({
   mediaContentId,
@@ -20,6 +21,8 @@ export default function WatchPage({
     setPreferredTranslationLanguage,
     subtitleSettings,
   } = useAppStore();
+
+  const { isOpen, close } = useSearchOverlay();
 
   const { params } = useZodSearchParams(WATCH_PAGE_PARAMS_SCHEMA);
 
@@ -89,7 +92,7 @@ export default function WatchPage({
         />
       </div>
 
-      <OverlayPlayer />
+      {isOpen && <OverlayPlayer onClose={close} />}
     </div>
   );
 }
