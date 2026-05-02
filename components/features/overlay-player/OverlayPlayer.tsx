@@ -138,7 +138,9 @@ export default function OverlayPlayer({
           </button>
         </div>
         <div className="flex flex-1 gap-4 min-h-0">
-          <div className="flex-3 min-w-0 bg-black relative">
+          <div
+            className={`${selected && streamData.data ? "flex-3" : "flex-0"} transition-all min-w-0 bg-black relative overflow-hidden`}
+          >
             {selected && streamData.data ? (
               <>
                 <PlayerSmall
