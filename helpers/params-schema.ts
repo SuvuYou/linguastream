@@ -35,6 +35,13 @@ export const PUBLIC_LIBRARY_PARAMS_SCHEMA = z.object({
     .default(false),
 });
 
+export const SEARCH_PARAMS_SCHEMA = z.object({
+  q: z.string().optional(),
+
+  src: LanguageCodeSchema.optional(),
+  trans: LanguageCodeSchema.optional(),
+});
+
 export const USE_LIBRARY_HOOK_PARAMS_SCHEMA = z.object({
   q: z.string().optional(),
 

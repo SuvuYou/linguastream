@@ -2,19 +2,28 @@ import type { SearchResponse } from "@/types/search";
 import { useQuery } from "@tanstack/react-query";
 
 export function useSearch({
+  enabled,
   query,
   sourceLanguage,
+  translationLanguage,
 }: {
+  enabled?: boolean;
   query: string;
   sourceLanguage: string;
+  translationLanguage: string;
 }) {
   return useQuery<SearchResponse>({
-    queryKey: ["search", { q: query, lang: sourceLanguage }],
+    enabled,
+    queryKey: [
+      "search",
+      { q: query, src: sourceLanguage, trans: translationLanguage },
+    ],
     queryFn: async () => {
       const searchParams = new URLSearchParams();
 
       searchParams.set("q", query);
-      searchParams.set("lang", sourceLanguage);
+      searchParams.set("src", sourceLanguage);
+      searchParams.set("trans", translationLanguage);
 
       const response = await fetch(`/api/search?${searchParams}`);
 
