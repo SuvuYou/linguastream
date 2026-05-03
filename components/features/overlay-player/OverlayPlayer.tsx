@@ -10,6 +10,7 @@ import type { SubtitleLine } from "@/hooks/useSubtitleTrack";
 import Link from "next/link";
 import Events from "@/events";
 import { useSearchOverlay } from "@/hooks/useSearchOverlay";
+import LanguageFilter from "@/components/features/library/LanguageFilter";
 
 function msToSubtitleLine(
   text: string,
@@ -116,6 +117,7 @@ export default function OverlayPlayer() {
             }`}
           />
           <div className="flex items-center gap-2 shrink-0">
+            <LanguageFilter />
             <span className="text-xs text-secondary-text">Auto-play</span>
             <button
               onClick={() => setAutoPlay(!autoPlay)}
