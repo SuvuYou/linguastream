@@ -9,7 +9,6 @@ import { useAppStore } from "@/lib/initializations/store";
 import OverlayPlayer from "../features/overlay-player/OverlayPlayer";
 import { useZodSearchParams } from "@/hooks/useZodSearchParams";
 import { WATCH_PAGE_PARAMS_SCHEMA } from "@/helpers/params-schema";
-import { useSearchOverlay } from "@/hooks/useSearchOverlay";
 
 export default function WatchPage({
   mediaContentId,
@@ -21,8 +20,6 @@ export default function WatchPage({
     setPreferredTranslationLanguage,
     subtitleSettings,
   } = useAppStore();
-
-  const { isOpen, close } = useSearchOverlay();
 
   const { params } = useZodSearchParams(WATCH_PAGE_PARAMS_SCHEMA);
 
@@ -54,16 +51,20 @@ export default function WatchPage({
 
   if (isLoading)
     return (
-      <div className="flex items-center justify-center h-64 text-secondary-text text-sm">
-        Loading...
-      </div>
+      <>
+        <div className="flex items-center justify-center h-64 text-secondary-text text-sm">
+          Loading...
+        </div>
+      </>
     );
 
   if (isError || !data)
     return (
-      <div className="flex items-center justify-center h-64 text-secondary-text text-sm">
-        Failed to load video.
-      </div>
+      <>
+        <div className="flex items-center justify-center h-64 text-secondary-text text-sm">
+          Failed to load video.
+        </div>
+      </>
     );
 
   return (
@@ -92,7 +93,7 @@ export default function WatchPage({
         />
       </div>
 
-      <OverlayPlayer isOpen={isOpen} onCloseIconPress={close} />
+      <OverlayPlayer />
     </div>
   );
 }

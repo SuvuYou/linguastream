@@ -32,6 +32,8 @@ interface AppState {
   setSubtitleSettings: (settings: Partial<SubtitleSettings>) => void;
   autoPlay: boolean;
   setAutoPlay: (v: boolean) => void;
+  overlayOpen: boolean;
+  setOverlayOpen: (v: boolean) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -44,6 +46,9 @@ export const useAppStore = create<AppState>()(
 
         autoPlay: true,
         setAutoPlay: (v) => set({ autoPlay: v }),
+
+        overlayOpen: true,
+        setOverlayOpen: (v) => set({ overlayOpen: v }),
 
         setPreferredSourceLanguage: (language) =>
           set({ preferredSourceLanguage: language }),
