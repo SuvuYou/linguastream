@@ -6,7 +6,7 @@ import LibraryCard from "@/components/features/library/LibraryCard";
 import { useUser } from "@/hooks/useUser";
 import { DEFAULT_LIBRARY_RESPONSE, useLibrary } from "@/hooks/useLibrary";
 import { useLanguages } from "@/hooks/useLanguages";
-import ContentConfigurationModal from "./ContentConfigurationModal";
+import ContentConfigurationModal from "@/components/features/library/ContentConfigurationModal";
 import type { MergedContentItem } from "@/types";
 
 export default function LibraryGrid() {

@@ -102,7 +102,7 @@ describe("useLangauges hook", () => {
           json: () =>
             Promise.resolve({
               availableSourceLanguages: ["en", "de"],
-              availableTranslationLanguages: [],
+              availableTranslationLanguages: ["en", "de"],
             }),
         }) as Promise<Response>,
     );
@@ -133,7 +133,7 @@ describe("useLangauges hook", () => {
           json: () =>
             Promise.resolve({
               availableSourceLanguages: ["en"],
-              availableTranslationLanguages: [],
+              availableTranslationLanguages: ["en"],
             }),
         }) as Promise<Response>,
     );

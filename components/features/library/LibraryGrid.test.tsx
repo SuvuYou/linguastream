@@ -8,8 +8,9 @@ import type { User } from "@prisma/client";
 import type { UseQueryResult } from "@tanstack/react-query";
 import type { LibraryResponse } from "@/types/library";
 import type { MergedContentItem } from "@/types";
-import { UNKNOWN_SOURCE_LANGUAGE } from "@/helpers/const";
+import { JOB_STATUS, UNKNOWN_SOURCE_LANGUAGE } from "@/helpers/const";
 import userEvent from "@testing-library/user-event";
+import { useJobPolling } from "@/hooks/useJobPolling";
 
 vi.mock("@/hooks/useUser", () => ({
   useUser: vi.fn(),
@@ -19,14 +20,18 @@ vi.mock("@/hooks/useLanguages", () => ({
   useLanguages: vi.fn(),
 }));
 
+vi.mock("@/hooks/useJobPolling", () => ({
+  useJobPolling: vi.fn(),
+}));
+
 vi.mock("@/hooks/useLibrary", () => ({
   useLibrary: vi.fn(),
   DEFAULT_LIBRARY_RESPONSE: { items: [], total: 0, pageCount: 0 },
 }));
 
-vi.mock("@/components/features/admin/AddToLibraryModal", () => ({
-  default: ({ OnSuccess }: { OnSuccess: () => void }) => (
-    <button onClick={OnSuccess}>Mock Modal</button>
+vi.mock("@/components/features/library/ContentConfigurationModal", () => ({
+  default: ({ onSuccess }: { onSuccess: () => void }) => (
+    <button onClick={onSuccess}>Mock Modal</button>
   ),
 }));
 
@@ -43,6 +48,7 @@ beforeEach(() => vi.resetAllMocks());
 const mockedUseUser = vi.mocked(useUser);
 const mockedUseLanguages = vi.mocked(useLanguages);
 const mockedUseLibrary = vi.mocked(useLibrary);
+const mockedUseJobPolling = vi.mocked(useJobPolling);
 
 const DEFAULT_LANGUAGE_RESPONSE = {
   isError: false,
@@ -54,8 +60,19 @@ const DEFAULT_LANGUAGE_RESPONSE = {
   availableTranslationLanguages: [],
 };
 
+const DEFAULT_POLLING_RESPONSE = {
+  jobState: {
+    status: JOB_STATUS.DONE,
+    progress: 12,
+    logs: [],
+  },
+  elementRef: { current: null },
+  resetJob: vi.fn(),
+};
+
 describe("LibraryGrid", () => {
   it("shows skeleton when loading", () => {
+    mockedUseJobPolling.mockReturnValue(DEFAULT_POLLING_RESPONSE);
     mockedUseLanguages.mockReturnValue(DEFAULT_LANGUAGE_RESPONSE);
     mockedUseUser.mockReturnValue({
       isLoading: true,
@@ -70,6 +87,7 @@ describe("LibraryGrid", () => {
   });
 
   it("shows error state", () => {
+    mockedUseJobPolling.mockReturnValue(DEFAULT_POLLING_RESPONSE);
     mockedUseLanguages.mockReturnValue(DEFAULT_LANGUAGE_RESPONSE);
     mockedUseUser.mockReturnValue({
       isLoading: false,
@@ -86,6 +104,7 @@ describe("LibraryGrid", () => {
   });
 
   it("renders library items", () => {
+    mockedUseJobPolling.mockReturnValue(DEFAULT_POLLING_RESPONSE);
     mockedUseUser.mockReturnValue({
       isLoading: false,
       isError: false,
@@ -126,6 +145,7 @@ describe("LibraryGrid", () => {
   });
 
   it("shows empty state", () => {
+    mockedUseJobPolling.mockReturnValue(DEFAULT_POLLING_RESPONSE);
     mockedUseUser.mockReturnValue({
       isLoading: false,
       isError: false,
@@ -149,6 +169,7 @@ describe("LibraryGrid", () => {
   });
 
   it("shows add button for admin and unknown language", async () => {
+    mockedUseJobPolling.mockReturnValue(DEFAULT_POLLING_RESPONSE);
     mockedUseUser.mockReturnValue({
       isLoading: false,
       isError: false,
@@ -170,12 +191,14 @@ describe("LibraryGrid", () => {
             id: "1",
             jellyfin_id: "123",
             source_language: UNKNOWN_SOURCE_LANGUAGE,
+            subtitle_tracks: [{ language: "de" }],
             jellyfinItem: {
               Id: "123",
               Name: "Movie 1",
               Type: "Movie",
             },
             thumbnailUrl: "/img.jpg",
+            job_status: JOB_STATUS.DONE,
           },
         ],
         total: 1,
@@ -184,14 +207,16 @@ describe("LibraryGrid", () => {
 
     render(<LibraryGrid />);
 
-    expect(screen.getByText("+ Add")).toBeInTheDocument();
+    expect(screen.getByText("Configure")).toBeInTheDocument();
 
-    await userEvent.click(screen.getByText("+ Add"));
+    await userEvent.click(screen.getByText("Configure"));
 
     expect(screen.getByText(/Mock Modal/i)).toBeInTheDocument();
 
     await userEvent.click(screen.getByText("Mock Modal"));
 
-    expect(refreshMock).toHaveBeenCalled();
+    const modal = screen.queryByText(/Mock Modal/i);
+
+    expect(modal).not.toBeInTheDocument();
   });
 });

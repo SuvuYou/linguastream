@@ -151,7 +151,7 @@ describe("GET api/library", () => {
 
     mockedParseSearchParams.mockReturnValue({
       q: "",
-      selectedSrc: undefined,
+      selectedSrc: "de",
       unreg: false,
       page: 0,
     });
