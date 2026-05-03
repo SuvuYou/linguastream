@@ -8,11 +8,8 @@ import PlayerSmall from "@/components/features/player/PlayerSmall";
 import type { SubtitleSearchDocument } from "@/lib/db-helpers/search";
 import type { SubtitleLine } from "@/hooks/useSubtitleTrack";
 import Link from "next/link";
-
-interface OverlayPlayerProps {
-  isOpen: boolean;
-  onCloseIconPress: () => void;
-}
+import Events from "@/events";
+import { useSearchOverlay } from "@/hooks/useSearchOverlay";
 
 function msToSubtitleLine(
   text: string,
@@ -22,10 +19,9 @@ function msToSubtitleLine(
   return { index: 0, text, start_ms, end_ms };
 }
 
-export default function OverlayPlayer({
-  isOpen,
-  onCloseIconPress,
-}: OverlayPlayerProps) {
+export default function OverlayPlayer() {
+  const { isOpen, close } = useSearchOverlay();
+
   const [selected, setSelected] = useState<SubtitleSearchDocument | null>(null);
   const [visualQuery, setVisualQuery] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -52,10 +48,23 @@ export default function OverlayPlayer({
 
   useEffect(() => {
     inputRef.current?.focus();
-  }, []);
+
+    const onOverlay = ({ isOpen }: { isOpen: boolean }) => {
+      if (!isOpen) {
+        setSelected(null);
+        setVisualQuery("");
+        setSearchQuery("");
+      }
+    };
+
+    const unsubscribe = Events.overlay.onOverlay(onOverlay);
+
+    return () => unsubscribe();
+  }, [isOpen]);
 
   const handleChangeQuery = (e: React.ChangeEvent<HTMLInputElement>) => {
     setVisualQuery(e.target.value);
+    setSelected(null);
 
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
@@ -89,7 +98,7 @@ export default function OverlayPlayer({
   return (
     <div
       className={`fixed inset-0 z-50 bg-background/80 backdrop-blur-sm transition-all ${isOpen ? "h-full" : "h-0"} overflow-hidden`}
-      onClick={onCloseIconPress}
+      onClick={close}
     >
       <div
         className="flex flex-col h-full w-full p-6 gap-4"
@@ -123,7 +132,7 @@ export default function OverlayPlayer({
           </div>
 
           <button
-            onClick={onCloseIconPress}
+            onClick={close}
             className="text-secondary-text hover:text-primary-text transition-colors shrink-0"
           >
             <svg
