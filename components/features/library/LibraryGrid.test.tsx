@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { useLanguages } from "@/hooks/useLanguages";
 import { useUser } from "@/hooks/useUser";
 import { useLibrary } from "@/hooks/useLibrary";
-import LibraryGrid from "./LibraryGrid";
+import LibraryGrid from "@/components/features/library/LibraryGrid";
 import type { User } from "@prisma/client";
 import type { UseQueryResult } from "@tanstack/react-query";
 import type { LibraryResponse } from "@/types/library";
