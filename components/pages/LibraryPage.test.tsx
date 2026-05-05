@@ -1,9 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { useUser } from "@/hooks/useUser";
 import LibraryPage from "./LibraryPage";
-import { User } from "@prisma/client";
-import { UseQueryResult } from "@tanstack/react-query";
+import { mockUseUser } from "@/helpers/tests/mocks/useUser";
 
 vi.mock("@/hooks/useUser", () => ({
   useUser: vi.fn(),
@@ -29,15 +27,11 @@ vi.mock("@/components/features/admin/UnregisteredCheckbox", () => ({
   default: () => <div data-testid="unreg-checkbox" />,
 }));
 
-const mockedUseUser = vi.mocked(useUser);
-
 beforeEach(() => vi.resetAllMocks());
 
 describe("LibraryPage", () => {
   it("renders base components", () => {
-    mockedUseUser.mockReturnValue({
-      data: null,
-    } as unknown as UseQueryResult<User>);
+    mockUseUser.base();
 
     render(<LibraryPage />);
 
@@ -50,9 +44,7 @@ describe("LibraryPage", () => {
   });
 
   it("does not show admin controls for non-admin user", () => {
-    mockedUseUser.mockReturnValue({
-      data: { is_admin: false },
-    } as unknown as UseQueryResult<User>);
+    mockUseUser.base();
 
     render(<LibraryPage />);
 
@@ -61,9 +53,7 @@ describe("LibraryPage", () => {
   });
 
   it("shows admin controls for admin user", () => {
-    mockedUseUser.mockReturnValue({
-      data: { is_admin: true },
-    } as unknown as UseQueryResult<User>);
+    mockUseUser.admin();
 
     render(<LibraryPage />);
 

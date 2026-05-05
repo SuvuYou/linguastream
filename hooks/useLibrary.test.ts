@@ -3,10 +3,8 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { useZodSearchParams } from "@/hooks/useZodSearchParams";
 import { createWrapper } from "@/helpers/tests/providers";
 import { DEFAULT_LIBRARY_RESPONSE, useLibrary } from "@/hooks/useLibrary";
-import { useUser } from "@/hooks/useUser";
-import { UseQueryResult } from "@tanstack/react-query";
-import { useLanguages } from "@/hooks/useLanguages";
-import { User } from "@prisma/client";
+import { mockUseLanguages } from "@/helpers/tests/mocks/useLanguages";
+import { mockUseUser } from "@/helpers/tests/mocks/useUser";
 
 vi.mock("@/hooks/useUser", () => ({
   useUser: vi.fn(),
@@ -20,35 +18,14 @@ vi.mock("@/hooks/useZodSearchParams", () => ({
   useZodSearchParams: vi.fn(),
 }));
 
-const DEFAULT_LANGUAGE_RESPONSE = {
-  isError: false,
-  isLoading: false,
-  isFetching: false,
-  selectedSourceLanguage: "",
-  selectedTranslationLanguage: undefined,
-  availableSourceLanguages: [],
-  availableTranslationLanguages: [],
-};
-
-const mockedUseUser = vi.mocked(useUser);
-const mockedUseLanguages = vi.mocked(useLanguages);
 const mockedUseZodSearchParams = vi.mocked(useZodSearchParams);
 
 beforeEach(() => vi.resetAllMocks());
 
 describe("useLibrary hook", () => {
   it("calls fetch with correct query params", async () => {
-    mockedUseUser.mockReturnValue({
-      isLoading: false,
-      isError: false,
-      data: { is_admin: true },
-    } as UseQueryResult<User>);
-
-    mockedUseLanguages.mockReturnValue({
-      ...DEFAULT_LANGUAGE_RESPONSE,
-      selectedSourceLanguage: "en",
-      selectedTranslationLanguage: "en",
-    });
+    mockUseUser.admin();
+    mockUseLanguages.selected();
 
     global.fetch = vi.fn(
       () =>
@@ -92,17 +69,8 @@ describe("useLibrary hook", () => {
   });
 
   it("handles fetch error", async () => {
-    mockedUseUser.mockReturnValue({
-      isLoading: false,
-      isError: false,
-      data: { is_admin: true },
-    } as UseQueryResult<User>);
-
-    mockedUseLanguages.mockReturnValue({
-      ...DEFAULT_LANGUAGE_RESPONSE,
-      selectedSourceLanguage: "en",
-      selectedTranslationLanguage: "en",
-    });
+    mockUseUser.admin();
+    mockUseLanguages.selected();
 
     global.fetch = vi.fn(() => Promise.reject(new Error("fail")));
 
@@ -127,17 +95,8 @@ describe("useLibrary hook", () => {
   });
 
   it("returns library data", async () => {
-    mockedUseUser.mockReturnValue({
-      isLoading: false,
-      isError: false,
-      data: { is_admin: true },
-    } as UseQueryResult<User>);
-
-    mockedUseLanguages.mockReturnValue({
-      ...DEFAULT_LANGUAGE_RESPONSE,
-      selectedSourceLanguage: "en",
-      selectedTranslationLanguage: "en",
-    });
+    mockUseUser.admin();
+    mockUseLanguages.selected();
 
     global.fetch = vi.fn(
       () =>
@@ -173,17 +132,8 @@ describe("useLibrary hook", () => {
   });
 
   it("updates query when params change", async () => {
-    mockedUseUser.mockReturnValue({
-      isLoading: false,
-      isError: false,
-      data: { is_admin: true },
-    } as UseQueryResult<User>);
-
-    mockedUseLanguages.mockReturnValue({
-      ...DEFAULT_LANGUAGE_RESPONSE,
-      selectedSourceLanguage: "en",
-      selectedTranslationLanguage: "en",
-    });
+    mockUseUser.admin();
+    mockUseLanguages.selected();
 
     const params = { q: "a", page: 0, unreg: false };
 

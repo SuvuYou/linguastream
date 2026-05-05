@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import { useLanguages } from "@/hooks/useLanguages";
 import LanguageFilter from "./LanguageFilter";
+import { mockUseLanguages } from "@/helpers/tests/mocks/useLanguages";
 
 vi.mock("@/hooks/useLanguages", () => ({
   useLanguages: vi.fn(),
@@ -28,24 +28,9 @@ vi.mock("@/hooks/useZodSearchParams", () => ({
 
 beforeEach(() => vi.resetAllMocks());
 
-const mockedUseLanguages = vi.mocked(useLanguages);
-
-const DEFAULT_LANGUAGE_RESPONSE = {
-  isError: false,
-  isLoading: false,
-  isFetching: false,
-  selectedSourceLanguage: "",
-  selectedTranslationLanguage: undefined,
-  availableSourceLanguages: [],
-  availableTranslationLanguages: [],
-};
-
 describe("LanguageFilter", () => {
   it("shows loading state", () => {
-    mockedUseLanguages.mockReturnValue({
-      ...DEFAULT_LANGUAGE_RESPONSE,
-      isLoading: true,
-    });
+    mockUseLanguages.loading();
 
     render(<LanguageFilter />);
 
@@ -53,10 +38,7 @@ describe("LanguageFilter", () => {
   });
 
   it("shows error state", () => {
-    mockedUseLanguages.mockReturnValue({
-      ...DEFAULT_LANGUAGE_RESPONSE,
-      isError: true,
-    });
+    mockUseLanguages.error();
 
     render(<LanguageFilter />);
 
@@ -66,13 +48,7 @@ describe("LanguageFilter", () => {
   it("updates filters when source language changes", async () => {
     const user = userEvent.setup();
 
-    mockedUseLanguages.mockReturnValue({
-      ...DEFAULT_LANGUAGE_RESPONSE,
-      selectedSourceLanguage: "en",
-      selectedTranslationLanguage: "de",
-      availableSourceLanguages: ["en", "de"],
-      availableTranslationLanguages: ["en", "de"],
-    });
+    mockUseLanguages.selected();
 
     render(<LanguageFilter />);
 
@@ -90,24 +66,18 @@ describe("LanguageFilter", () => {
   it("updates filters when translation language changes", async () => {
     const user = userEvent.setup();
 
-    mockedUseLanguages.mockReturnValue({
-      ...DEFAULT_LANGUAGE_RESPONSE,
-      selectedSourceLanguage: "en",
-      selectedTranslationLanguage: "de",
-      availableSourceLanguages: ["en", "de"],
-      availableTranslationLanguages: ["en", "de"],
-    });
+    mockUseLanguages.selected();
 
     render(<LanguageFilter />);
 
     const selects = screen.getAllByRole("combobox");
 
-    await user.selectOptions(selects[1], "de");
+    await user.selectOptions(selects[1], "en");
 
     expect(setMock).toHaveBeenCalledWith({
-      trans: "de",
+      trans: "en",
     });
 
-    expect(setPreferredTranslationLanguage).toHaveBeenCalledWith("de");
+    expect(setPreferredTranslationLanguage).toHaveBeenCalledWith("en");
   });
 });

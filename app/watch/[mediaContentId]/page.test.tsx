@@ -5,6 +5,10 @@ import { useWatchData, WatchData } from "@/hooks/useWatchData";
 import { SubtitleLine, useSubtitleTrack } from "@/hooks/useSubtitleTrack";
 import { useSearch } from "@/hooks/useSearch";
 import { useStreamUrl } from "@/hooks/useStreamUrl";
+import { useZodSearchParams } from "@/hooks/useZodSearchParams";
+import { UseQueryResult } from "@tanstack/react-query";
+import { SearchResponse } from "@/types/search";
+import { mockUseLanguages } from "@/helpers/tests/mocks/useLanguages";
 
 vi.mock("@/hooks/useLanguages", () => ({
   useLanguages: vi.fn(),
@@ -40,11 +44,6 @@ vi.mock("next/navigation", () => ({
   })),
 }));
 
-import { useZodSearchParams } from "@/hooks/useZodSearchParams";
-import { UseQueryResult } from "@tanstack/react-query";
-import { SearchResponse } from "@/types/search";
-import { useLanguages } from "@/hooks/useLanguages";
-
 vi.mock("@/hooks/useZodSearchParams", () => ({
   useZodSearchParams: vi.fn(),
 }));
@@ -64,23 +63,10 @@ const mockedUseWatchData = vi.mocked(useWatchData);
 const mockedUseSubtitleTrack = vi.mocked(useSubtitleTrack);
 const mockedUseSearch = vi.mocked(useSearch);
 const mockedUseStreamUrl = vi.mocked(useStreamUrl);
-const mockedUseLanguages = vi.mocked(useLanguages);
-
-const DEFAULT_LANGUAGE_RESPONSE = {
-  isError: false,
-  isLoading: false,
-  isFetching: false,
-  selectedSourceLanguage: "",
-  selectedTranslationLanguage: undefined,
-  availableSourceLanguages: [],
-  availableTranslationLanguages: [],
-};
 
 describe("watch content page", () => {
   it("renders Player with fetched data", async () => {
-    mockedUseLanguages.mockReturnValue({
-      ...DEFAULT_LANGUAGE_RESPONSE,
-    });
+    mockUseLanguages.empty();
 
     mockedUseStreamUrl.mockReturnValue({
       isLoading: false,
