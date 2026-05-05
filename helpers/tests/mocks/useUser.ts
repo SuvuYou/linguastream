@@ -3,10 +3,6 @@ import { useUser } from "@/hooks/useUser";
 import type { User } from "@prisma/client";
 import type { UseQueryResult } from "@tanstack/react-query";
 
-vi.mock("@/hooks/useUser", () => ({
-  useUser: vi.fn(),
-}));
-
 const createBaseUser = () => ({
   id: "",
   firebase_uid: "",
@@ -56,10 +52,4 @@ export const mockUseUser = {
   error: () => mockedUseUser.mockReturnValue(createErrorUserResponse()),
   base: () => mockedUseUser.mockReturnValue(createBaseUserResponse()),
   admin: () => mockedUseUser.mockReturnValue(createAdminUserResponse()),
-
-  custom: (overrides: Partial<UseQueryResult<User>>) =>
-    mockedUseUser.mockReturnValue({
-      ...createBaseUserResponse(),
-      ...overrides,
-    } as UseQueryResult<User>),
 };

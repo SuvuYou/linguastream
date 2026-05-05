@@ -2,10 +2,6 @@ import { vi } from "vitest";
 import { JOB_STATUS } from "@/helpers/const";
 import { useJobPolling } from "@/hooks/useJobPolling";
 
-vi.mock("@/hooks/useJobPolling", () => ({
-  useJobPolling: vi.fn(),
-}));
-
 const resetJobMock = vi.fn();
 
 const createJobPolling = () => ({

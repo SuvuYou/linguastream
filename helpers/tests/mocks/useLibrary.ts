@@ -4,11 +4,6 @@ import type { UseQueryResult } from "@tanstack/react-query";
 import type { LibraryResponse } from "@/types/library";
 import { JOB_STATUS } from "@/helpers/const";
 
-vi.mock("@/hooks/useLibrary", () => ({
-  useLibrary: vi.fn(),
-  DEFAULT_LIBRARY_RESPONSE: { items: [], total: 0, pageCount: 0 },
-}));
-
 const createBaseLibraryItem = () => ({
   id: "1",
   jellyfin_id: "123",
@@ -42,6 +37,12 @@ const createErrorLibraryResponse = () =>
     isError: true,
   }) as UseQueryResult<LibraryResponse>;
 
+const createEmptyLibraryResponse = () =>
+  ({
+    ...createBaseLibraryResponse(),
+    data: { items: [], total: 0, pageCount: 0 },
+  }) as UseQueryResult<LibraryResponse>;
+
 const mockedUseLibrary = vi.mocked(useLibrary);
 
 export const mockUseLibrary = {
@@ -49,6 +50,7 @@ export const mockUseLibrary = {
     mockedUseLibrary.mockReturnValue(createLoadingLibraryResponse()),
   error: () => mockedUseLibrary.mockReturnValue(createErrorLibraryResponse()),
   base: () => mockedUseLibrary.mockReturnValue(createBaseLibraryResponse()),
+  empty: () => mockedUseLibrary.mockReturnValue(createEmptyLibraryResponse()),
 
   custom: (overrides: Partial<UseQueryResult<LibraryResponse>>) =>
     mockedUseLibrary.mockReturnValue({

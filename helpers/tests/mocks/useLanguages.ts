@@ -1,10 +1,6 @@
 import { vi } from "vitest";
 import { useLanguages } from "@/hooks/useLanguages";
 
-vi.mock("@/hooks/useLanguages", () => ({
-  useLanguages: vi.fn(),
-}));
-
 const createEmptyLanguageResponse = () => ({
   isError: false,
   isLoading: false,
@@ -34,6 +30,7 @@ const createSelectedLanguageResponse = () => ({
 });
 
 const mockedUseLanguages = vi.mocked(useLanguages);
+
 export const mockUseLanguages = {
   empty: () =>
     mockedUseLanguages.mockReturnValue(createEmptyLanguageResponse()),
