@@ -2,7 +2,6 @@ import { vi } from "vitest";
 import type { User } from "@prisma/client";
 
 import { getCurrentUser } from "@/lib/firebase/session";
-import { empty } from "@prisma/client/runtime/client";
 
 const createBaseUser = () => ({
   id: "id",
@@ -32,4 +31,9 @@ export const mockGetCurrentUser = {
   base: () => mockedGetCurrentUser.mockResolvedValue(createBaseUserResponse()),
   admin: () =>
     mockedGetCurrentUser.mockResolvedValue(createAdminUserResponse()),
+  override: (overrides: Partial<User>) =>
+    mockedGetCurrentUser.mockResolvedValue({
+      ...createBaseUserResponse(),
+      ...overrides,
+    }),
 };

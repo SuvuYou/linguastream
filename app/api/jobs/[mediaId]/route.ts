@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import { db } from "@/lib/initializations/db";
 import { getCurrentUser } from "@/lib/firebase/session";
+import { JOB_STATUS } from "@/helpers/const";
 
 const TAIL_LINES = 20; // how many recent log lines to return
 
@@ -20,7 +21,7 @@ export async function GET(
   { params }: { params: Promise<{ mediaId: string }> },
 ) {
   const { mediaId } = await params;
-  
+
   const user = await getCurrentUser();
 
   if (!user) {
@@ -78,7 +79,7 @@ export async function DELETE(
   if (!user.is_admin && media.user_id !== user.id)
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  if (media.job_status === "running") {
+  if (media.job_status === JOB_STATUS.RUNNING) {
     return NextResponse.json(
       { error: "Cannot reset a running job" },
       { status: 409 },
