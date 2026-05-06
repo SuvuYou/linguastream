@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/initializations/firebase/session";
+import { getCurrentUser } from "@/lib/firebase/session";
 import { db } from "@/lib/initializations/db";
 import { getJellyfinStreamUrl } from "@/lib/db-helpers/jellyfin";
 

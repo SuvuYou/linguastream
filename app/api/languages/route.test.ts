@@ -1,5 +1,5 @@
 import { describe, beforeEach, expect, it, vi } from "vitest";
-import { getCurrentUser } from "@/lib/initializations/firebase/session";
+import { getCurrentUser } from "@/lib/firebase/session";
 import { GET } from "./route";
 import {
   fetchAvailableSourceLanguages,
@@ -7,7 +7,7 @@ import {
 } from "@/lib/db-helpers/languages";
 import type { User } from "@prisma/client";
 
-vi.mock("@/lib/initializations/firebase/session", () => ({
+vi.mock("@/lib/firebase/session", () => ({
   getCurrentUser: vi.fn(),
 }));
 

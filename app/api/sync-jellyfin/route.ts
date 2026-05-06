@@ -4,7 +4,7 @@ import {
   fetchAllRegisteredJellyfinIds,
 } from "@/lib/db-helpers/media";
 import { fetchJellyfinLibrary } from "@/lib/db-helpers/jellyfin";
-import { getCurrentUser } from "@/lib/initializations/firebase/session";
+import { getCurrentUser } from "@/lib/firebase/session";
 
 export async function POST() {
   const user = await getCurrentUser();

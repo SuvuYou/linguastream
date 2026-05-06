@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/initializations/firebase/session";
+import { getCurrentUser } from "@/lib/firebase/session";
 import { indexAllSubtitleLines } from "@/lib/db-helpers/search";
 
 export async function POST() {
