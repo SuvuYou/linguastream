@@ -35,4 +35,15 @@ export const mockDbMediaContent = {
         .mocked(db.mediaContent.findUnique)
         .mockResolvedValue({ ...createBaseResponse(), ...overrides }),
   },
+  update: {
+    base: () =>
+      vi
+        .mocked(db.mediaContent.findUnique)
+        .mockResolvedValue(createBaseResponse()),
+    empty: () => vi.mocked(db.mediaContent.findUnique).mockResolvedValue(null),
+    override: (overrides: Partial<MediaContent>) =>
+      vi
+        .mocked(db.mediaContent.findUnique)
+        .mockResolvedValue({ ...createBaseResponse(), ...overrides }),
+  },
 };

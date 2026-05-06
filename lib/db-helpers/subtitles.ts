@@ -67,11 +67,11 @@ export async function ingestSubtitles({
   data: {
     sourceLang: string;
     acquisitionMethod: "upload" | "whisperx";
-    sourceFile: string;
+    sourceFile?: string;
     translateLangs: string[];
     translateMethod?: "upload" | "deepl" | "libretranslate";
-    translateFiles: Record<string, string>;
-    removeLangs: string[];
+    translateFiles?: Record<string, string>;
+    removeLangs?: string[];
     videoFilePath?: string;
   };
 }) {
