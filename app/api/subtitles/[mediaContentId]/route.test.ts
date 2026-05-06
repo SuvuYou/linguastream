@@ -4,7 +4,6 @@ import { getSubtitles, ingestSubtitles } from "@/lib/db-helpers/subtitles";
 import { parseSearchParamsSafe } from "@/helpers/params-schema";
 import { NextRequest } from "next/server";
 import { mockGetCurrentUser } from "@/helpers/tests/mocks/getCurrentUser";
-import { Whisper } from "next/font/google";
 
 vi.mock("@/lib/firebase/session", () => ({
   getCurrentUser: vi.fn(),
