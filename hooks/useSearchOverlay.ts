@@ -26,7 +26,7 @@ export function useSearchOverlay() {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (((e.metaKey || e.ctrlKey) && e.key === "k") || e.key === "Escape") {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
 
         handleToggleOverlay();
@@ -37,6 +37,20 @@ export function useSearchOverlay() {
 
     return () => window.removeEventListener("keydown", handler);
   }, [handleToggleOverlay]);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+
+        handleSetOverlay({ isOpen: false });
+      }
+    };
+
+    window.addEventListener("keydown", handler);
+
+    return () => window.removeEventListener("keydown", handler);
+  }, [handleSetOverlay]);
 
   return {
     isOpen: overlayOpen,
