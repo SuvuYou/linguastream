@@ -55,7 +55,7 @@ export async function GET(
 
   return NextResponse.json({
     id: media.id,
-    title: jellyfinItem.Name ?? media.title,
+    title: jellyfinItem.Name,
     streamUrl,
     sourceLanguage: media.source_language,
     translationLanguages,

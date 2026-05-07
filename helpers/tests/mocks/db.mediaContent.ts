@@ -30,7 +30,11 @@ export const mockDbMediaContent = {
         .mocked(db.mediaContent.findUnique)
         .mockResolvedValue(createBaseResponse()),
     empty: () => vi.mocked(db.mediaContent.findUnique).mockResolvedValue(null),
-    override: (overrides: Partial<MediaContent>) =>
+    override: (
+      overrides: Partial<
+        MediaContent & { subtitle_tracks: { language: string }[] }
+      >,
+    ) =>
       vi
         .mocked(db.mediaContent.findUnique)
         .mockResolvedValue({ ...createBaseResponse(), ...overrides }),
@@ -41,7 +45,11 @@ export const mockDbMediaContent = {
         .mocked(db.mediaContent.findUnique)
         .mockResolvedValue(createBaseResponse()),
     empty: () => vi.mocked(db.mediaContent.findUnique).mockResolvedValue(null),
-    override: (overrides: Partial<MediaContent>) =>
+    override: (
+      overrides: Partial<
+        MediaContent & { subtitle_tracks: { language: string }[] }
+      >,
+    ) =>
       vi
         .mocked(db.mediaContent.findUnique)
         .mockResolvedValue({ ...createBaseResponse(), ...overrides }),
