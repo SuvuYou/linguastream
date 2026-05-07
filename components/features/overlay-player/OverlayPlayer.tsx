@@ -99,6 +99,7 @@ export default function OverlayPlayer() {
   return (
     <div
       className={`fixed inset-0 z-50 bg-background/80 backdrop-blur-sm transition-all ${isOpen ? "h-full" : "h-0"} overflow-hidden`}
+      data-testId={"close-button"}
       onClick={close}
     >
       <div
@@ -120,6 +121,7 @@ export default function OverlayPlayer() {
             <LanguageFilter />
             <span className="text-xs text-secondary-text">Auto-play</span>
             <button
+              data-testid="autoplay-toggle"
               onClick={() => setAutoPlay(!autoPlay)}
               className={`w-8 h-4 rounded-full transition-colors relative ${
                 autoPlay ? "bg-active-border" : "bg-primary-border"
