@@ -60,7 +60,7 @@ export const mockUseJobPolling = {
   error: () =>
     mockedUseJobPolling.mockReturnValue(createErrorJobPollingResponse()),
 
-  custom: (
+  override: (
     overrides: Partial<ReturnType<typeof createDoneJobPollingResponse>>,
   ) =>
     mockedUseJobPolling.mockReturnValue({

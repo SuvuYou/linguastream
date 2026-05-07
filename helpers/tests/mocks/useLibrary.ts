@@ -2,19 +2,30 @@ import { vi } from "vitest";
 import { useLibrary } from "@/hooks/useLibrary";
 import type { UseQueryResult } from "@tanstack/react-query";
 import type { LibraryResponse } from "@/types/library";
-import { JOB_STATUS } from "@/helpers/const";
+import { JELLYFIN_CONTENT_TYPE, JOB_STATUS } from "@/helpers/const";
+import { MergedContentItem } from "@/types";
 
-const createBaseLibraryItem = () => ({
-  id: "1",
-  jellyfin_id: "123",
+export const createBaseLibraryItem = (): MergedContentItem => ({
+  id: "mediaId",
+  user_id: "userId",
+  title: "title",
+  jellyfin_id: "jellyfinId",
+  type: JELLYFIN_CONTENT_TYPE,
   source_language: "en",
   jellyfinItem: {
-    Id: "123",
+    Id: "jellyfinId",
     Name: "Movie 1",
     Type: "Movie",
   },
+  file_path: "path/file",
+  youtube_video_id: "ytId",
+  source_subtitle_acquisition_method: "whisperx",
   thumbnailUrl: "/img.jpg",
   job_status: JOB_STATUS.DONE,
+  job_progress: 45,
+  job_logs: "path/job",
+  subtitle_tracks: [],
+  created_at: new Date(),
 });
 
 const createBaseLibraryResponse = () =>
