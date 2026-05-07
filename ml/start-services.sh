@@ -108,8 +108,8 @@ fi
 
 echo ""
 echo "🚀  ML services running:"
-echo "    WhisperX     → http://localhost:$WHISPER_PORT"
-echo "    LibreTranslate → http://localhost:$LIBRETRANSLATE_PORT"
+echo "    WhisperX     -> http://localhost:$WHISPER_PORT"
+echo "    LibreTranslate -> http://localhost:$LIBRETRANSLATE_PORT"
 echo ""
 echo "    Logs: $LOG_DIR/"
 echo "    Stop: bash ml/stop-services.sh"

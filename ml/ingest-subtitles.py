@@ -263,7 +263,7 @@ def transcribe_with_whisperx(video_path: str, media_id: str) -> tuple[list[dict]
     resp.raise_for_status()
     log(f"WhisperX job started: {job_id}")
 
-    # progress simulation: crawl from 5% → 28% while waiting
+    # progress simulation: crawl from 5% -> 28% while waiting
     # stays just below the 30% we set after transcription completes
     simulated = 5
     target = 78
@@ -437,7 +437,7 @@ def main():
 
             total_langs = len(translate_langs)
             for lang_index, target_lang in enumerate(translate_langs):
-                log(f"Processing translation: {detected_lang} → {target_lang}")
+                log(f"Processing translation: {detected_lang} -> {target_lang}")
 
                 if args.translate_method == "upload":
                     path = translate_files_map.get(target_lang)

@@ -37,7 +37,7 @@ beforeEach(() => {
 });
 
 describe("GET /api/jobs/[mediaId]", () => {
-  it("GET → 401 if no user", async () => {
+  it("GET -> 401 if no user", async () => {
     mockGetCurrentUser.empty();
 
     const req = new NextRequest("http://localhost", { method: "GET" });
@@ -49,7 +49,7 @@ describe("GET /api/jobs/[mediaId]", () => {
     expect(json).toEqual({ error: "Unauthorized" });
   });
 
-  it("GET → 404 if media not found", async () => {
+  it("GET -> 404 if media not found", async () => {
     mockGetCurrentUser.base();
     mockDbMediaContent.findUnique.empty();
 
@@ -60,7 +60,7 @@ describe("GET /api/jobs/[mediaId]", () => {
     expect(res.status).toBe(404);
   });
 
-  it("GET → 403 if not owner", async () => {
+  it("GET -> 403 if not owner", async () => {
     mockGetCurrentUser.override({ id: "id1" });
     mockDbMediaContent.findUnique.override({ user_id: "id2" });
 
@@ -71,7 +71,7 @@ describe("GET /api/jobs/[mediaId]", () => {
     expect(res.status).toBe(403);
   });
 
-  it("GET → returns empty job state", async () => {
+  it("GET -> returns empty job state", async () => {
     mockGetCurrentUser.admin();
     mockDbMediaContent.findUnique.override({ job_status: null });
 
@@ -87,7 +87,7 @@ describe("GET /api/jobs/[mediaId]", () => {
     });
   });
 
-  it("GET → returns tailed logs", async () => {
+  it("GET -> returns tailed logs", async () => {
     mockGetCurrentUser.admin();
 
     mockDbMediaContent.findUnique.base();
@@ -106,7 +106,7 @@ describe("GET /api/jobs/[mediaId]", () => {
     expect(body.logs[0]).toBe("line10"); // last 20
   });
 
-  it("DELETE → 401 if no user", async () => {
+  it("DELETE -> 401 if no user", async () => {
     mockGetCurrentUser.empty();
 
     const req = new NextRequest("http://localhost", { method: "DELETE" });
@@ -115,7 +115,7 @@ describe("GET /api/jobs/[mediaId]", () => {
     expect(res.status).toBe(401);
   });
 
-  it("DELETE → 404 if not found", async () => {
+  it("DELETE -> 404 if not found", async () => {
     mockGetCurrentUser.base();
     mockDbMediaContent.findUnique.empty();
 
@@ -125,7 +125,7 @@ describe("GET /api/jobs/[mediaId]", () => {
     expect(res.status).toBe(404);
   });
 
-  it("DELETE → 403 if not owner", async () => {
+  it("DELETE -> 403 if not owner", async () => {
     mockGetCurrentUser.base();
 
     mockDbMediaContent.findUnique.base();
@@ -136,7 +136,7 @@ describe("GET /api/jobs/[mediaId]", () => {
     expect(res.status).toBe(403);
   });
 
-  it("DELETE → 409 if job is running", async () => {
+  it("DELETE -> 409 if job is running", async () => {
     mockGetCurrentUser.admin();
     mockDbMediaContent.findUnique.override({ job_status: JOB_STATUS.RUNNING });
 
@@ -148,7 +148,7 @@ describe("GET /api/jobs/[mediaId]", () => {
     expect(body.error).toMatch(/running/);
   });
 
-  it("DELETE → resets job fields", async () => {
+  it("DELETE -> resets job fields", async () => {
     mockGetCurrentUser.admin();
 
     mockDbMediaContent.findUnique.base();

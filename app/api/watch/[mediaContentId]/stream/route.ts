@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/firebase/session";
 import { db } from "@/lib/initializations/db";
 import { getJellyfinStreamUrl } from "@/lib/db-helpers/jellyfin";
+import { JELLYFIN_CONTENT_TYPE } from "@/helpers/const";
 
 export async function GET(
   _req: NextRequest,
@@ -21,7 +22,7 @@ export async function GET(
 
   if (!media) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const isPublic = media.type === "jellyfin";
+  const isPublic = media.type === JELLYFIN_CONTENT_TYPE;
   const isOwner = media.user_id === user.id;
 
   if (!isPublic && !isOwner) {
