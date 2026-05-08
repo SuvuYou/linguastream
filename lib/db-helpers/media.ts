@@ -33,7 +33,7 @@ export async function fetchAllRegisteredJellyfinIds(): Promise<Set<string>> {
 interface FetchPublicMediaContentOptions {
   searchTerm?: string;
   sourceLanguage?: string;
-  subtitleLanguage?: string;
+  translationLanguage?: string;
   page: number;
   pageSize: number;
 }
@@ -48,7 +48,7 @@ export async function fetchPublicMediaContent(
   const {
     searchTerm = "",
     sourceLanguage,
-    subtitleLanguage,
+    translationLanguage,
     page,
     pageSize,
   } = options;
@@ -56,9 +56,9 @@ export async function fetchPublicMediaContent(
   const where = {
     type: JELLYFIN_CONTENT_TYPE,
     ...(sourceLanguage ? { source_language: sourceLanguage } : {}),
-    ...(subtitleLanguage
+    ...(translationLanguage
       ? {
-          subtitle_tracks: { some: { subtitle_language: subtitleLanguage } },
+          subtitle_tracks: { some: { language: translationLanguage } },
         }
       : {}),
     ...(searchTerm
@@ -74,6 +74,11 @@ export async function fetchPublicMediaContent(
       take: pageSize,
       skip: page * pageSize,
       orderBy: { created_at: "desc" },
+      include: {
+        subtitle_tracks: {
+          select: { language: true },
+        },
+      },
     }),
     db.mediaContent.count({ where }),
   ]);
@@ -112,6 +117,11 @@ export async function fetchUnregisteredMediaContent(options: {
       take: pageSize,
       skip: page * pageSize,
       orderBy: { created_at: "desc" },
+      include: {
+        subtitle_tracks: {
+          select: { language: true },
+        },
+      },
     }),
     db.mediaContent.count({ where }),
   ]);

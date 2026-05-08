@@ -4,8 +4,9 @@ import SyncButton from "@/components/features/admin/SyncButton";
 import UnregisteredCheckbox from "@/components/features/admin/UnregisteredCheckbox";
 import LanguageFilter from "@/components/features/library/LanguageFilter";
 import SearchBar from "@/components/features/library/SearchBar";
+import LibraryGrid from "@/components/features/library/LibraryGrid";
+import Reindex from "@/components/features/admin/Reindex";
 import { useUser } from "@/hooks/useUser";
-import LibraryGrid from "../features/library/LibraryGrid";
 
 export default function LibraryPage() {
   const userData = useUser();
@@ -20,10 +21,10 @@ export default function LibraryPage() {
       </div>
       <div className="ml-auto flex items-center gap-4 px-4">
         {isAdmin && <SyncButton />}
+        {isAdmin && <Reindex />}
         {isAdmin && <UnregisteredCheckbox />}
       </div>
       <LibraryGrid />
-      {/* TODO: Pagination controls should go here */}
     </>
   );
 }

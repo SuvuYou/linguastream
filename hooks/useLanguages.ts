@@ -18,35 +18,55 @@ export function useLanguages() {
     },
   });
 
-  const { preferredSourceLanguage, preferredSubtitleLanguage } = useAppStore();
+  const { preferredSourceLanguage, preferredTranslationLanguage } =
+    useAppStore();
 
-  const { availableSourceLanguages, availableSubtitleLanguages } =
+  const { availableSourceLanguages, availableTranslationLanguages } =
     data || DEFAULT_LANGUAGES_RESPONSE;
 
   const searchParams = useZodSearchParams(FETCH_LANGUAGES_API_PARAMS_SCHEMA);
-  const { src: sourceLanguage, sub: subtitleLanguage } = searchParams.params;
+  const { src: sourceLanguage, trans: translationLanguage } =
+    searchParams.params;
 
   useEffect(() => {
-    if (!sourceLanguage && preferredSourceLanguage) {
+    if (
+      !sourceLanguage &&
+      preferredSourceLanguage &&
+      availableSourceLanguages.includes(preferredSourceLanguage)
+    ) {
       searchParams.set({ src: preferredSourceLanguage as LanguageCode });
     }
-  }, [sourceLanguage, preferredSourceLanguage, searchParams]);
+  }, [
+    sourceLanguage,
+    availableSourceLanguages,
+    preferredSourceLanguage,
+    searchParams,
+  ]);
 
   useEffect(() => {
-    if (!subtitleLanguage && preferredSubtitleLanguage) {
-      searchParams.set({ sub: preferredSubtitleLanguage as LanguageCode });
+    if (
+      !translationLanguage &&
+      preferredTranslationLanguage &&
+      availableTranslationLanguages.includes(preferredTranslationLanguage)
+    ) {
+      searchParams.set({ trans: preferredTranslationLanguage as LanguageCode });
     }
-  }, [subtitleLanguage, preferredSubtitleLanguage, searchParams]);
+  }, [
+    translationLanguage,
+    availableTranslationLanguages,
+    preferredTranslationLanguage,
+    searchParams,
+  ]);
 
   if (
-    availableSourceLanguages.length == 0
-    // availableSubtitleLanguages.length == 0
+    availableSourceLanguages.length == 0 ||
+    availableTranslationLanguages.length == 0
   ) {
     return {
       selectedSourceLanguage: null,
-      selectedSubtitleLanguage: null,
+      selectedTranslationLanguage: null,
       availableSourceLanguages,
-      availableSubtitleLanguages,
+      availableTranslationLanguages,
       isLoading,
       isFetching,
       isError,
@@ -59,16 +79,21 @@ export function useLanguages() {
     ? sourceLanguage
     : availableSourceLanguages[0];
 
-  const selectedSubtitleLanguage = subtitleLanguage;
-  // availableSubtitleLanguages.includes(subtitleLanguage)
-  //   ? subtitleLanguage
-  //   : availableSubtitleLanguages[0];
+  const filteredAvailableTranslationLanguages =
+    availableTranslationLanguages.filter(
+      (lang) => lang !== selectedSourceLanguage,
+    );
+
+  const selectedTranslationLanguage =
+    filteredAvailableTranslationLanguages.includes(translationLanguage || "")
+      ? translationLanguage
+      : filteredAvailableTranslationLanguages[0];
 
   return {
     selectedSourceLanguage,
-    selectedSubtitleLanguage,
+    selectedTranslationLanguage,
     availableSourceLanguages,
-    availableSubtitleLanguages,
+    availableTranslationLanguages: filteredAvailableTranslationLanguages,
     isLoading,
     isFetching,
     isError,
@@ -77,5 +102,5 @@ export function useLanguages() {
 
 export const DEFAULT_LANGUAGES_RESPONSE: LanguagesResponse = {
   availableSourceLanguages: [],
-  availableSubtitleLanguages: [],
+  availableTranslationLanguages: [],
 };

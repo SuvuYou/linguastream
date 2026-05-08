@@ -1,22 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { useLanguages } from "@/hooks/useLanguages";
-import { useUser } from "@/hooks/useUser";
-import { useLibrary } from "@/hooks/useLibrary";
-import LibraryGrid from "./LibraryGrid";
-import type { User } from "@prisma/client";
-import type { UseQueryResult } from "@tanstack/react-query";
-import type { LibraryResponse } from "@/types/library";
-import type { MergedContentItem } from "@/types";
-import { UNKNOWN_SOURCE_LANGUAGE } from "@/helpers/const";
+import LibraryGrid from "@/components/features/library/LibraryGrid";
 import userEvent from "@testing-library/user-event";
+import { mockUseJobPolling } from "@/helpers/tests/mocks/useJobPolling";
+import { mockUseLibrary } from "@/helpers/tests/mocks/useLibrary";
+import { mockUseUser } from "@/helpers/tests/mocks/useUser";
+import { mockUseLanguages } from "@/helpers/tests/mocks/useLanguages";
 
 vi.mock("@/hooks/useUser", () => ({
   useUser: vi.fn(),
 }));
 
-vi.mock("@/hooks/useLanguages", () => ({
-  useLanguages: vi.fn(),
+vi.mock("@/hooks/useJobPolling", () => ({
+  useJobPolling: vi.fn(),
 }));
 
 vi.mock("@/hooks/useLibrary", () => ({
@@ -24,9 +20,14 @@ vi.mock("@/hooks/useLibrary", () => ({
   DEFAULT_LIBRARY_RESPONSE: { items: [], total: 0, pageCount: 0 },
 }));
 
-vi.mock("@/components/features/admin/AddToLibraryModal", () => ({
-  default: ({ OnSuccess }: { OnSuccess: () => void }) => (
-    <button onClick={OnSuccess}>Mock Modal</button>
+vi.mock("@/hooks/useLanguages", () => ({
+  useLanguages: vi.fn(),
+}));
+
+
+vi.mock("@/components/features/library/ContentConfigurationModal/Modal", () => ({
+  default: ({ onSuccess }: { onSuccess: () => void }) => (
+    <button onClick={onSuccess}>Mock Modal</button>
   ),
 }));
 
@@ -40,29 +41,11 @@ vi.mock("next/navigation", () => ({
 
 beforeEach(() => vi.resetAllMocks());
 
-const mockedUseUser = vi.mocked(useUser);
-const mockedUseLanguages = vi.mocked(useLanguages);
-const mockedUseLibrary = vi.mocked(useLibrary);
-
-const DEFAULT_LANGUAGE_RESPONSE = {
-  isError: false,
-  isLoading: false,
-  isFetching: false,
-  selectedSourceLanguage: "",
-  selectedSubtitleLanguage: undefined,
-  availableSourceLanguages: [],
-  availableSubtitleLanguages: [],
-};
-
 describe("LibraryGrid", () => {
   it("shows skeleton when loading", () => {
-    mockedUseLanguages.mockReturnValue(DEFAULT_LANGUAGE_RESPONSE);
-    mockedUseUser.mockReturnValue({
-      isLoading: true,
-    } as UseQueryResult<User>);
-    mockedUseLibrary.mockReturnValue({
-      isLoading: false,
-    } as UseQueryResult<LibraryResponse>);
+    mockUseLanguages.loading();
+    mockUseUser.loading();
+    mockUseLibrary.loading();
 
     render(<LibraryGrid />);
 
@@ -70,15 +53,10 @@ describe("LibraryGrid", () => {
   });
 
   it("shows error state", () => {
-    mockedUseLanguages.mockReturnValue(DEFAULT_LANGUAGE_RESPONSE);
-    mockedUseUser.mockReturnValue({
-      isLoading: false,
-      isError: true,
-    } as UseQueryResult<User>);
-    mockedUseLibrary.mockReturnValue({
-      isLoading: false,
-      isError: false,
-    } as UseQueryResult<LibraryResponse>);
+    mockUseJobPolling.done();
+    mockUseLanguages.error();
+    mockUseUser.error();
+    mockUseLibrary.error();
 
     render(<LibraryGrid />);
 
@@ -86,38 +64,10 @@ describe("LibraryGrid", () => {
   });
 
   it("renders library items", () => {
-    mockedUseUser.mockReturnValue({
-      isLoading: false,
-      isError: false,
-      data: {},
-    } as UseQueryResult<User>);
-
-    mockedUseLanguages.mockReturnValue({
-      ...DEFAULT_LANGUAGE_RESPONSE,
-      selectedSourceLanguage: "en",
-      selectedSubtitleLanguage: "en",
-    });
-
-    mockedUseLibrary.mockReturnValue({
-      isLoading: false,
-      isError: false,
-      data: {
-        items: [
-          {
-            id: "1",
-            jellyfin_id: "123",
-            source_language: "en",
-            jellyfinItem: {
-              Id: "123",
-              Name: "Movie 1",
-              Type: "Movie",
-            },
-            thumbnailUrl: "/img.jpg",
-          },
-        ],
-        total: 1,
-      },
-    } as UseQueryResult<LibraryResponse>);
+    mockUseJobPolling.done();
+    mockUseUser.base();
+    mockUseLanguages.selected();
+    mockUseLibrary.base();
 
     render(<LibraryGrid />);
 
@@ -126,22 +76,22 @@ describe("LibraryGrid", () => {
   });
 
   it("shows empty state", () => {
-    mockedUseUser.mockReturnValue({
-      isLoading: false,
-      isError: false,
-      data: {},
-    } as UseQueryResult<User>);
+    mockUseUser.base();
+    mockUseJobPolling.done();
+    mockUseLibrary.base();
+    mockUseLanguages.selected();
 
-    mockedUseLanguages.mockReturnValue({
-      ...DEFAULT_LANGUAGE_RESPONSE,
-      selectedSourceLanguage: "en",
-    });
+    render(<LibraryGrid />);
 
-    mockedUseLibrary.mockReturnValue({
-      isLoading: false,
-      isError: false,
-      data: { items: [] as MergedContentItem[], total: 0 },
-    } as UseQueryResult<LibraryResponse>);
+    expect(screen.getByText("Movie 1")).toBeInTheDocument();
+    expect(screen.getByText("1 titles")).toBeInTheDocument();
+  });
+
+  it("shows empty state", () => {
+    mockUseJobPolling.done();
+    mockUseUser.base();
+    mockUseLanguages.selected();
+    mockUseLibrary.empty();
 
     render(<LibraryGrid />);
 
@@ -149,49 +99,23 @@ describe("LibraryGrid", () => {
   });
 
   it("shows add button for admin and unknown language", async () => {
-    mockedUseUser.mockReturnValue({
-      isLoading: false,
-      isError: false,
-      data: { is_admin: true },
-    } as UseQueryResult<User>);
-
-    mockedUseLanguages.mockReturnValue({
-      ...DEFAULT_LANGUAGE_RESPONSE,
-      selectedSourceLanguage: "en",
-      selectedSubtitleLanguage: "en",
-    });
-
-    mockedUseLibrary.mockReturnValue({
-      isLoading: false,
-      isError: false,
-      data: {
-        items: [
-          {
-            id: "1",
-            jellyfin_id: "123",
-            source_language: UNKNOWN_SOURCE_LANGUAGE,
-            jellyfinItem: {
-              Id: "123",
-              Name: "Movie 1",
-              Type: "Movie",
-            },
-            thumbnailUrl: "/img.jpg",
-          },
-        ],
-        total: 1,
-      },
-    } as UseQueryResult<LibraryResponse>);
+    mockUseJobPolling.done();
+    mockUseUser.admin();
+    mockUseLanguages.selected();
+    mockUseLibrary.base();
 
     render(<LibraryGrid />);
 
-    expect(screen.getByText("+ Add")).toBeInTheDocument();
+    expect(screen.getByText("Configure")).toBeInTheDocument();
 
-    await userEvent.click(screen.getByText("+ Add"));
+    await userEvent.click(screen.getByText("Configure"));
 
     expect(screen.getByText(/Mock Modal/i)).toBeInTheDocument();
 
     await userEvent.click(screen.getByText("Mock Modal"));
 
-    expect(refreshMock).toHaveBeenCalled();
+    const modal = screen.queryByText(/Mock Modal/i);
+
+    expect(modal).not.toBeInTheDocument();
   });
 });

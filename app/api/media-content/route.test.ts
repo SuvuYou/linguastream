@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "./route";
 import { NextRequest } from "next/server";
-import { getCurrentUser } from "@/lib/initializations/firebase/session";
+import { getCurrentUser } from "@/lib/firebase/session";
 import { db } from "@/lib/initializations/db";
 import type { MediaContent, User } from "@prisma/client";
 
-vi.mock("@/lib/initializations/firebase/session", () => ({
+vi.mock("@/lib/firebase/session", () => ({
   getCurrentUser: vi.fn(),
 }));
 
