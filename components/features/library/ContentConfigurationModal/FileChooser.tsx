@@ -1,19 +1,16 @@
 "use client";
 
 import { useRef } from "react";
-
 import type { FileUploadState } from "@/hooks/useFileUpload";
-import FileStatus from "./FileStatus";
+import FileStatus from "@/components/features/library/ContentConfigurationModal/FileStatus";
 
 interface FileChooserProps {
   uploadState: FileUploadState | null;
   onUpload: (file: File) => void;
 }
 
-export default function FileChooser({
-  uploadState,
-  onUpload,
-}: FileChooserProps) {
+export default function FileChooser(props: FileChooserProps) {
+  const { uploadState, onUpload } = props;
   const inputRef = useRef<HTMLInputElement>(null);
 
   return (
@@ -38,6 +35,7 @@ export default function FileChooser({
         type="file"
         accept=".srt,.vtt"
         className="hidden"
+        data-testId="file-input"
         onChange={(e) => {
           const file = e.target.files?.[0];
           if (file) onUpload(file);

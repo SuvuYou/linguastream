@@ -1,6 +1,6 @@
 "use client";
 
-import FileChooser from "./FileChooser";
+import FileChooser from "@/components/features/library/ContentConfigurationModal/FileChooser";
 
 import type { FileUploadState } from "@/hooks/useFileUpload";
 

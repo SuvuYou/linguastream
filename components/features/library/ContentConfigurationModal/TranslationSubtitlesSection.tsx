@@ -10,7 +10,7 @@ import {
 import type { AcquisitionMethod } from "@prisma/client";
 import type { FileUploadState } from "@/hooks/useFileUpload";
 import { useUser } from "@/hooks/useUser";
-import TranslationSubtitleRow from "./TranslationSubtitleRow";
+import TranslationSubtitleRow from "@/components/features/library/ContentConfigurationModal/TranslationSubtitleRow";
 
 interface TranslationLanguage {
   code: string;

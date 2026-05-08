@@ -7,7 +7,7 @@ import {
 import { FileUploadState } from "@/hooks/useFileUpload";
 import { AcquisitionMethod } from "@prisma/client";
 import { useRef } from "react";
-import FileStatus from "./FileStatus";
+import FileStatus from "@/components/features/library/ContentConfigurationModal/FileStatus";
 
 interface SourceSubtitlesSectionProps {
   acquisitionMethod: AcquisitionMethod;

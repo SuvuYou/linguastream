@@ -11,9 +11,9 @@ import { useLanguageSelectors } from "@/hooks/useLanguageSelectors";
 import type { MergedContentItem } from "@/types";
 import type { AcquisitionMethod } from "@prisma/client";
 import { useState, useTransition } from "react";
-import { SourceLanguageSection } from "./ContentConfigurationModal/SourceLanguageSection";
-import { SourceSubtitlesSection } from "./ContentConfigurationModal/SourceSubtitlesSection";
-import { TranslationSubtitlesSection } from "./ContentConfigurationModal/TranslationSubtitlesSection";
+import { SourceLanguageSection } from "@/components/features/library/ContentConfigurationModal/SourceLanguageSection";
+import { SourceSubtitlesSection } from "@/components/features/library/ContentConfigurationModal/SourceSubtitlesSection";
+import { TranslationSubtitlesSection } from "@/components/features/library/ContentConfigurationModal/TranslationSubtitlesSection";
 
 interface ContentConfigurationModalProps {
   item: MergedContentItem;
