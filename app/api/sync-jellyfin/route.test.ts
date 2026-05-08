@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "./route";
-import { getCurrentUser } from "@/lib/initializations/firebase/session";
+import { getCurrentUser } from "@/lib/firebase/session";
 import {
   bulkPopulateMediaContentWithJellyfinItems,
   fetchAllRegisteredJellyfinIds,
@@ -9,7 +9,7 @@ import { fetchJellyfinLibrary } from "@/lib/db-helpers/jellyfin";
 import type { User } from "@prisma/client";
 import { JellyfinItem } from "@/types";
 
-vi.mock("@/lib/initializations/firebase/session", () => ({
+vi.mock("@/lib/firebase/session", () => ({
   getCurrentUser: vi.fn(),
 }));
 

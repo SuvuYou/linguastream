@@ -2,15 +2,24 @@ import { z } from "zod";
 import { LANGUAGES } from "./const";
 import type { LanguageCode } from "./const";
 
-const LanguageCodeSchema = z.enum(
+export const LanguageCodeSchema = z.enum(
   LANGUAGES.map((l) => l.code) as [LanguageCode, ...LanguageCode[]],
 );
+
+export const WATCH_PAGE_PARAMS_SCHEMA = z.object({
+  t: z
+    .string()
+    .transform((v) => Number(v))
+    .refine((n) => !isNaN(n) && n >= 0, { message: "Invalid timestamp" })
+    .optional()
+    .default(0),
+});
 
 export const PUBLIC_LIBRARY_PARAMS_SCHEMA = z.object({
   q: z.string().optional(),
 
   src: LanguageCodeSchema.optional(),
-  sub: LanguageCodeSchema.optional(),
+  trans: LanguageCodeSchema.optional(),
 
   page: z
     .string()
@@ -24,6 +33,13 @@ export const PUBLIC_LIBRARY_PARAMS_SCHEMA = z.object({
     .transform((v) => v === "true")
     .optional()
     .default(false),
+});
+
+export const SEARCH_PARAMS_SCHEMA = z.object({
+  q: z.string().optional(),
+
+  src: LanguageCodeSchema.optional(),
+  trans: LanguageCodeSchema.optional(),
 });
 
 export const USE_LIBRARY_HOOK_PARAMS_SCHEMA = z.object({
@@ -47,7 +63,7 @@ export const FETCH_LIBRARY_API_PARAMS_SCHEMA = z.object({
   q: z.string().optional(),
 
   selectedSrc: LanguageCodeSchema.optional(),
-  selectedSub: LanguageCodeSchema.optional(),
+  selectedTrans: LanguageCodeSchema.optional(),
 
   page: z
     .string()
@@ -65,8 +81,36 @@ export const FETCH_LIBRARY_API_PARAMS_SCHEMA = z.object({
 
 export const FETCH_LANGUAGES_API_PARAMS_SCHEMA = z.object({
   src: LanguageCodeSchema.optional(),
-  sub: LanguageCodeSchema.optional(),
+  trans: LanguageCodeSchema.optional(),
 });
+
+export const FETCH_SUBTITLES_API_PARAMS_SCHEMA = z.object({
+  lang: LanguageCodeSchema.optional(),
+});
+
+export const PUT_INGEST_SUBTITLES_API_PARAMS_SCHEMA = z.discriminatedUnion(
+  "acquisitionMethod",
+  [
+    z.object({
+      sourceLang: z.string().min(2),
+      acquisitionMethod: z.literal("upload"),
+      sourceFile: z.string().min(1),
+      translateLangs: z.array(z.string()),
+      translateMethod: z.enum(["libretranslate", "deepl", "upload"]),
+      translateFiles: z.record(LanguageCodeSchema, z.string()).optional(),
+      removeLangs: z.array(z.string()).optional(),
+    }),
+    z.object({
+      sourceLang: z.string().min(2),
+      acquisitionMethod: z.literal("whisperx"),
+      videoFilePath: z.string().min(1),
+      translateLangs: z.array(z.string()),
+      translateMethod: z.enum(["libretranslate", "deepl", "upload"]),
+      translateFiles: z.record(LanguageCodeSchema, z.string()).optional(),
+      removeLangs: z.array(z.string()).optional(),
+    }),
+  ],
+);
 
 export function parseSearchParams<T extends z.ZodTypeAny>(
   schema: T,

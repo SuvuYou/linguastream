@@ -1,6 +1,6 @@
 import { GET } from "./route";
 
-import { getCurrentUser } from "@/lib/initializations/firebase/session";
+import { getCurrentUser } from "@/lib/firebase/session";
 import {
   fetchJellyfinLibrary,
   getThumbnailUrl,
@@ -15,7 +15,7 @@ import { NextRequest } from "next/server";
 import type { MediaContent, User } from "@prisma/client";
 import type { JellyfinItem } from "@/types";
 
-vi.mock("@/lib/initializations/firebase/session", () => ({
+vi.mock("@/lib/firebase/session", () => ({
   getCurrentUser: vi.fn(),
 }));
 
@@ -151,7 +151,7 @@ describe("GET api/library", () => {
 
     mockedParseSearchParams.mockReturnValue({
       q: "",
-      selectedSrc: undefined,
+      selectedSrc: "de",
       unreg: false,
       page: 0,
     });

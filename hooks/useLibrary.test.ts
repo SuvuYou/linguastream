@@ -3,6 +3,16 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { useZodSearchParams } from "@/hooks/useZodSearchParams";
 import { createWrapper } from "@/helpers/tests/providers";
 import { DEFAULT_LIBRARY_RESPONSE, useLibrary } from "@/hooks/useLibrary";
+import { mockUseLanguages } from "@/helpers/tests/mocks/useLanguages";
+import { mockUseUser } from "@/helpers/tests/mocks/useUser";
+
+vi.mock("@/hooks/useUser", () => ({
+  useUser: vi.fn(),
+}));
+
+vi.mock("@/hooks/useLanguages", () => ({
+  useLanguages: vi.fn(),
+}));
 
 vi.mock("@/hooks/useZodSearchParams", () => ({
   useZodSearchParams: vi.fn(),
@@ -13,29 +23,10 @@ const mockedUseZodSearchParams = vi.mocked(useZodSearchParams);
 beforeEach(() => vi.resetAllMocks());
 
 describe("useLibrary hook", () => {
-  it("does not fetch when disabled", () => {
-    global.fetch = vi.fn();
-
-    mockedUseZodSearchParams.mockReturnValue({
-      params: { q: "", page: 0, unreg: false },
-      set: vi.fn(),
-      remove: vi.fn(),
-    });
-
-    renderHook(
-      () =>
-        useLibrary({
-          enabled: false,
-          selectedSourceLanguage: "en",
-          selectedSubtitleLanguage: "en",
-        }),
-      { wrapper: createWrapper() },
-    );
-
-    expect(global.fetch).not.toHaveBeenCalled();
-  });
-
   it("calls fetch with correct query params", async () => {
+    mockUseUser.admin();
+    mockUseLanguages.selected();
+
     global.fetch = vi.fn(
       () =>
         Promise.resolve({
@@ -58,9 +49,8 @@ describe("useLibrary hook", () => {
     renderHook(
       () =>
         useLibrary({
-          enabled: true,
           selectedSourceLanguage: "en",
-          selectedSubtitleLanguage: "en",
+          selectedTranslationLanguage: "en",
         }),
       { wrapper: createWrapper() },
     );
@@ -79,6 +69,9 @@ describe("useLibrary hook", () => {
   });
 
   it("handles fetch error", async () => {
+    mockUseUser.admin();
+    mockUseLanguages.selected();
+
     global.fetch = vi.fn(() => Promise.reject(new Error("fail")));
 
     mockedUseZodSearchParams.mockReturnValue({
@@ -90,9 +83,8 @@ describe("useLibrary hook", () => {
     const { result } = renderHook(
       () =>
         useLibrary({
-          enabled: true,
           selectedSourceLanguage: "en",
-          selectedSubtitleLanguage: "en",
+          selectedTranslationLanguage: "en",
         }),
       { wrapper: createWrapper() },
     );
@@ -103,6 +95,9 @@ describe("useLibrary hook", () => {
   });
 
   it("returns library data", async () => {
+    mockUseUser.admin();
+    mockUseLanguages.selected();
+
     global.fetch = vi.fn(
       () =>
         Promise.resolve({
@@ -125,9 +120,8 @@ describe("useLibrary hook", () => {
     const { result } = renderHook(
       () =>
         useLibrary({
-          enabled: true,
           selectedSourceLanguage: "en",
-          selectedSubtitleLanguage: "en",
+          selectedTranslationLanguage: "en",
         }),
       { wrapper: createWrapper() },
     );
@@ -138,6 +132,9 @@ describe("useLibrary hook", () => {
   });
 
   it("updates query when params change", async () => {
+    mockUseUser.admin();
+    mockUseLanguages.selected();
+
     const params = { q: "a", page: 0, unreg: false };
 
     mockedUseZodSearchParams.mockImplementation(() => ({
@@ -157,9 +154,8 @@ describe("useLibrary hook", () => {
     const { rerender } = renderHook(
       ({ q }) =>
         useLibrary({
-          enabled: true,
           selectedSourceLanguage: q,
-          selectedSubtitleLanguage: "en",
+          selectedTranslationLanguage: "en",
         }),
       {
         wrapper: createWrapper(),

@@ -8,30 +8,30 @@ import { useAppStore } from "@/lib/initializations/store";
 import { useEffect } from "react";
 
 export default function LanguageFilter() {
-  const languages = useLanguages();
-
   const searchParams = useZodSearchParams(PUBLIC_LIBRARY_PARAMS_SCHEMA);
 
-  const { availableSourceLanguages, availableSubtitleLanguages } = languages;
+  const languages = useLanguages();
 
-  const { setPreferredSourceLanguage, setPreferredSubtitleLanguage } =
+  const { availableSourceLanguages, availableTranslationLanguages } = languages;
+
+  const { setPreferredSourceLanguage, setPreferredTranslationLanguage } =
     useAppStore();
 
   useEffect(() => {
     if (languages.selectedSourceLanguage)
       setPreferredSourceLanguage(languages.selectedSourceLanguage);
-    if (languages.selectedSubtitleLanguage)
-      setPreferredSubtitleLanguage(languages.selectedSubtitleLanguage);
+    if (languages.selectedTranslationLanguage)
+      setPreferredTranslationLanguage(languages.selectedTranslationLanguage);
   }, [
     languages.selectedSourceLanguage,
-    languages.selectedSubtitleLanguage,
+    languages.selectedTranslationLanguage,
     setPreferredSourceLanguage,
-    setPreferredSubtitleLanguage,
+    setPreferredTranslationLanguage,
   ]);
 
-  const updateFilter = (type: "src" | "sub", value: string) => {
+  const updateFilter = (type: "src" | "trans", value: string) => {
     if (type === "src") setPreferredSourceLanguage(value);
-    if (type === "sub") setPreferredSubtitleLanguage(value);
+    if (type === "trans") setPreferredTranslationLanguage(value);
 
     searchParams.set({ [type]: value });
   };
@@ -49,9 +49,20 @@ export default function LanguageFilter() {
   }
 
   if (
+    !languages.isError &&
+    (availableSourceLanguages.length === 0 ||
+      availableTranslationLanguages.length === 0)
+  )
+    return (
+      <div className="p-12 text-center text-sm text-secondary-text">
+        No languages to select from.
+      </div>
+    );
+
+  if (
     languages.isError ||
-    !languages.selectedSourceLanguage
-    // || !languages.selectedSubtitleLanguage
+    !languages.selectedSourceLanguage ||
+    !languages.selectedTranslationLanguage
   )
     return (
       <div className="p-12 text-center text-sm text-secondary-text">
@@ -77,13 +88,13 @@ export default function LanguageFilter() {
       </div>
 
       <div className="flex items-center gap-2 px-4 h-full">
-        <span className="text-xs text-secondary-text">Subtitles</span>
+        <span className="text-xs text-secondary-text">Translations</span>
         <select
-          value={languages.selectedSubtitleLanguage || ""}
-          onChange={(e) => updateFilter("sub", e.target.value)}
+          value={languages.selectedTranslationLanguage || ""}
+          onChange={(e) => updateFilter("trans", e.target.value)}
           className="bg-transparent text-xs text-active-border outline-none cursor-pointer"
         >
-          {availableSubtitleLanguages.map((code) => (
+          {availableTranslationLanguages.map((code) => (
             <option key={code} value={code} className="bg-background">
               {getLabel(code)}
             </option>

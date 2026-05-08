@@ -11,6 +11,18 @@ datasource db {
   provider = "postgresql"
 }
 
+enum JobStatus {
+  pending
+  running
+  done
+  error
+}
+
+enum AcquisitionMethod {
+  upload
+  whisperx
+}
+
 model User {
   id              String   @id @default(uuid())
   firebase_uid    String   @unique
@@ -26,32 +38,37 @@ model User {
 }
 
 model MediaContent {
-  id              String   @id @default(uuid())
-  user_id         String
-  title           String
-  type            String
-  source_language String
-  jellyfin_id     String?
-  file_path       String?
+  id               String   @id @default(uuid())
+  user_id          String
+  title            String
+  type             String
+  source_language  String
+  source_subtitle_acquisition_method  AcquisitionMethod?
+  jellyfin_id      String?
+  file_path        String?
   youtube_video_id String?
-  created_at      DateTime @default(now())
+  job_status       JobStatus?
+  job_progress     Int?     // 0-100
+  job_logs         String?  // absolute path to log file on disk
+  created_at       DateTime @default(now())
 
-  user            User           @relation(fields: [user_id], references: [id])
-  subtitle_tracks SubtitleTrack[]
-  subtitle_lines  SubtitleLine[]
-  cards           Card[]
+  user             User           @relation(fields: [user_id], references: [id])
+  subtitle_tracks  SubtitleTrack[]
+  subtitle_lines   SubtitleLine[]
+  cards            Card[]
 }
 
 model SubtitleTrack {
   id               String   @id @default(uuid())
   media_content_id String
-  subtitle_language  String
+  language         String
+  is_source        Boolean
   created_at       DateTime @default(now())
 
   media_content  MediaContent   @relation(fields: [media_content_id], references: [id])
   subtitle_lines SubtitleLine[]
 
-  @@unique([media_content_id, subtitle_language])
+  @@unique([media_content_id, language])
 }
 
 model SubtitleLine {
@@ -103,7 +120,7 @@ model Card {
   word_profile_id  String?
   word             String
   source_language  String
-  subtitle_language  String
+  translation_language  String
   timestamp_ms     Int
   next_review      DateTime @default(now())
   interval_days    Int      @default(1)

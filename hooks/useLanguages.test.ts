@@ -23,7 +23,7 @@ describe("useLangauges hook", () => {
     global.fetch = vi.fn(() => new Promise(() => {}) as Promise<Response>);
     mockedUseAppStore.mockReturnValue({});
     mockedUseZodSearchParams.mockReturnValue({
-      params: { src: "en", sub: "en" },
+      params: { src: "en", trans: "en" },
       set: vi.fn(),
       remove: vi.fn(),
     });
@@ -42,11 +42,11 @@ describe("useLangauges hook", () => {
 
     mockedUseAppStore.mockReturnValue({
       preferredSourceLanguage: null,
-      preferredSubtitleLanguage: null,
+      preferredTranslationLanguage: null,
     });
 
     mockedUseZodSearchParams.mockReturnValue({
-      params: { src: "en", sub: "en" },
+      params: { src: "en", trans: "en" },
       set: vi.fn(),
       remove: vi.fn(),
     });
@@ -68,14 +68,14 @@ describe("useLangauges hook", () => {
           json: () =>
             Promise.resolve({
               availableSourceLanguages: ["en", "de"],
-              availableSubtitleLanguages: ["es"],
+              availableTranslationLanguages: ["es"],
             }),
         }) as Promise<Response>,
     );
 
     mockedUseAppStore.mockReturnValue({
       preferredSourceLanguage: null,
-      preferredSubtitleLanguage: null,
+      preferredTranslationLanguage: null,
     });
 
     mockedUseZodSearchParams.mockReturnValue({
@@ -102,7 +102,7 @@ describe("useLangauges hook", () => {
           json: () =>
             Promise.resolve({
               availableSourceLanguages: ["en", "de"],
-              availableSubtitleLanguages: [],
+              availableTranslationLanguages: ["en", "de"],
             }),
         }) as Promise<Response>,
     );
@@ -133,14 +133,14 @@ describe("useLangauges hook", () => {
           json: () =>
             Promise.resolve({
               availableSourceLanguages: ["en"],
-              availableSubtitleLanguages: [],
+              availableTranslationLanguages: ["en"],
             }),
         }) as Promise<Response>,
     );
 
     mockedUseAppStore.mockReturnValue({
       preferredSourceLanguage: "en",
-      preferredSubtitleLanguage: "en",
+      preferredTranslationLanguage: "en",
     });
 
     mockedUseZodSearchParams.mockReturnValue({
@@ -155,7 +155,7 @@ describe("useLangauges hook", () => {
 
     await waitFor(() => {
       expect(setMock).toHaveBeenCalledWith({ src: "en" });
-      expect(setMock).toHaveBeenCalledWith({ sub: "en" });
+      expect(setMock).toHaveBeenCalledWith({ trans: "en" });
     });
   });
 });

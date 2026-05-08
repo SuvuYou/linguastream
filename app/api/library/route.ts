@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/initializations/firebase/session";
+import { getCurrentUser } from "@/lib/firebase/session";
 import {
   fetchJellyfinLibrary,
   getThumbnailUrl,
@@ -35,10 +35,17 @@ export async function GET(req: NextRequest) {
   const {
     q: query,
     selectedSrc: sourceLanguage,
-    // selectedSub: subtitleLanguage,
+    selectedTrans: translationLanguage,
     unreg: shouldShowUnregistered,
     page,
   } = parsedParams;
+
+  if (!sourceLanguage && (!user.is_admin || !shouldShowUnregistered)) {
+    return NextResponse.json(
+      { error: "Source language not specified" },
+      { status: 400 },
+    );
+  }
 
   // Fetch DB items based on mode
   const {
@@ -54,7 +61,7 @@ export async function GET(req: NextRequest) {
     : await fetchPublicMediaContent({
         searchTerm: query,
         sourceLanguage,
-        // subtitleLanguage, // TODO: re-enable subtitle language filter when we have more subtitle data
+        translationLanguage,
         page,
         pageSize: PAGE_SIZE,
       });
