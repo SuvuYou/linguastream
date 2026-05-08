@@ -6,6 +6,7 @@ import {
   SUBTITLE_ACQUISITION_METHOD,
   UNKNOWN_SOURCE_LANGUAGE,
 } from "@/helpers/const";
+import { FileUploadState, useFileUpload } from "@/hooks/useFileUpload";
 import { useUser } from "@/hooks/useUser";
 import type { MergedContentItem } from "@/types";
 import type { AcquisitionMethod } from "@prisma/client";
@@ -17,13 +18,6 @@ interface ContentConfigurationModalProps {
   item: MergedContentItem;
   onClose: () => void;
   onSuccess: () => void;
-}
-
-interface FileUploadState {
-  file: File;
-  status: "pending" | "uploading" | "done" | "error";
-  path?: string;
-  error?: string;
 }
 
 function FileStatus({ state }: { state: FileUploadState | null }) {
@@ -42,12 +36,17 @@ export default function ContentConfigurationModal({
   onClose,
   onSuccess,
 }: ContentConfigurationModalProps) {
-  const { id: mediaId, title, source_language: currentSourceLanguage } = item;
+  const {
+    id: mediaId,
+    title,
+    source_language: currentSourceLanguage,
+    subtitle_tracks,
+  } = item;
 
   const user = useUser();
   const isAdmin = user.data?.is_admin;
 
-  const existingTranslationLangs = item.subtitle_tracks
+  const existingTranslationLangs = subtitle_tracks
     .map((t) => t.language)
     .filter((l) => l !== currentSourceLanguage);
 
@@ -61,8 +60,8 @@ export default function ContentConfigurationModal({
     item.source_subtitle_acquisition_method ?? "upload",
   );
 
-  const [sourceFileUpload, setSourceFileUpload] =
-    useState<FileUploadState | null>(null);
+  const sourceFileUpload = useFileUpload();
+  const translationsFileUpload = useFileUpload();
 
   const [translateMethod, setTranslateMethod] =
     useState<TranslateMethod>("libretranslate");
@@ -70,10 +69,6 @@ export default function ContentConfigurationModal({
   const [selectedTranslateLangs, setSelectedTranslateLangs] = useState<
     Set<string>
   >(new Set(existingTranslationLangs));
-
-  const [translateFileUploads, setTranslateFileUploads] = useState<
-    Record<string, FileUploadState>
-  >({});
 
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -97,11 +92,15 @@ export default function ContentConfigurationModal({
 
   const allFileUploadsReady = (() => {
     if (acquisitionMethod === "upload") {
-      if (!sourceFileUpload || sourceFileUpload.status !== "done") return false;
+      if (
+        !sourceFileUpload.fileUploads["source"] ||
+        sourceFileUpload.fileUploads["source"].status !== "done"
+      )
+        return false;
     }
     if (effectiveTranslateMethod === "upload") {
       for (const lang of selectedTranslateLangs) {
-        const u = translateFileUploads[lang];
+        const u = translationsFileUpload.fileUploads[lang];
         if (!u || u.status !== "done") return false;
       }
     }
@@ -112,62 +111,13 @@ export default function ContentConfigurationModal({
 
   // ── file upload ────────────────────────────────────────────────────────────
 
-  async function uploadFile(file: File): Promise<string> {
-    const formData = new FormData();
-    formData.append("file", file);
-    const res = await fetch("/api/subtitles/upload-file", {
-      method: "POST",
-      body: formData,
-    });
-
-    if (!res.ok) {
-      const data = await res.json();
-      throw new Error(data.error ?? "Upload failed");
-    }
-
-    const data = await res.json();
-    return data.path as string;
-  }
-
-  async function handleSourceFileChange(file: File) {
-    setSourceFileUpload({ file, status: "uploading" });
-
-    try {
-      const path = await uploadFile(file);
-      setSourceFileUpload({ file, status: "done", path });
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "Upload failed";
-      setSourceFileUpload({ file, status: "error", error: msg });
-    }
-  }
-
-  async function handleTranslateFileChange(lang: string, file: File) {
-    setTranslateFileUploads((prev) => ({
-      ...prev,
-      [lang]: { file, status: "uploading" },
-    }));
-    try {
-      const path = await uploadFile(file);
-      setTranslateFileUploads((prev) => ({
-        ...prev,
-        [lang]: { file, status: "done", path },
-      }));
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "Upload failed";
-      setTranslateFileUploads((prev) => ({
-        ...prev,
-        [lang]: { file, status: "error", error: msg },
-      }));
-    }
-  }
-
   function toggleTranslateLang(code: string) {
     setSelectedTranslateLangs((prev) => {
       const next = new Set(prev);
       if (next.has(code)) {
         next.delete(code);
 
-        setTranslateFileUploads((u) => {
+        translationsFileUpload.setFileUploads((u) => {
           const updated = { ...u };
           delete updated[code];
 
@@ -185,11 +135,7 @@ export default function ContentConfigurationModal({
   function handleSubmit() {
     setError(null);
     startTransition(async () => {
-      const translateFiles: Record<string, string> = {};
-
-      for (const [lang, u] of Object.entries(translateFileUploads)) {
-        if (u.path) translateFiles[lang] = u.path;
-      }
+      const translateFiles = translationsFileUpload.extractPathsMap();
 
       const res = await fetch(`/api/subtitles/${mediaId}`, {
         method: "PUT",
@@ -197,7 +143,7 @@ export default function ContentConfigurationModal({
         body: JSON.stringify({
           sourceLang,
           acquisitionMethod,
-          sourceFile: sourceFileUpload?.path,
+          sourceFile: sourceFileUpload.fileUploads["source"]?.path,
           videoFilePath:
             item.jellyfinItem?.MediaSources?.[0].Path ??
             item.file_path ??
@@ -289,10 +235,10 @@ export default function ContentConfigurationModal({
                 >
                   {sourceFileUpload ? "Change file" : "Choose file"}
                 </button>
-                <FileStatus state={sourceFileUpload} />
-                {sourceFileUpload?.status === "done" && (
+                <FileStatus state={sourceFileUpload.fileUploads["source"]} />
+                {sourceFileUpload.fileUploads["source"]?.status === "done" && (
                   <span className="text-xs text-secondary-text truncate max-w-35">
-                    {sourceFileUpload.file.name}
+                    {sourceFileUpload.fileUploads["source"].file.name}
                   </span>
                 )}
               </div>
@@ -303,7 +249,7 @@ export default function ContentConfigurationModal({
                 className="hidden"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
-                  if (file) handleSourceFileChange(file);
+                  if (file) sourceFileUpload.handleUploadFile("source", file);
                 }}
               />
             </div>
@@ -357,7 +303,8 @@ export default function ContentConfigurationModal({
             {availableTranslateLangs.map((lang) => {
               const isChecked = selectedTranslateLangs.has(lang.code);
               const wasExisting = existingTranslationLangs.includes(lang.code);
-              const uploadState = translateFileUploads[lang.code] ?? null;
+              const uploadState =
+                translationsFileUpload.fileUploads[lang.code] ?? null;
 
               return (
                 <div key={lang.code}>
@@ -413,7 +360,11 @@ export default function ContentConfigurationModal({
                         className="hidden"
                         onChange={(e) => {
                           const file = e.target.files?.[0];
-                          if (file) handleTranslateFileChange(lang.code, file);
+                          if (file)
+                            translationsFileUpload.handleUploadFile(
+                              lang.code,
+                              file,
+                            );
                         }}
                       />
                     </div>
