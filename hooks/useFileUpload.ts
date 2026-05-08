@@ -59,5 +59,28 @@ export function useFileUpload() {
     return pathsMap;
   }
 
-  return { fileUploads, setFileUploads, handleUploadFile, extractPathsMap };
+  function areFilesReady(keys: string[] = Object.keys(fileUploads)) {
+    for (const key of keys) {
+      if (!fileUploads[key] || fileUploads[key].status !== "done") return false;
+    }
+
+    return true;
+  }
+
+  function deleteKey(key: string) {
+    setFileUploads((u) => {
+      const updated = { ...u };
+      delete updated[key];
+
+      return updated;
+    });
+  }
+
+  return {
+    fileUploads,
+    deleteKey,
+    handleUploadFile,
+    extractPathsMap,
+    areFilesReady,
+  };
 }

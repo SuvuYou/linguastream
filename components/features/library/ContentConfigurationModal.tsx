@@ -4,9 +4,9 @@ import {
   AUTO_DETECT,
   LANGUAGES,
   SUBTITLE_ACQUISITION_METHOD,
-  UNKNOWN_SOURCE_LANGUAGE,
 } from "@/helpers/const";
 import { FileUploadState, useFileUpload } from "@/hooks/useFileUpload";
+import { useLanguageSelectors } from "@/hooks/useLanguageSelectors";
 import { useUser } from "@/hooks/useUser";
 import type { MergedContentItem } from "@/types";
 import type { AcquisitionMethod } from "@prisma/client";
@@ -36,39 +36,25 @@ export default function ContentConfigurationModal({
   onClose,
   onSuccess,
 }: ContentConfigurationModalProps) {
-  const {
-    id: mediaId,
-    title,
-    source_language: currentSourceLanguage,
-    subtitle_tracks,
-  } = item;
+  const { id: mediaId, title } = item;
 
   const user = useUser();
   const isAdmin = user.data?.is_admin;
-
-  const existingTranslationLangs = subtitle_tracks
-    .map((t) => t.language)
-    .filter((l) => l !== currentSourceLanguage);
-
-  const [sourceLang, setSourceLang] = useState<string>(
-    currentSourceLanguage && currentSourceLanguage !== UNKNOWN_SOURCE_LANGUAGE
-      ? currentSourceLanguage
-      : AUTO_DETECT,
-  );
 
   const [acquisitionMethod, setAcquisitionMethod] = useState<AcquisitionMethod>(
     item.source_subtitle_acquisition_method ?? "upload",
   );
 
-  const sourceFileUpload = useFileUpload();
-  const translationsFileUpload = useFileUpload();
-
   const [translateMethod, setTranslateMethod] =
     useState<TranslateMethod>("libretranslate");
 
-  const [selectedTranslateLangs, setSelectedTranslateLangs] = useState<
-    Set<string>
-  >(new Set(existingTranslationLangs));
+  const sourceFileUpload = useFileUpload();
+  const translationsFileUpload = useFileUpload();
+
+  const languageSelector = useLanguageSelectors({
+    item,
+    onToggleTranslate: (code) => translationsFileUpload.deleteKey(code),
+  });
 
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -76,59 +62,27 @@ export default function ContentConfigurationModal({
   const sourceFileRef = useRef<HTMLInputElement>(null);
   const translateFileRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
-  const availableTranslateLangs = LANGUAGES.filter(
-    (l) => l.code !== sourceLang,
-  );
-
-  const removedLangs = existingTranslationLangs.filter(
-    (l) => !selectedTranslateLangs.has(l),
-  );
-
-  // if user switches source to whisperx and translate was upload, reset
   const effectiveTranslateMethod: TranslateMethod =
     acquisitionMethod === "whisperx" && translateMethod === "upload"
       ? "libretranslate"
       : translateMethod;
 
   const allFileUploadsReady = (() => {
-    if (acquisitionMethod === "upload") {
-      if (
-        !sourceFileUpload.fileUploads["source"] ||
-        sourceFileUpload.fileUploads["source"].status !== "done"
-      )
-        return false;
-    }
-    if (effectiveTranslateMethod === "upload") {
-      for (const lang of selectedTranslateLangs) {
-        const u = translationsFileUpload.fileUploads[lang];
-        if (!u || u.status !== "done") return false;
-      }
-    }
+    if (acquisitionMethod === "upload" && !sourceFileUpload.areFilesReady())
+      return false;
+
+    if (
+      effectiveTranslateMethod === "upload" &&
+      !translationsFileUpload.areFilesReady([
+        ...languageSelector.data.selectedTranslateLangs,
+      ])
+    )
+      return false;
+
     return true;
   })();
 
   const canSubmit = !isPending && allFileUploadsReady;
-
-  // ── file upload ────────────────────────────────────────────────────────────
-
-  function toggleTranslateLang(code: string) {
-    setSelectedTranslateLangs((prev) => {
-      const next = new Set(prev);
-      if (next.has(code)) {
-        next.delete(code);
-
-        translationsFileUpload.setFileUploads((u) => {
-          const updated = { ...u };
-          delete updated[code];
-
-          return updated;
-        });
-      } else {
-        next.add(code);
-      }
-      return next;
-    });
-  }
 
   // ── submit ─────────────────────────────────────────────────────────────────
 
@@ -141,16 +95,18 @@ export default function ContentConfigurationModal({
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          sourceLang,
+          sourceLang: languageSelector.data.selectedSourceLang,
           acquisitionMethod,
           sourceFile: sourceFileUpload.fileUploads["source"]?.path,
           videoFilePath:
             item.jellyfinItem?.MediaSources?.[0].Path ??
             item.file_path ??
             undefined,
-          translateLangs: Array.from(selectedTranslateLangs),
+          translateLangs: Array.from(
+            languageSelector.data.selectedTranslateLangs,
+          ),
           translateMethod: effectiveTranslateMethod,
-          removeLangs: removedLangs,
+          removeLangs: languageSelector.data.removedTranslationLangs,
           ...(translateFiles && Object.entries(translateFiles).length > 0
             ? { translateFiles }
             : {}),
@@ -190,8 +146,10 @@ export default function ContentConfigurationModal({
             Content language
           </label>
           <select
-            value={sourceLang}
-            onChange={(e) => setSourceLang(e.target.value)}
+            value={languageSelector.data.selectedSourceLang}
+            onChange={(e) =>
+              languageSelector.actions.setSelectedSourceLang(e.target.value)
+            }
             className="bg-background border border-primary-border text-sm text-primary-text px-3 py-2 outline-none"
           >
             <option value={AUTO_DETECT}>Auto-detect</option>
@@ -300,9 +258,17 @@ export default function ContentConfigurationModal({
 
           {/* language checkboxes */}
           <div className="flex flex-col gap-1 mt-1">
-            {availableTranslateLangs.map((lang) => {
-              const isChecked = selectedTranslateLangs.has(lang.code);
-              const wasExisting = existingTranslationLangs.includes(lang.code);
+            {languageSelector.data.availableTranslationLangs.map((lang) => {
+              const isChecked =
+                languageSelector.checks.isTranslationLanguageSelected(
+                  lang.code,
+                );
+
+              const wasExisting =
+                languageSelector.checks.isTranslationLanguageExisting(
+                  lang.code,
+                );
+
               const uploadState =
                 translationsFileUpload.fileUploads[lang.code] ?? null;
 
@@ -313,7 +279,9 @@ export default function ContentConfigurationModal({
                       type="checkbox"
                       id={`lang-${lang.code}`}
                       checked={isChecked}
-                      onChange={() => toggleTranslateLang(lang.code)}
+                      onChange={() =>
+                        languageSelector.actions.toggleTranslateLang(lang.code)
+                      }
                       className="accent-active-border"
                     />
                     <label
@@ -375,10 +343,10 @@ export default function ContentConfigurationModal({
           </div>
         </div>
 
-        {removedLangs.length > 0 && (
+        {languageSelector.data.removedTranslationLangs.length > 0 && (
           <div className="text-xs text-red-400 border border-red-400/20 px-3 py-2">
             The following tracks will be permanently deleted:{" "}
-            {removedLangs
+            {languageSelector.data.removedTranslationLangs
               .map((l) => LANGUAGES.find((lang) => lang.code === l)?.label ?? l)
               .join(", ")}
           </div>
