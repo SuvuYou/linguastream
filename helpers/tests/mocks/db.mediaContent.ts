@@ -23,6 +23,19 @@ const createBaseResponse = () => ({
   ...createBaseMediaContent(),
 });
 
+const createBaseArrayResponse = () => [
+  {
+    ...createBaseMediaContent(),
+  },
+  {
+    ...createBaseMediaContent(),
+  },
+];
+
+type OverrideArgType = Partial<
+  MediaContent & { subtitle_tracks: { language: string }[] }
+>;
+
 export const mockDbMediaContent = {
   findUnique: {
     base: () =>
@@ -30,11 +43,7 @@ export const mockDbMediaContent = {
         .mocked(db.mediaContent.findUnique)
         .mockResolvedValue(createBaseResponse()),
     empty: () => vi.mocked(db.mediaContent.findUnique).mockResolvedValue(null),
-    override: (
-      overrides: Partial<
-        MediaContent & { subtitle_tracks: { language: string }[] }
-      >,
-    ) =>
+    override: (overrides: OverrideArgType) =>
       vi
         .mocked(db.mediaContent.findUnique)
         .mockResolvedValue({ ...createBaseResponse(), ...overrides }),
@@ -45,13 +54,25 @@ export const mockDbMediaContent = {
         .mocked(db.mediaContent.findUnique)
         .mockResolvedValue(createBaseResponse()),
     empty: () => vi.mocked(db.mediaContent.findUnique).mockResolvedValue(null),
-    override: (
-      overrides: Partial<
-        MediaContent & { subtitle_tracks: { language: string }[] }
-      >,
-    ) =>
+    override: (overrides: OverrideArgType) =>
       vi
         .mocked(db.mediaContent.findUnique)
         .mockResolvedValue({ ...createBaseResponse(), ...overrides }),
+  },
+  findMany: {
+    base: () =>
+      vi
+        .mocked(db.mediaContent.findMany)
+        .mockResolvedValue(createBaseArrayResponse()),
+    empty: () => vi.mocked(db.mediaContent.findMany).mockResolvedValue([]),
+    override: (overrides: OverrideArgType) =>
+      vi
+        .mocked(db.mediaContent.findMany)
+        .mockResolvedValue([{ ...createBaseResponse(), ...overrides }]),
+    once: (overrides: OverrideArgType) =>
+      vi
+        .mocked(db.mediaContent.findMany)
+        .mockResolvedValueOnce([{ ...createBaseResponse(), ...overrides }])
+        .mockResolvedValueOnce([]),
   },
 };

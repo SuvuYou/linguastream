@@ -7,19 +7,19 @@ import { act } from "react";
 
 vi.mock("plyr/dist/plyr.css", () => ({}));
 
-const destroyMock = vi.fn();
+vi.mock("plyr", () => {
+  class PlyrMock {
+    destroy = vi.fn();
+    play = vi.fn();
+    pause = vi.fn();
+    on = vi.fn();
+    off = vi.fn();
+  }
 
-class PlyrMockClass {
-  source = null;
-
-  destroy = destroyMock;
-}
-
-const PlyrMock = vi.fn(() => new PlyrMockClass());
-
-vi.mock("plyr", () => ({
-  default: PlyrMock,
-}));
+  return {
+    default: PlyrMock,
+  };
+});
 
 vi.mock("@/hooks/useAnimationTick", () => ({
   useAnimationTick: vi.fn(),
