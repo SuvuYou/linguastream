@@ -4,6 +4,10 @@ import {
   AUTO_DETECT,
   LANGUAGES,
   SUBTITLE_ACQUISITION_METHOD,
+  SUBTITLE_ACQUISITION_METHODS,
+  TRANSLATE_METHODS,
+  TRANSLATE_METHOD_LABELS,
+  TranslationMethod,
 } from "@/helpers/const";
 import { FileUploadState, useFileUpload } from "@/hooks/useFileUpload";
 import { useLanguageSelectors } from "@/hooks/useLanguageSelectors";
@@ -11,8 +15,6 @@ import { useUser } from "@/hooks/useUser";
 import type { MergedContentItem } from "@/types";
 import type { AcquisitionMethod } from "@prisma/client";
 import { useState, useTransition, useRef } from "react";
-
-type TranslateMethod = "libretranslate" | "deepl" | "upload";
 
 interface ContentConfigurationModalProps {
   item: MergedContentItem;
@@ -42,11 +44,13 @@ export default function ContentConfigurationModal({
   const isAdmin = user.data?.is_admin;
 
   const [acquisitionMethod, setAcquisitionMethod] = useState<AcquisitionMethod>(
-    item.source_subtitle_acquisition_method ?? "upload",
+    item.source_subtitle_acquisition_method ??
+      SUBTITLE_ACQUISITION_METHODS.UPLOAD,
   );
 
-  const [translateMethod, setTranslateMethod] =
-    useState<TranslateMethod>("libretranslate");
+  const [translateMethod, setTranslateMethod] = useState<TranslationMethod>(
+    TRANSLATE_METHODS.LIBRETRANSLATE,
+  );
 
   const sourceFileUpload = useFileUpload();
   const translationsFileUpload = useFileUpload();
@@ -62,17 +66,21 @@ export default function ContentConfigurationModal({
   const sourceFileRef = useRef<HTMLInputElement>(null);
   const translateFileRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
-  const effectiveTranslateMethod: TranslateMethod =
-    acquisitionMethod === "whisperx" && translateMethod === "upload"
-      ? "libretranslate"
+  const effectiveTranslateMethod: TranslationMethod =
+    acquisitionMethod === SUBTITLE_ACQUISITION_METHODS.WHISPERX &&
+    translateMethod === TRANSLATE_METHODS.UPLOAD
+      ? TRANSLATE_METHODS.LIBRETRANSLATE
       : translateMethod;
 
   const allFileUploadsReady = (() => {
-    if (acquisitionMethod === "upload" && !sourceFileUpload.areFilesReady())
+    if (
+      acquisitionMethod === SUBTITLE_ACQUISITION_METHODS.UPLOAD &&
+      !sourceFileUpload.areFilesReady()
+    )
       return false;
 
     if (
-      effectiveTranslateMethod === "upload" &&
+      effectiveTranslateMethod === TRANSLATE_METHODS.UPLOAD &&
       !translationsFileUpload.areFilesReady([
         ...languageSelector.data.selectedTranslateLangs,
       ])
@@ -177,14 +185,14 @@ export default function ContentConfigurationModal({
                     : "border-primary-border text-secondary-text hover:text-primary-text"
                 }`}
               >
-                {method.type === "upload"
+                {method.type === SUBTITLE_ACQUISITION_METHODS.UPLOAD
                   ? "Upload file"
                   : "Generate with WhisperX"}
               </button>
             ))}
           </div>
 
-          {acquisitionMethod === "upload" && (
+          {acquisitionMethod === SUBTITLE_ACQUISITION_METHODS.UPLOAD && (
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-3">
                 <button
@@ -213,7 +221,7 @@ export default function ContentConfigurationModal({
             </div>
           )}
 
-          {acquisitionMethod === "whisperx" && (
+          {acquisitionMethod === SUBTITLE_ACQUISITION_METHODS.WHISPERX && (
             <p className="text-xs text-secondary-text">
               Audio will be transcribed locally using WhisperX. This may take
               several minutes.
@@ -227,15 +235,18 @@ export default function ContentConfigurationModal({
             Translation subtitles
           </label>
           <div className="flex gap-2">
-            {(
-              [
-                "libretranslate",
-                ...(isAdmin ? ["deepl"] : []),
-                "upload",
-              ] as TranslateMethod[]
-            )
+            {[
+              TRANSLATE_METHODS.LIBRETRANSLATE,
+              ...(isAdmin ? [TRANSLATE_METHODS.DEEPL] : []),
+              TRANSLATE_METHODS.UPLOAD,
+            ]
               .filter(
-                (m) => !(acquisitionMethod === "whisperx" && m === "upload"),
+                (m) =>
+                  !(
+                    acquisitionMethod ===
+                      SUBTITLE_ACQUISITION_METHODS.WHISPERX &&
+                    m === TRANSLATE_METHODS.UPLOAD
+                  ),
               )
               .map((method) => (
                 <button
@@ -247,11 +258,7 @@ export default function ContentConfigurationModal({
                       : "border-primary-border text-secondary-text hover:text-primary-text"
                   }`}
                 >
-                  {method === "libretranslate"
-                    ? "LibreTranslate"
-                    : method === "deepl"
-                      ? "DeepL"
-                      : "Upload files"}
+                  {TRANSLATE_METHOD_LABELS[method]}
                 </button>
               ))}
           </div>
@@ -303,40 +310,41 @@ export default function ContentConfigurationModal({
                   </div>
 
                   {/* per-language file picker when upload method selected */}
-                  {isChecked && effectiveTranslateMethod === "upload" && (
-                    <div className="ml-6 flex items-center gap-3 pb-1">
-                      <button
-                        onClick={() =>
-                          translateFileRefs.current[lang.code]?.click()
-                        }
-                        className="text-xs px-3 py-1 border border-primary-border text-secondary-text hover:text-primary-text transition-colors"
-                      >
-                        {uploadState ? "Change" : "Choose file"}
-                      </button>
-                      <FileStatus state={uploadState} />
-                      {uploadState?.status === "done" && (
-                        <span className="text-xs text-secondary-text truncate max-w-30">
-                          {uploadState.file.name}
-                        </span>
-                      )}
-                      <input
-                        ref={(el) => {
-                          translateFileRefs.current[lang.code] = el;
-                        }}
-                        type="file"
-                        accept=".srt,.vtt"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file)
-                            translationsFileUpload.handleUploadFile(
-                              lang.code,
-                              file,
-                            );
-                        }}
-                      />
-                    </div>
-                  )}
+                  {isChecked &&
+                    effectiveTranslateMethod === TRANSLATE_METHODS.UPLOAD && (
+                      <div className="ml-6 flex items-center gap-3 pb-1">
+                        <button
+                          onClick={() =>
+                            translateFileRefs.current[lang.code]?.click()
+                          }
+                          className="text-xs px-3 py-1 border border-primary-border text-secondary-text hover:text-primary-text transition-colors"
+                        >
+                          {uploadState ? "Change" : "Choose file"}
+                        </button>
+                        <FileStatus state={uploadState} />
+                        {uploadState?.status === "done" && (
+                          <span className="text-xs text-secondary-text truncate max-w-30">
+                            {uploadState.file.name}
+                          </span>
+                        )}
+                        <input
+                          ref={(el) => {
+                            translateFileRefs.current[lang.code] = el;
+                          }}
+                          type="file"
+                          accept=".srt,.vtt"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file)
+                              translationsFileUpload.handleUploadFile(
+                                lang.code,
+                                file,
+                              );
+                          }}
+                        />
+                      </div>
+                    )}
                 </div>
               );
             })}
