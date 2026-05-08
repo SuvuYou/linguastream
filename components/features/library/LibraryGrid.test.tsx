@@ -24,7 +24,8 @@ vi.mock("@/hooks/useLanguages", () => ({
   useLanguages: vi.fn(),
 }));
 
-vi.mock("@/components/features/library/ContentConfigurationModal", () => ({
+
+vi.mock("@/components/features/library/ContentConfigurationModal/Modal", () => ({
   default: ({ onSuccess }: { onSuccess: () => void }) => (
     <button onClick={onSuccess}>Mock Modal</button>
   ),
