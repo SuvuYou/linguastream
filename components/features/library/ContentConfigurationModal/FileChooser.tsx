@@ -35,7 +35,7 @@ export default function FileChooser(props: FileChooserProps) {
         type="file"
         accept=".srt,.vtt"
         className="hidden"
-        data-testId="file-input"
+        data-testid="file-input"
         onChange={(e) => {
           const file = e.target.files?.[0];
           if (file) onUpload(file);
