@@ -99,7 +99,7 @@ export default function OverlayPlayer() {
   return (
     <div
       className={`fixed inset-0 z-50 bg-background/80 backdrop-blur-sm transition-all ${isOpen ? "h-full" : "h-0"} overflow-hidden`}
-      data-testId={"close-button"}
+      data-testid={"close-button"}
       onClick={close}
     >
       <div
