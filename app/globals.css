@@ -134,3 +134,59 @@
     background: rgba(109, 156, 117, 0.3);
   }
 }
+
+@layer utilities {
+  .bg-app {
+    background:
+      radial-gradient(
+        circle at top left,
+        rgba(109, 156, 117, 0.12),
+        transparent 30%
+      ),
+      var(--color-background);
+  }
+
+  .glass {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(20px);
+  }
+
+  .panel {
+    @apply glass border rounded-[24px];
+    border-color: var(--color-border);
+  }
+
+  .panel-hover {
+    transition: all 180ms ease;
+  }
+
+  .panel-hover:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--color-border-strong);
+  }
+
+  .text-muted {
+    color: var(--color-text-muted);
+  }
+
+  .text-secondary {
+    color: var(--color-text-secondary);
+  }
+
+  .scrollbar-subtle::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  .scrollbar-subtle::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+  }
+
+  .focus-ring {
+    @apply outline-none ring-0;
+  }
+
+  .focus-ring:focus-visible {
+    box-shadow: var(--shadow-glow);
+  }
+}
