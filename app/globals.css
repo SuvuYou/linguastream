@@ -1,10 +1,53 @@
 @import "tailwindcss";
 
 @theme inline {
+  /* Core */
   --color-background: #08090b;
+  --color-surface: #111317;
+  --color-surface-elevated: #171a1f;
+  --color-surface-hover: #1d2127;
+
+  /* Text */
+  --color-text-primary: #e2e4e8;
+  --color-text-secondary: #c8ccd2;
+  --color-text-muted: #8b93a1;
+
+  /* Brand */
+  --color-primary: #6d9c75;
+  --color-primary-hover: #7aac83;
+  --color-primary-foreground: #08110a;
+
+  /* Borders */
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.14);
+
+  /* Semantic */
+  --color-success: #6d9c75;
+  --color-warning: #f0b35f;
+  --color-danger: #d96b6b;
+  --color-info: #6aa7ff;
+
+  /* Glow */
+  --shadow-glow:
+    0 0 0 1px rgba(109, 156, 117, 0.12), 0 0 40px rgba(109, 156, 117, 0.18);
+
+  /* Radius */
+  --radius-sm: 12px;
+  --radius-md: 18px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+
+  /* Layout */
+  --header-height: 72px;
+  --sidebar-width: 280px;
+
+  /* Typography */
+  --font-sans: var(--font-geist-sans);
+
+  /* --color-background: #08090b; */
   --color-background-hover: #1f1e1e;
 
-  --font-sans: var(--font-geist-sans);
+  /* --font-sans: var(--font-geist-sans); */
   --font-mono: var(--font-geist-mono);
 
   --color-primary-text: #e2e4e8;
@@ -14,70 +57,80 @@
   --color-active-border: #6d9c75;
 }
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-*:not(dialog) {
-  margin: 0;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  html {
-    interpolate-size: allow-keywords;
+@layer base {
+  *,
+  *::before,
+  *::after {
+    @apply border-border;
   }
-}
 
-body {
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-}
+  *:not(dialog) {
+    margin: 0;
+  }
 
-img,
-picture,
-video,
-canvas,
-svg {
-  display: block;
-  max-width: 100%;
-}
+  html {
+    color-scheme: dark;
+  }
 
-input,
-button,
-textarea,
-select {
-  font: inherit;
-}
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      interpolate-size: allow-keywords;
+    }
+  }
 
-p,
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  overflow-wrap: break-word;
-}
+  body {
+    background: var(--color-background);
+    color: var(--color-text-primary);
+    font-family: var(--font-sans);
+    text-rendering: optimizeLegibility;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
 
-p {
-  text-wrap: pretty;
-}
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  text-wrap: balance;
-}
+  img,
+  picture,
+  video,
+  canvas,
+  svg {
+    display: block;
+    max-width: 100%;
+  }
 
-#root,
-#__next {
-  isolation: isolate;
-}
+  input,
+  button,
+  textarea,
+  select {
+    font: inherit;
+  }
 
-body {
-  font-family: Arial, Helvetica, sans-serif;
+  p,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    overflow-wrap: break-word;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    text-wrap: balance;
+  }
+
+  #root,
+  #__next {
+    isolation: isolate;
+  }
+
+  ::selection {
+    background: rgba(109, 156, 117, 0.3);
+  }
 }
