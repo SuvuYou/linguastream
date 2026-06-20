@@ -68,8 +68,8 @@ export default function WatchPage({
     );
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <div className="flex flex-col flex-2 min-w-0 bg-black items-center justify-start pt-1">
+    <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-col flex-2 min-w-0 bg-background items-center justify-start pt-1">
         <Player
           streamUrl={data.streamUrl}
           title={data.title}

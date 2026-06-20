@@ -152,7 +152,7 @@ export default function OverlayPlayer() {
         </div>
         <div className="flex flex-1 gap-4 min-h-0">
           <div
-            className={`${selected && streamData.data ? "flex-3" : "flex-0"} transition-all min-w-0 bg-black relative overflow-hidden`}
+            className={`${selected && streamData.data ? "flex-3" : "flex-0"} transition-all min-w-0 bg-background relative overflow-hidden`}
           >
             {selected && streamData.data ? (
               <>
