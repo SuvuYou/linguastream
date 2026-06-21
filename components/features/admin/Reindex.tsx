@@ -1,5 +1,6 @@
 "use client";
 
+import { ArchiveRestore, RefreshCw } from "lucide-react";
 import { useTransition } from "react";
 
 export default function Reindex() {
@@ -13,11 +14,16 @@ export default function Reindex() {
 
   return (
     <button
+      title={isPending ? "Reindexing..." : "Reindex Subtitles"}
       onClick={handleReindex}
       disabled={isPending}
       className="text-xs px-3 py-1.5 border border-primary-border text-secondary-text hover:text-primary-text disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed transition-all"
     >
-      {isPending ? "Reindexing..." : "Reindex Subtitles"}
+      {isPending ? (
+        <RefreshCw className="size-4 animate-spin" />
+      ) : (
+        <ArchiveRestore className="size-4" />
+      )}
     </button>
   );
 }
