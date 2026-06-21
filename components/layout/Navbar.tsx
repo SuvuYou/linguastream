@@ -3,37 +3,66 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import SignOutButton from "@/components/features/signin/SignOutButton";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarHeader,
+  SidebarFooter,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from "@/components/ui/sidebar";
 
-export default function Navbar() {
+const NAV_LINKS = [
+  { href: "/", label: "Library" },
+  { href: "/personal", label: "Personal" },
+  { href: "/decks", label: "Decks" },
+  { href: "/study", label: "Study" },
+  { href: "/design", label: "Design" },
+] as const;
+
+export default function AppSidebar() {
   const pathname = usePathname();
 
-  const linkClass = (href: string) =>
-    `px-4 text-sm h-full flex items-center border-r border-primary-border border-b-2 ${
-      pathname === href
-        ? "border-b-active-border text-primary-text"
-        : "border-b-transparent text-secondary-text hover:bg-background-hover"
-    }`;
-
   return (
-    <nav className="flex flex-wrap overflow-visible items-center h-12 border-b border-primary-border">
-      <div className="flex items-center px-4 font-medium text-sm border-r border-primary-border h-full ">
-        LinguaStream
-      </div>
-      <Link href="/" className={linkClass("/")}>
-        Library
-      </Link>
-      <Link href="/personal" className={linkClass("/personal")}>
-        Personal
-      </Link>
-      <Link href="/decks" className={linkClass("/decks")}>
-        Decks
-      </Link>
-      <Link href="/study" className={linkClass("/study")}>
-        Study
-      </Link>
-      <div className="ml-auto mr-4">
-        <SignOutButton />
-      </div>
-    </nav>
+    <Sidebar>
+      <SidebarHeader>
+        <div className="px-2 py-1.5 text-sm font-medium">LinguaStream</div>
+      </SidebarHeader>
+
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {NAV_LINKS.map(({ href, label }) => {
+                const isActive = pathname === href;
+                return (
+                  <SidebarMenuItem key={href}>
+                    <SidebarMenuButton asChild isActive={isActive}>
+                      <Link
+                        href={href}
+                        aria-current={isActive ? "page" : undefined}
+                      >
+                        {label}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SignOutButton />
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+    </Sidebar>
   );
 }

@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from "@/components/layout/Navbar";
 import Providers from "@/components/layout/Providers";
 import { cn } from "@/lib/utils";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,10 +38,12 @@ export default function RootLayout({
       )}
     >
       <body>
-        <main className="flex min-h-dvh flex-col">
+        <SidebarProvider>
           <Navbar />
-          <Providers>{children}</Providers>
-        </main>
+          <main className="flex min-h-dvh flex-col">
+            <Providers>{children}</Providers>
+          </main>
+        </SidebarProvider>
       </body>
     </html>
   );
