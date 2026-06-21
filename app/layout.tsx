@@ -40,7 +40,7 @@ export default function RootLayout({
       <body>
         <SidebarProvider>
           <Navbar />
-          <main className="flex min-h-dvh flex-col">
+          <main className="flex min-h-dvh w-full flex-col bg-sidebar">
             <Providers>{children}</Providers>
           </main>
         </SidebarProvider>

@@ -34,7 +34,7 @@ export default function AppSidebar() {
   const pathname = usePathname();
 
   return (
-    <Sidebar>
+    <Sidebar className="shrink-0 h-lvh" collapsible="none">
       <SidebarHeader>
         <div className="px-2 py-1.5 text-sm font-medium">LinguaStream</div>
       </SidebarHeader>
