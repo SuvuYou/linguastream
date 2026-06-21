@@ -12,7 +12,7 @@
   *,
   *::before,
   *::after {
-    /* @apply border-border; */
+    @apply border-border outline-ring/50;
   }
 
   html {
@@ -21,6 +21,7 @@
 
   body {
     @apply min-h-screen bg-background text-foreground;
+    letter-spacing: var(--tracking-normal);
   }
 
   ::selection {
