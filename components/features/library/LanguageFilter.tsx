@@ -5,7 +5,21 @@ import { PUBLIC_LIBRARY_PARAMS_SCHEMA } from "@/helpers/params-schema";
 import { useLanguages } from "@/hooks/useLanguages";
 import { useZodSearchParams } from "@/hooks/useZodSearchParams";
 import { useAppStore } from "@/lib/initializations/store";
-import { useEffect } from "react";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyTitle,
+  EmptyDescription,
+} from "@/components/ui/empty";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function LanguageFilter() {
   const searchParams = useZodSearchParams(PUBLIC_LIBRARY_PARAMS_SCHEMA);
@@ -16,18 +30,6 @@ export default function LanguageFilter() {
 
   const { setPreferredSourceLanguage, setPreferredTranslationLanguage } =
     useAppStore();
-
-  useEffect(() => {
-    if (languages.selectedSourceLanguage)
-      setPreferredSourceLanguage(languages.selectedSourceLanguage);
-    if (languages.selectedTranslationLanguage)
-      setPreferredTranslationLanguage(languages.selectedTranslationLanguage);
-  }, [
-    languages.selectedSourceLanguage,
-    languages.selectedTranslationLanguage,
-    setPreferredSourceLanguage,
-    setPreferredTranslationLanguage,
-  ]);
 
   const updateFilter = (type: "src" | "trans", value: string) => {
     if (type === "src") setPreferredSourceLanguage(value);
@@ -42,8 +44,13 @@ export default function LanguageFilter() {
 
   if (languages.isLoading || languages.isFetching) {
     return (
-      <div className="p-12 text-center text-sm text-secondary-text">
-        Loading languages...
+      <div
+        className="flex items-center gap-3 px-4 h-full"
+        role="status"
+        aria-label="Loading languages"
+      >
+        <Skeleton className="h-9 w-46" />
+        <Skeleton className="h-9 w-46" />
       </div>
     );
   }
@@ -54,9 +61,13 @@ export default function LanguageFilter() {
       availableTranslationLanguages.length === 0)
   )
     return (
-      <div className="p-12 text-center text-sm text-secondary-text">
-        No languages to select from.
-      </div>
+      <Empty className="p-4">
+        <EmptyHeader>
+          <EmptyTitle className="text-sm">
+            No languages to select from
+          </EmptyTitle>
+        </EmptyHeader>
+      </Empty>
     );
 
   if (
@@ -65,42 +76,71 @@ export default function LanguageFilter() {
     !languages.selectedTranslationLanguage
   )
     return (
-      <div className="p-12 text-center text-sm text-secondary-text">
-        Failed to load languages.
-      </div>
+      <Empty className="p-4">
+        <EmptyHeader>
+          <EmptyTitle className="text-sm">Failed to load languages</EmptyTitle>
+          <EmptyDescription>Please try refreshing the page.</EmptyDescription>
+        </EmptyHeader>
+      </Empty>
     );
 
   return (
-    <div className="flex items-center h-full divide-x divide-primary-border">
-      <div className="flex items-center gap-2 px-4 h-full">
-        <span className="text-xs text-secondary-text">Content</span>
-        <select
+    <div className="flex items-center h-full">
+      <Field orientation="horizontal" className="px-1 w-auto">
+        <Select
           value={languages.selectedSourceLanguage}
-          onChange={(e) => updateFilter("src", e.target.value)}
-          className="bg-transparent text-xs text-active-border outline-none cursor-pointer"
+          onValueChange={(value) => updateFilter("src", value)}
         >
-          {availableSourceLanguages.map((code) => (
-            <option key={code} value={code} className="bg-background">
-              {getLabel(code)}
-            </option>
-          ))}
-        </select>
-      </div>
+          <SelectTrigger
+            id="content-language"
+            size="default"
+            className="*:text-xm min-h-auto"
+          >
+            <FieldLabel
+              htmlFor="content-language"
+              className="text-muted-foreground/50 pr-1"
+            >
+              Source:
+            </FieldLabel>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {availableSourceLanguages.map((code) => (
+              <SelectItem key={code} value={code}>
+                {getLabel(code)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Field>
 
-      <div className="flex items-center gap-2 px-4 h-full">
-        <span className="text-xs text-secondary-text">Translations</span>
-        <select
-          value={languages.selectedTranslationLanguage || ""}
-          onChange={(e) => updateFilter("trans", e.target.value)}
-          className="bg-transparent text-xs text-active-border outline-none cursor-pointer"
+      <Field orientation="horizontal" className="px-1 w-auto">
+        <Select
+          value={languages.selectedTranslationLanguage || undefined}
+          onValueChange={(value) => updateFilter("trans", value)}
         >
-          {availableTranslationLanguages.map((code) => (
-            <option key={code} value={code} className="bg-background">
-              {getLabel(code)}
-            </option>
-          ))}
-        </select>
-      </div>
+          <SelectTrigger
+            id="translation-language"
+            size="default"
+            className="*:text-xm min-h-auto"
+          >
+            <FieldLabel
+              htmlFor="translation-language"
+              className="text-muted-foreground/50 pr-1"
+            >
+              Translations:
+            </FieldLabel>
+            <SelectValue placeholder="Select language" />
+          </SelectTrigger>
+          <SelectContent>
+            {availableTranslationLanguages.map((code) => (
+              <SelectItem key={code} value={code}>
+                {getLabel(code)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Field>
     </div>
   );
 }
