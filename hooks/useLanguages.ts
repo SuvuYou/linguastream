@@ -3,12 +3,10 @@ import { useZodSearchParams } from "@/hooks/useZodSearchParams";
 import { useQuery } from "@tanstack/react-query";
 import type { LanguagesResponse } from "@/types/languages";
 import { useAppStore } from "@/lib/initializations/store";
-import { LanguageCode } from "@/helpers/const";
-import { useEffect } from "react";
 
 export function useLanguages() {
   const { data, isLoading, isFetching, isError } = useQuery<LanguagesResponse>({
-    queryKey: ["langauges"],
+    queryKey: ["languages"],
     queryFn: async () => {
       const response = await fetch(`/api/languages`);
 
@@ -24,39 +22,8 @@ export function useLanguages() {
   const { availableSourceLanguages, availableTranslationLanguages } =
     data || DEFAULT_LANGUAGES_RESPONSE;
 
-  const searchParams = useZodSearchParams(FETCH_LANGUAGES_API_PARAMS_SCHEMA);
-  const { src: sourceLanguage, trans: translationLanguage } =
-    searchParams.params;
-
-  useEffect(() => {
-    if (
-      !sourceLanguage &&
-      preferredSourceLanguage &&
-      availableSourceLanguages.includes(preferredSourceLanguage)
-    ) {
-      searchParams.set({ src: preferredSourceLanguage as LanguageCode });
-    }
-  }, [
-    sourceLanguage,
-    availableSourceLanguages,
-    preferredSourceLanguage,
-    searchParams,
-  ]);
-
-  useEffect(() => {
-    if (
-      !translationLanguage &&
-      preferredTranslationLanguage &&
-      availableTranslationLanguages.includes(preferredTranslationLanguage)
-    ) {
-      searchParams.set({ trans: preferredTranslationLanguage as LanguageCode });
-    }
-  }, [
-    translationLanguage,
-    availableTranslationLanguages,
-    preferredTranslationLanguage,
-    searchParams,
-  ]);
+  const { params } = useZodSearchParams(FETCH_LANGUAGES_API_PARAMS_SCHEMA);
+  const { src: sourceLanguageParam, trans: translationLanguageParam } = params;
 
   if (
     availableSourceLanguages.length == 0 ||
@@ -73,21 +40,46 @@ export function useLanguages() {
     };
   }
 
-  const selectedSourceLanguage = availableSourceLanguages.includes(
-    sourceLanguage || "",
-  )
-    ? sourceLanguage
-    : availableSourceLanguages[0];
+  const fallbackSource =
+    preferredSourceLanguage &&
+    availableSourceLanguages.includes(preferredSourceLanguage)
+      ? preferredSourceLanguage
+      : availableSourceLanguages[0];
+
+  const selectedSourceLanguage =
+    sourceLanguageParam &&
+    availableSourceLanguages.includes(sourceLanguageParam)
+      ? sourceLanguageParam
+      : fallbackSource;
 
   const filteredAvailableTranslationLanguages =
     availableTranslationLanguages.filter(
       (lang) => lang !== selectedSourceLanguage,
     );
 
-  const selectedTranslationLanguage =
-    filteredAvailableTranslationLanguages.includes(translationLanguage || "")
-      ? translationLanguage
+  if (filteredAvailableTranslationLanguages.length == 0) {
+    return {
+      selectedSourceLanguage,
+      selectedTranslationLanguage: null,
+      availableSourceLanguages,
+      availableTranslationLanguages: filteredAvailableTranslationLanguages,
+      isLoading,
+      isFetching,
+      isError,
+    };
+  }
+
+  const fallbackTranslation =
+    preferredTranslationLanguage &&
+    filteredAvailableTranslationLanguages.includes(preferredTranslationLanguage)
+      ? preferredTranslationLanguage
       : filteredAvailableTranslationLanguages[0];
+
+  const selectedTranslationLanguage =
+    translationLanguageParam &&
+    filteredAvailableTranslationLanguages.includes(translationLanguageParam)
+      ? translationLanguageParam
+      : fallbackTranslation;
 
   return {
     selectedSourceLanguage,
