@@ -104,7 +104,7 @@ export default function LanguageFilter() {
             </FieldLabel>
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent position="popper">
             {availableSourceLanguages.map((code) => (
               <SelectItem key={code} value={code}>
                 {getLabel(code)}
@@ -132,7 +132,7 @@ export default function LanguageFilter() {
             </FieldLabel>
             <SelectValue placeholder="Select language" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent position="popper">
             {availableTranslationLanguages.map((code) => (
               <SelectItem key={code} value={code}>
                 {getLabel(code)}
