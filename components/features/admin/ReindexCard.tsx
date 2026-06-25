@@ -22,7 +22,7 @@ export default function ReindexCard() {
   };
 
   return (
-    <Card className="flex-1 justify-between">
+    <Card className="flex-1 justify-between max-w-lg">
       <CardHeader>
         <CardTitle>Reindex Subtitles</CardTitle>
         <CardDescription>Reindex your subtitle files</CardDescription>

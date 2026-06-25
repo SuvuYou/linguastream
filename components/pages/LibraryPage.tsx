@@ -20,15 +20,15 @@ export default function LibraryPage() {
       <div className="flex items-center min-h-10 px-4 pb-4 pt-2 gap-4">
         <SearchBar />
         <LanguageFilter />
+        {isAdmin && <UnregisteredCheckbox />}
       </div>
 
       <Separator />
 
       <ScrollArea className="flex-1">
-        <div className="flex items-stretch justify-between gap-4 p-4">
+        <div className="flex items-stretch justify-evenly gap-4 p-4">
           {isAdmin && <SyncCard />}
           {isAdmin && <ReindexCard />}
-          {isAdmin && <UnregisteredCheckbox />}
         </div>
         <LibraryGrid />
       </ScrollArea>

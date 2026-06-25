@@ -98,7 +98,7 @@ export default function LanguageFilter() {
           >
             <FieldLabel
               htmlFor="content-language"
-              className="text-muted-foreground/50 pr-1"
+              className="text-muted-foreground/70 pr-1 cursor-pointer"
             >
               Source:
             </FieldLabel>
@@ -126,7 +126,7 @@ export default function LanguageFilter() {
           >
             <FieldLabel
               htmlFor="translation-language"
-              className="text-muted-foreground/50 pr-1"
+              className="text-muted-foreground/70 pr-1 cursor-pointer"
             >
               Translations:
             </FieldLabel>

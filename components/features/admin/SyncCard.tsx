@@ -29,7 +29,7 @@ export default function SyncCard() {
   };
 
   return (
-    <Card className="flex-1 justify-between">
+    <Card className="flex-1 justify-between max-w-lg">
       <CardHeader>
         <CardTitle>Sync Jellyfin</CardTitle>
         <CardDescription>
