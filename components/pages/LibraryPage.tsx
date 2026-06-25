@@ -1,6 +1,5 @@
 "use client";
 
-import SyncButton from "@/components/features/admin/SyncButton";
 import UnregisteredCheckbox from "@/components/features/admin/UnregisteredCheckbox";
 import LanguageFilter from "@/components/features/library/LanguageFilter";
 import SearchBar from "@/components/features/library/SearchBar";
@@ -9,6 +8,7 @@ import Reindex from "@/components/features/admin/Reindex";
 import { useUser } from "@/hooks/useUser";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import SyncCard from "../features/admin/SyncCard";
 
 export default function LibraryPage() {
   const userData = useUser();
@@ -20,16 +20,16 @@ export default function LibraryPage() {
       <div className="flex items-center min-h-10 px-4 pb-4 pt-2 gap-4">
         <SearchBar />
         <LanguageFilter />
-        <div className="ml-auto flex items-center gap-4">
-          {isAdmin && <SyncButton />}
-          {isAdmin && <Reindex />}
-          {isAdmin && <UnregisteredCheckbox />}
-        </div>
       </div>
 
       <Separator />
 
       <ScrollArea className="flex-1">
+        <div className="flex items-center justify-between gap-4 p-4">
+          {isAdmin && <SyncCard />}
+          {isAdmin && <Reindex />}
+          {isAdmin && <UnregisteredCheckbox />}
+        </div>
         <LibraryGrid />
       </ScrollArea>
     </section>
