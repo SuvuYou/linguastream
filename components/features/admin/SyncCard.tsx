@@ -7,7 +7,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { CloudSync, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { Badge } from "@/components/ui/badge";
+import { CloudSync } from "lucide-react";
 import { useState, useTransition } from "react";
 
 export default function SyncCard() {
@@ -21,35 +24,38 @@ export default function SyncCard() {
     startTransition(async () => {
       const res = await fetch("/api/sync-jellyfin", { method: "POST" });
       const data = await res.json();
-
       setSyncInfo(data);
     });
   };
 
   return (
-    <Card className="flex-1">
+    <Card className="flex-1 justify-between">
       <CardHeader>
         <CardTitle>Sync Jellyfin</CardTitle>
         <CardDescription>
           Sync your Jellyfin library with the latest changes
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <button
+      <CardContent className="flex items-center gap-3">
+        <Button
+          variant="outline"
+          size="lg"
           onClick={handleSync}
           disabled={isPending}
-          className="text-xs px-3 py-1.5 border border-primary-border text-secondary-text hover:text-primary-text disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed transition-all"
+          aria-label={isPending ? "Syncing Jellyfin..." : "Sync Jellyfin"}
+          aria-busy={isPending}
         >
           {isPending ? (
-            <RefreshCw className="size-4 animate-spin" />
+            <Spinner className="size-4" />
           ) : (
             <CloudSync className="size-4" />
           )}
-        </button>
+        </Button>
+
         {syncInfo && (
-          <span className="text-xs text-secondary-text">
+          <Badge variant="secondary" className="text-xs font-normal">
             {syncInfo.synced} new items synced ({syncInfo.total} total)
-          </span>
+          </Badge>
         )}
       </CardContent>
     </Card>

@@ -4,7 +4,7 @@ import UnregisteredCheckbox from "@/components/features/admin/UnregisteredCheckb
 import LanguageFilter from "@/components/features/library/LanguageFilter";
 import SearchBar from "@/components/features/library/SearchBar";
 import LibraryGrid from "@/components/features/library/LibraryGrid";
-import Reindex from "@/components/features/admin/Reindex";
+import ReindexCard from "@/components/features/admin/ReindexCard";
 import { useUser } from "@/hooks/useUser";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -25,9 +25,9 @@ export default function LibraryPage() {
       <Separator />
 
       <ScrollArea className="flex-1">
-        <div className="flex items-center justify-between gap-4 p-4">
+        <div className="flex items-stretch justify-between gap-4 p-4">
           {isAdmin && <SyncCard />}
-          {isAdmin && <Reindex />}
+          {isAdmin && <ReindexCard />}
           {isAdmin && <UnregisteredCheckbox />}
         </div>
         <LibraryGrid />
