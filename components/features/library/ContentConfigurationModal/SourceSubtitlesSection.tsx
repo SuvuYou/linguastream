@@ -8,6 +8,10 @@ import { FileUploadState } from "@/hooks/useFileUpload";
 import { AcquisitionMethod } from "@prisma/client";
 import { useRef } from "react";
 import FileStatus from "@/components/features/library/ContentConfigurationModal/FileStatus";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 interface SourceSubtitlesSectionProps {
   acquisitionMethod: AcquisitionMethod;
@@ -25,36 +29,38 @@ export function SourceSubtitlesSection({
   const fileRef = useRef<HTMLInputElement>(null);
 
   return (
-    <div className="flex flex-col gap-2">
-      <label className="text-xs text-secondary-text">Source subtitles</label>
+    <Field className="gap-2">
+      <FieldLabel className="text-xs text-secondary-text font-normal">
+        Source subtitles
+      </FieldLabel>
 
-      <div className="flex gap-2">
-        {SUBTITLE_ACQUISITION_METHOD.map((method) => (
-          <button
-            key={method.type}
-            onClick={() => onChangeMethod(method.type)}
-            className={`flex-1 px-3 py-2 text-xs border transition-colors ${
-              acquisitionMethod === method.type
-                ? "border-active-border text-primary-text"
-                : "border-primary-border text-secondary-text hover:text-primary-text"
-            }`}
-          >
-            {method.type === SUBTITLE_ACQUISITION_METHODS.UPLOAD
-              ? "Upload file"
-              : "Generate with WhisperX"}
-          </button>
-        ))}
-      </div>
+      <Tabs
+        value={acquisitionMethod}
+        onValueChange={(value) => onChangeMethod(value as AcquisitionMethod)}
+      >
+        <TabsList className="w-full">
+          {SUBTITLE_ACQUISITION_METHOD.map((method) => (
+            <TabsTrigger
+              key={method.type}
+              value={method.type}
+              className="flex-1 text-xs"
+            >
+              {method.type === SUBTITLE_ACQUISITION_METHODS.UPLOAD
+                ? "Upload file"
+                : "Generate with WhisperX"}
+            </TabsTrigger>
+          ))}
+        </TabsList>
 
-      {acquisitionMethod === SUBTITLE_ACQUISITION_METHODS.UPLOAD && (
-        <div className="flex flex-col gap-1">
+        <TabsContent value={SUBTITLE_ACQUISITION_METHODS.UPLOAD}>
           <div className="flex items-center gap-3">
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => fileRef.current?.click()}
-              className="text-xs px-3 py-1.5 border border-primary-border text-secondary-text hover:text-primary-text transition-colors"
             >
               {uploadState ? "Change file" : "Choose file"}
-            </button>
+            </Button>
 
             <FileStatus state={uploadState} />
 
@@ -75,15 +81,17 @@ export function SourceSubtitlesSection({
               if (file) onUpload(file);
             }}
           />
-        </div>
-      )}
+        </TabsContent>
 
-      {acquisitionMethod === SUBTITLE_ACQUISITION_METHODS.WHISPERX && (
-        <p className="text-xs text-secondary-text">
-          Audio will be transcribed locally using WhisperX. This may take
-          several minutes.
-        </p>
-      )}
-    </div>
+        <TabsContent value={SUBTITLE_ACQUISITION_METHODS.WHISPERX}>
+          <Alert>
+            <AlertDescription className="text-xs">
+              Audio will be transcribed locally using WhisperX. This may take
+              several minutes.
+            </AlertDescription>
+          </Alert>
+        </TabsContent>
+      </Tabs>
+    </Field>
   );
 }

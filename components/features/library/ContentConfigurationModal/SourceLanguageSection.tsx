@@ -1,6 +1,14 @@
 "use client";
 
 import { AUTO_DETECT, LANGUAGES } from "@/helpers/const";
+import { Field, FieldLabel } from "@/components/ui/field";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface SourceLanguageSectionProps {
   value: string;
@@ -12,22 +20,26 @@ export function SourceLanguageSection({
   onChange,
 }: SourceLanguageSectionProps) {
   return (
-    <div className="flex flex-col gap-2">
-      <label className="text-xs text-secondary-text">Content language</label>
-
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="bg-background border border-primary-border text-sm text-primary-text px-3 py-2 outline-none"
+    <Field className="gap-2">
+      <FieldLabel
+        htmlFor="source-language"
+        className="text-xs text-secondary-text font-normal"
       >
-        <option value={AUTO_DETECT}>Auto-detect</option>
-
-        {LANGUAGES.map((l) => (
-          <option key={l.code} value={l.code}>
-            {l.label}
-          </option>
-        ))}
-      </select>
-    </div>
+        Content language
+      </FieldLabel>
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger id="source-language" size="sm">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={AUTO_DETECT}>Auto-detect</SelectItem>
+          {LANGUAGES.map((l) => (
+            <SelectItem key={l.code} value={l.code}>
+              {l.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </Field>
   );
 }
