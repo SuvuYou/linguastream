@@ -11,6 +11,8 @@ import type { AcquisitionMethod } from "@prisma/client";
 import type { FileUploadState } from "@/hooks/useFileUpload";
 import { useUser } from "@/hooks/useUser";
 import TranslationSubtitleRow from "@/components/features/library/ContentConfigurationModal/TranslationSubtitleRow";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 interface TranslationLanguage {
   code: string;
@@ -50,54 +52,59 @@ export function TranslationSubtitlesSection({
   const user = useUser();
   const isAdmin = user.data?.is_admin;
 
+  const availableMethods = [
+    TRANSLATE_METHODS.LIBRETRANSLATE,
+    ...(isAdmin ? [TRANSLATE_METHODS.DEEPL] : []),
+    TRANSLATE_METHODS.UPLOAD,
+  ].filter(
+    (m) =>
+      !(
+        acquisitionMethod === SUBTITLE_ACQUISITION_METHODS.WHISPERX &&
+        m === TRANSLATE_METHODS.UPLOAD
+      ),
+  );
+
   return (
-    <div className="flex flex-col gap-2">
-      <label className="text-xs text-secondary-text">
+    <Field className="gap-2">
+      <FieldLabel className="text-xs text-secondary-text font-normal">
         Translation subtitles
-      </label>
+      </FieldLabel>
 
-      <div className="flex gap-2">
-        {[
-          TRANSLATE_METHODS.LIBRETRANSLATE,
-          ...(isAdmin ? [TRANSLATE_METHODS.DEEPL] : []),
-          TRANSLATE_METHODS.UPLOAD,
-        ]
-          .filter(
-            (m) =>
-              !(
-                acquisitionMethod === SUBTITLE_ACQUISITION_METHODS.WHISPERX &&
-                m === TRANSLATE_METHODS.UPLOAD
-              ),
-          )
-          .map((method) => (
-            <button
-              key={method}
-              onClick={() => setTranslateMethod(method)}
-              className={`flex-1 px-3 py-2 text-xs border transition-colors ${
-                effectiveTranslateMethod === method
-                  ? "border-active-border text-primary-text"
-                  : "border-primary-border text-secondary-text hover:text-primary-text"
-              }`}
-            >
+      <Tabs
+        value={effectiveTranslateMethod}
+        onValueChange={(value) =>
+          setTranslateMethod(value as TranslationMethod)
+        }
+      >
+        <TabsList className="w-full">
+          {availableMethods.map((method) => (
+            <TabsTrigger key={method} value={method} className="flex-1 text-xs">
               {TRANSLATE_METHOD_LABELS[method]}
-            </button>
+            </TabsTrigger>
           ))}
-      </div>
+        </TabsList>
 
-      <div className="flex flex-col gap-1 mt-1">
-        {availableTranslationLangs.map((lang) => (
-          <TranslationSubtitleRow
-            key={lang.code}
-            lang={lang}
-            isChecked={isTranslationLanguageSelected(lang.code)}
-            wasExisting={isTranslationLanguageExisting(lang.code)}
-            onToggle={() => toggleTranslateLang(lang.code)}
-            showUpload={effectiveTranslateMethod === TRANSLATE_METHODS.UPLOAD}
-            uploadState={getUploadState(lang.code)}
-            onUpload={(file) => onUploadFile(lang.code, file)}
-          />
+        {availableMethods.map((method) => (
+          <TabsContent key={method} value={method}>
+            <div className="flex flex-col gap-1 mt-1">
+              {availableTranslationLangs.map((lang) => (
+                <TranslationSubtitleRow
+                  key={lang.code}
+                  lang={lang}
+                  isChecked={isTranslationLanguageSelected(lang.code)}
+                  wasExisting={isTranslationLanguageExisting(lang.code)}
+                  onToggle={() => toggleTranslateLang(lang.code)}
+                  showUpload={
+                    effectiveTranslateMethod === TRANSLATE_METHODS.UPLOAD
+                  }
+                  uploadState={getUploadState(lang.code)}
+                  onUpload={(file) => onUploadFile(lang.code, file)}
+                />
+              ))}
+            </div>
+          </TabsContent>
         ))}
-      </div>
-    </div>
+      </Tabs>
+    </Field>
   );
 }
