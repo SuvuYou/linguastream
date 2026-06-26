@@ -4,6 +4,9 @@ import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { auth } from "@/lib/initializations/firebase/firebase";
 import { signOut } from "firebase/auth";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { LogOut } from "lucide-react";
 
 export default function SignOutButton() {
   const router = useRouter();
@@ -19,12 +22,24 @@ export default function SignOutButton() {
   }
 
   return (
-    <button
+    <Button
+      variant="ghost"
+      size="default"
       onClick={handleSignOut}
       disabled={isPending}
-      className="text-xs text-secondary-text hover:text-primary-text transition-colors disabled:opacity-50"
+      aria-busy={isPending}
+      className="mb-4 p-4 w-full justify-start"
     >
-      {isPending ? "Signing out..." : "Sign out"}
-    </button>
+      {isPending ? (
+        <>
+          <Spinner className="size-3.5" />
+          Signing out...
+        </>
+      ) : (
+        <>
+          <LogOut className="size-4" /> {"Sign out"}
+        </>
+      )}
+    </Button>
   );
 }
