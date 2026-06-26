@@ -41,27 +41,35 @@ export default function TranslationSubtitleRow({
 
         <Label
           htmlFor={`lang-${lang.code}`}
-          className="text-sm text-primary-text font-normal cursor-pointer flex-1"
+          className="text-sm text-primary-text font-normal cursor-pointer flex-1 py-1.5"
         >
           {lang.label}
         </Label>
 
         {wasExisting && !isChecked && (
-          <Badge variant="destructive" className="text-xs font-normal">
+          <Badge
+            size="sm"
+            variant="destructive"
+            className="text-xs font-normal"
+          >
             Will be removed
           </Badge>
         )}
 
         {wasExisting && isChecked && (
-          <Badge variant="secondary" className="text-xs font-normal">
+          <Badge size="sm" variant="secondary" className="text-xs font-normal">
             Existing
           </Badge>
         )}
-      </div>
 
-      {isChecked && showUpload && (
-        <FileChooser uploadState={uploadState} onUpload={onUpload} />
-      )}
+        {isChecked && showUpload && (
+          <FileChooser
+            uploadState={uploadState}
+            onUpload={onUpload}
+            size="sm"
+          />
+        )}
+      </div>
     </div>
   );
 }
