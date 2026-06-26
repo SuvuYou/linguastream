@@ -6,12 +6,10 @@ import {
 } from "@/helpers/const";
 import { FileUploadState } from "@/hooks/useFileUpload";
 import { AcquisitionMethod } from "@prisma/client";
-import { useRef } from "react";
-import FileStatus from "@/components/features/library/ContentConfigurationModal/FileStatus";
 import { Field, FieldLabel } from "@/components/ui/field";
-import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import FileChooser from "./FileChooser";
 
 interface SourceSubtitlesSectionProps {
   acquisitionMethod: AcquisitionMethod;
@@ -26,8 +24,6 @@ export function SourceSubtitlesSection({
   uploadState,
   onUpload,
 }: SourceSubtitlesSectionProps) {
-  const fileRef = useRef<HTMLInputElement>(null);
-
   return (
     <Field className="gap-2">
       <FieldLabel className="text-xs text-secondary-text font-normal">
@@ -53,34 +49,9 @@ export function SourceSubtitlesSection({
         </TabsList>
 
         <TabsContent value={SUBTITLE_ACQUISITION_METHODS.UPLOAD}>
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => fileRef.current?.click()}
-            >
-              {uploadState ? "Change file" : "Choose file"}
-            </Button>
-
-            <FileStatus state={uploadState} />
-
-            {uploadState?.status === "done" && (
-              <span className="text-xs text-secondary-text truncate max-w-35">
-                {uploadState.file.name}
-              </span>
-            )}
+          <div className="mt-1.5 mb-4">
+            <FileChooser uploadState={uploadState} onUpload={onUpload} />
           </div>
-
-          <input
-            ref={fileRef}
-            type="file"
-            accept=".srt,.vtt"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) onUpload(file);
-            }}
-          />
         </TabsContent>
 
         <TabsContent value={SUBTITLE_ACQUISITION_METHODS.WHISPERX}>
