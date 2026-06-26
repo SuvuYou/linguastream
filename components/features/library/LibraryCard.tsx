@@ -113,9 +113,9 @@ export default function LibraryCard({
 
   // — Normal state —
   return (
-    <Card className="relative hover:bg-background transition-all duration-400 p-0 group rounded-bl-xs hover:rounded-none">
-      <CardContent className="p-0">
-        <Link href={`/watch/${item.id}`}>
+    <Card className="relative transition-all duration-400 p-0 group rounded-bl-xs hover:rounded-none hover:bg-background hover:cursor-pointer">
+      <Link href={`/watch/${item.id}`}>
+        <CardContent className="p-0">
           <div className="aspect-video bg-secondary mb-3 overflow-hidden">
             <Image
               src={item.thumbnailUrl}
@@ -136,19 +136,18 @@ export default function LibraryCard({
           >
             {item.jellyfinItem.Type}
           </Badge>
-        </Link>
-
-        {isAdmin && onOpenConfigModal && (
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => onOpenConfigModal(item)}
-            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-all"
-          >
-            Configure
-          </Button>
-        )}
-      </CardContent>
+        </CardContent>
+      </Link>
+      {isAdmin && onOpenConfigModal && (
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => onOpenConfigModal(item)}
+          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-all"
+        >
+          Configure
+        </Button>
+      )}
     </Card>
   );
 }
