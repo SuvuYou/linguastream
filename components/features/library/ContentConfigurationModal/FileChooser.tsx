@@ -3,24 +3,31 @@
 import { useRef } from "react";
 import type { FileUploadState } from "@/hooks/useFileUpload";
 import FileStatus from "@/components/features/library/ContentConfigurationModal/FileStatus";
+import { Button } from "@/components/ui/button";
 
 interface FileChooserProps {
   uploadState: FileUploadState | null;
   onUpload: (file: File) => void;
+  size?: "sm" | "default";
 }
 
-export default function FileChooser(props: FileChooserProps) {
-  const { uploadState, onUpload } = props;
+export default function FileChooser({
+  uploadState,
+  onUpload,
+  size = "default",
+}: FileChooserProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   return (
-    <div className="ml-6 flex items-center gap-3 pb-1">
-      <button
+    <div className="flex items-center gap-3">
+      <Button
+        variant="outline"
+        size={size}
         onClick={() => inputRef.current?.click()}
-        className="text-xs px-3 py-1 border border-primary-border text-secondary-text hover:text-primary-text transition-colors"
+        className="px-4"
       >
         {uploadState ? "Change" : "Choose file"}
-      </button>
+      </Button>
 
       <FileStatus state={uploadState} />
 
