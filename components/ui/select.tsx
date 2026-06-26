@@ -35,16 +35,18 @@ function SelectValue({
 function SelectTrigger({
   className,
   size = "default",
+  variant = "secondary",
   children,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Trigger> & {
   size?: "sm" | "default";
+  variant?: "default" | "secondary" | "destructive" | "outline";
 }) {
   return (
     <SelectPrimitive.Trigger
       data-slot="select-trigger"
       data-size={size}
-      className={cn(buttonVariants({ variant: "secondary", size }), className)}
+      className={cn(buttonVariants({ variant, size }), className)}
       {...props}
     >
       {children}

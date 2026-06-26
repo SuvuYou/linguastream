@@ -36,7 +36,7 @@ export default function AppSidebar() {
   return (
     <Sidebar className="shrink-0 h-lvh" collapsible="none">
       <SidebarHeader>
-        <div className="px-2 py-1.5 pt-5 text-default font-medium underline underline-offset-4 decoration-primary decoration-2">
+        <div className="px-4 py-1.5 pt-5 text-default font-medium underline underline-offset-4 decoration-primary decoration-2">
           LinguaStream
         </div>
       </SidebarHeader>

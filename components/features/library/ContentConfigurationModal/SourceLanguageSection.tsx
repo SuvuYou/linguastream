@@ -21,17 +21,18 @@ export function SourceLanguageSection({
 }: SourceLanguageSectionProps) {
   return (
     <Field className="gap-2">
-      <FieldLabel
-        htmlFor="source-language"
-        className="text-xs text-secondary-text font-normal"
-      >
-        Content language
+      <FieldLabel className="text-xs text-secondary-text font-normal">
+        Content source language
       </FieldLabel>
       <Select value={value} onValueChange={onChange}>
-        <SelectTrigger id="source-language" size="sm">
+        <SelectTrigger
+          aria-labelledby="source-language-label"
+          variant="outline"
+          size="default"
+        >
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent position="popper">
           <SelectItem value={AUTO_DETECT}>Auto-detect</SelectItem>
           {LANGUAGES.map((l) => (
             <SelectItem key={l.code} value={l.code}>
