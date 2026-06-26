@@ -7,12 +7,7 @@ import { useZodSearchParams } from "@/hooks/useZodSearchParams";
 import { useAppStore } from "@/lib/initializations/store";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Empty,
-  EmptyHeader,
-  EmptyTitle,
-  EmptyDescription,
-} from "@/components/ui/empty";
+import { Empty, EmptyTitle } from "@/components/ui/empty";
 import {
   Select,
   SelectContent,
@@ -20,6 +15,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { InfoIcon, OctagonXIcon } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 export default function LanguageFilter() {
   const searchParams = useZodSearchParams(PUBLIC_LIBRARY_PARAMS_SCHEMA);
@@ -61,12 +59,23 @@ export default function LanguageFilter() {
       availableTranslationLanguages.length === 0)
   )
     return (
-      <Empty className="p-4">
-        <EmptyHeader>
+      <Empty
+        className="flex flex-row justify-start p-0"
+        title=" No languages to select from"
+      >
+        <Badge variant={"warning"} size={"default"}>
+          <InfoIcon className="size-4" />
           <EmptyTitle className="text-sm">
             No languages to select from
           </EmptyTitle>
-        </EmptyHeader>
+        </Badge>
+
+        <Badge variant={"warning"} size={"default"}>
+          <InfoIcon className="size-4" />
+          <EmptyTitle className="text-sm">
+            No languages to select from
+          </EmptyTitle>
+        </Badge>
       </Empty>
     );
 
@@ -76,11 +85,19 @@ export default function LanguageFilter() {
     !languages.selectedTranslationLanguage
   )
     return (
-      <Empty className="p-4">
-        <EmptyHeader>
+      <Empty
+        className="flex flex-row justify-start p-0"
+        title="Please try refreshing the page."
+      >
+        <Badge variant={"destructive"} size={"default"}>
+          <OctagonXIcon className="size-4" />
           <EmptyTitle className="text-sm">Failed to load languages</EmptyTitle>
-          <EmptyDescription>Please try refreshing the page.</EmptyDescription>
-        </EmptyHeader>
+        </Badge>
+
+        <Badge variant={"destructive"} size={"default"}>
+          <OctagonXIcon className="size-4" />
+          <EmptyTitle className="text-sm">Failed to load languages</EmptyTitle>
+        </Badge>
       </Empty>
     );
 
