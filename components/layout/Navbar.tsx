@@ -23,11 +23,11 @@ import {
 } from "lucide-react";
 
 const NAV_LINKS = [
-  { href: "/", label: "Library", icon: <SquareLibrary /> },
-  { href: "/personal", label: "Personal", icon: <BookHeart /> },
-  { href: "/decks", label: "Decks", icon: <Layers /> },
-  { href: "/study", label: "Study", icon: <BookOpen /> },
-  { href: "/design", label: "Design", icon: <Paintbrush /> },
+  { href: "/dashboard", label: "Library", icon: <SquareLibrary /> },
+  { href: "/dashboard/personal", label: "Personal", icon: <BookHeart /> },
+  { href: "/dashboard/decks", label: "Decks", icon: <Layers /> },
+  { href: "/dashboard/study", label: "Study", icon: <BookOpen /> },
+  { href: "/dashboard/design", label: "Design", icon: <Paintbrush /> },
 ] as const;
 
 export default function AppSidebar() {
