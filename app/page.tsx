@@ -1,9 +1,5 @@
-import LibraryPage from "@/components/pages/LibraryPage";
+import { redirect } from "next/navigation";
 
-export default async function Library() {
-  return (
-    <>
-      <LibraryPage />
-    </>
-  );
+export default function HomePage() {
+  redirect("/dashboard");
 }
