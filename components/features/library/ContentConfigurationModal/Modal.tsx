@@ -69,7 +69,10 @@ export default function ContentConfigurationModal({
   const allFileUploadsReady = (() => {
     if (
       acquisitionMethod === SUBTITLE_ACQUISITION_METHODS.UPLOAD &&
-      !sourceFileUpload.areFilesReady()
+      !sourceFileUpload.areFilesReady([
+        languageSelector.data.selectedSourceLang,
+      ]) &&
+      !languageSelector.checks.isSourceLanguageExisting
     )
       return false;
 
@@ -141,6 +144,7 @@ export default function ContentConfigurationModal({
             />
 
             <SourceSubtitlesSection
+              isExisting={languageSelector.checks.isSourceLanguageExisting}
               acquisitionMethod={acquisitionMethod}
               onChangeMethod={setAcquisitionMethod}
               uploadState={sourceFileUpload.fileUploads["source"] ?? null}
@@ -197,11 +201,11 @@ export default function ContentConfigurationModal({
         </ScrollArea>
 
         <DialogFooter className="px-6 py-4 border-t border-primary-border">
-          <Button variant="ghost" size="sm" onClick={onClose}>
+          <Button variant="ghost" size="lg" onClick={onClose}>
             Cancel
           </Button>
           <Button
-            size="sm"
+            size="lg"
             onClick={handleSubmit}
             disabled={!canSubmit}
             aria-busy={isPending}

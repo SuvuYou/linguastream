@@ -10,12 +10,14 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import FileChooser from "./FileChooser";
+import { Badge } from "@/components/ui/badge";
 
 interface SourceSubtitlesSectionProps {
   acquisitionMethod: AcquisitionMethod;
   onChangeMethod: (method: AcquisitionMethod) => void;
   uploadState: FileUploadState | null;
   onUpload: (file: File) => void;
+  isExisting: boolean;
 }
 
 export function SourceSubtitlesSection({
@@ -23,6 +25,7 @@ export function SourceSubtitlesSection({
   onChangeMethod,
   uploadState,
   onUpload,
+  isExisting,
 }: SourceSubtitlesSectionProps) {
   return (
     <Field className="gap-2">
@@ -49,8 +52,19 @@ export function SourceSubtitlesSection({
         </TabsList>
 
         <TabsContent value={SUBTITLE_ACQUISITION_METHODS.UPLOAD}>
-          <div className="mt-1.5 mb-4">
-            <FileChooser uploadState={uploadState} onUpload={onUpload} />
+          <div className="flex flex-row-reverse items-start justify-start gap-2">
+            <div className="mt-1.5 mb-4">
+              <FileChooser uploadState={uploadState} onUpload={onUpload} />
+            </div>
+            {isExisting && (
+              <Badge
+                size="sm"
+                variant="secondary"
+                className="text-xs font-normal mt-2 "
+              >
+                Existing
+              </Badge>
+            )}
           </div>
         </TabsContent>
 

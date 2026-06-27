@@ -31,6 +31,10 @@ export function useLanguageSelectors(args: Args) {
     getDefaultSourceLanguage(item),
   );
 
+  const isSourceLanguageExisting =
+    item.subtitle_tracks.map((t) => t.language).includes(selectedSourceLang) &&
+    item.source_language === selectedSourceLang;
+
   const availableTranslationLangs = LANGUAGES.filter(
     (l) => l.code !== selectedSourceLang,
   );
@@ -74,6 +78,7 @@ export function useLanguageSelectors(args: Args) {
       toggleTranslateLang,
     },
     checks: {
+      isSourceLanguageExisting,
       isTranslationLanguageSelected,
       isTranslationLanguageExisting,
     },
