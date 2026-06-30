@@ -9,6 +9,13 @@ import { useAppStore } from "@/lib/initializations/store";
 import OverlayPlayer from "../features/overlay-player/OverlayPlayer";
 import { useZodSearchParams } from "@/hooks/useZodSearchParams";
 import { WATCH_PAGE_PARAMS_SCHEMA } from "@/helpers/params-schema";
+import { Spinner } from "@/components/ui/spinner";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyTitle,
+  EmptyDescription,
+} from "@/components/ui/empty";
 
 export default function WatchPage({
   mediaContentId,
@@ -51,20 +58,20 @@ export default function WatchPage({
 
   if (isLoading)
     return (
-      <>
-        <div className="flex items-center justify-center h-64 text-secondary-text text-sm">
-          Loading...
-        </div>
-      </>
+      <div className="flex items-center justify-center h-64 gap-2 text-secondary-text text-sm">
+        <Spinner className="size-4" />
+        Loading...
+      </div>
     );
 
   if (isError || !data)
     return (
-      <>
-        <div className="flex items-center justify-center h-64 text-secondary-text text-sm">
-          Failed to load video.
-        </div>
-      </>
+      <Empty className="h-64 justify-center">
+        <EmptyHeader>
+          <EmptyTitle>Failed to load video</EmptyTitle>
+          <EmptyDescription>Please try refreshing the page.</EmptyDescription>
+        </EmptyHeader>
+      </Empty>
     );
 
   return (
