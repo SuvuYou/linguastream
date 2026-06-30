@@ -8,6 +8,7 @@ import { useAppStore } from "@/lib/initializations/store";
 import type { SubtitleLine } from "@/hooks/useSubtitleTrack";
 import { useAnimationTick } from "@/hooks/useAnimationTick";
 import Events from "@/events";
+import { Button } from "@/components/ui/button";
 
 interface PlayerProps {
   initialTimeMs?: number;
@@ -142,20 +143,26 @@ export default function Player({
 
       {isHoveringPlayer && (
         <div className="absolute bottom-14 right-2 z-20">
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => setShowSettings((v) => !v)}
-            className="text-xs px-2 py-1 bg-background/80 border border-primary-border text-secondary-text hover:text-primary-text transition-colors"
+            className="bg-background/80 text-xs"
+            aria-expanded={showSettings}
+            aria-controls="subtitle-settings-panel"
           >
             Subtitles
-          </button>
+          </Button>
         </div>
       )}
 
       {showSettings && (
-        <SubtitleSettingsPanel
-          settings={subtitleSettings}
-          onSettingsChange={setSubtitleSettings}
-        />
+        <div id="subtitle-settings-panel">
+          <SubtitleSettingsPanel
+            settings={subtitleSettings}
+            onSettingsChange={setSubtitleSettings}
+          />
+        </div>
       )}
     </div>
   );

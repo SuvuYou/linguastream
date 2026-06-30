@@ -1,6 +1,13 @@
 "use client";
 
 import type { SubtitleSettings } from "@/lib/initializations/store";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Slider } from "@/components/ui/slider";
 
 interface SubtitleSettingsPanelProps {
   settings: SubtitleSettings;
@@ -15,185 +22,165 @@ export default function SubtitleSettingsPanel({
   onSettingsChange,
 }: SubtitleSettingsPanelProps) {
   return (
-    <div className="absolute bottom-14 right-0 w-72 bg-background border border-primary-border p-4 flex flex-col gap-4 z-20 shadow-xl">
-      <div className="text-xs text-secondary-text font-medium uppercase tracking-wider">
-        Subtitle Settings
-      </div>
+    <Card className="absolute bottom-14 right-0 w-72 z-20 shadow-xl rounded-none">
+      <CardHeader className="px-4 pt-4 pb-2">
+        <CardTitle className="text-xs text-secondary-text font-medium uppercase tracking-wider">
+          Subtitle Settings
+        </CardTitle>
+      </CardHeader>
 
-      <div className="flex flex-col gap-2">
-        <Toggle
-          label="Show source"
-          value={settings.showSource}
-          onChange={(v) => onSettingsChange({ showSource: v })}
-        />
-        <Toggle
-          label="Show translation"
-          value={settings.showTranslation}
-          onChange={(v) => onSettingsChange({ showTranslation: v })}
-        />
-      </div>
+      <CardContent className="px-4 pb-4 flex flex-col gap-4">
+        {/* Visibility toggles */}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <Label
+              htmlFor="toggle-source"
+              className="text-xs text-primary-text font-normal cursor-pointer"
+            >
+              Show source
+            </Label>
+            <Switch
+              id="toggle-source"
+              checked={settings.showSource}
+              onCheckedChange={(v) => onSettingsChange({ showSource: v })}
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <Label
+              htmlFor="toggle-translation"
+              className="text-xs text-primary-text font-normal cursor-pointer"
+            >
+              Show translation
+            </Label>
+            <Switch
+              id="toggle-translation"
+              checked={settings.showTranslation}
+              onCheckedChange={(v) => onSettingsChange({ showTranslation: v })}
+            />
+          </div>
+        </div>
 
-      {/* {translationLanguages.length > 0 && (
-        <div className="flex flex-col gap-1">
-          <label className="text-xs text-secondary-text">
-            Translation language
-          </label>
-          <select
-            value={activeTranslationLang ?? ""}
-            onChange={(e) => onTranslationLangChange(e.target.value)}
-            className="bg-background border border-primary-border text-xs text-primary-text px-2 py-1.5 outline-none"
-          >
-            {translationLanguages.map((lang) => (
-              <option key={lang} value={lang}>
-                {getLangLabel(lang)}
-              </option>
-            ))}
-          </select>
-        </div>
-      )} */}
+        <Separator />
 
-      <div className="flex flex-col gap-2">
-        <div className="flex flex-col gap-1">
-          <label className="text-xs text-secondary-text">
-            Source font size
-          </label>
-          <FontSizePicker
-            value={settings.sourceFontSize}
-            onChange={(v) => onSettingsChange({ sourceFontSize: v })}
-          />
-        </div>
-        <div className="flex flex-col gap-1">
-          <label className="text-xs text-secondary-text">
-            Translation font size
-          </label>
-          <FontSizePicker
-            value={settings.translationFontSize}
-            onChange={(v) => onSettingsChange({ translationFontSize: v })}
-          />
-        </div>
-      </div>
+        {/* Font size pickers */}
+        <div className="flex flex-col gap-2">
+          <Field className="gap-1">
+            <FieldLabel className="text-xs text-secondary-text font-normal">
+              Source font size
+            </FieldLabel>
+            <Tabs
+              value={settings.sourceFontSize}
+              onValueChange={(v) =>
+                onSettingsChange({ sourceFontSize: v as FontSize })
+              }
+            >
+              <TabsList className="w-full">
+                {FONT_SIZES.map((size) => (
+                  <TabsTrigger
+                    key={size}
+                    value={size}
+                    className="flex-1 text-xs capitalize"
+                  >
+                    {size}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+          </Field>
 
-      <div className="flex gap-3">
-        <div className="flex flex-col gap-1 flex-1">
-          <label className="text-xs text-secondary-text">Font color</label>
-          <input
-            type="color"
-            value={settings.fontColor}
-            onChange={(e) => onSettingsChange({ fontColor: e.target.value })}
-            className="w-full h-8 bg-background border border-primary-border cursor-pointer"
-          />
+          <Field className="gap-1">
+            <FieldLabel className="text-xs text-secondary-text font-normal">
+              Translation font size
+            </FieldLabel>
+            <Tabs
+              value={settings.translationFontSize}
+              onValueChange={(v) =>
+                onSettingsChange({ translationFontSize: v as FontSize })
+              }
+            >
+              <TabsList className="w-full">
+                {FONT_SIZES.map((size) => (
+                  <TabsTrigger
+                    key={size}
+                    value={size}
+                    className="flex-1 text-xs capitalize"
+                  >
+                    {size}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+          </Field>
         </div>
-        <div className="flex flex-col gap-1 flex-1">
-          <label className="text-xs text-secondary-text">
-            Background color
-          </label>
-          <input
-            type="color"
-            value={settings.backgroundColor}
-            onChange={(e) =>
-              onSettingsChange({ backgroundColor: e.target.value })
-            }
-            className="w-full h-8 bg-background border border-primary-border cursor-pointer"
-          />
-        </div>
-      </div>
 
-      <div className="flex flex-col gap-2">
-        <div className="flex flex-col gap-1">
-          <label className="text-xs text-secondary-text">
-            Font opacity{" "}
-            <span className="text-primary-text">
-              {Math.round(settings.fontOpacity * 100)}%
-            </span>
-          </label>
-          <input
-            type="range"
-            min={0}
-            max={1}
-            step={0.05}
-            value={settings.fontOpacity}
-            onChange={(e) =>
-              onSettingsChange({ fontOpacity: parseFloat(e.target.value) })
-            }
-            className="w-full accent-active-border"
-          />
-        </div>
-        <div className="flex flex-col gap-1">
-          <label className="text-xs text-secondary-text">
-            Background opacity{" "}
-            <span className="text-primary-text">
-              {Math.round(settings.backgroundOpacity * 100)}%
-            </span>
-          </label>
-          <input
-            type="range"
-            min={0}
-            max={1}
-            step={0.05}
-            value={settings.backgroundOpacity}
-            onChange={(e) =>
-              onSettingsChange({
-                backgroundOpacity: parseFloat(e.target.value),
-              })
-            }
-            className="w-full accent-active-border"
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
+        <Separator />
 
-function Toggle({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: boolean;
-  onChange: (v: boolean) => void;
-}) {
-  return (
-    <div className="flex items-center justify-between">
-      <span className="text-xs text-primary-text">{label}</span>
-      <button
-        onClick={() => onChange(!value)}
-        className={`w-8 h-4 rounded-full transition-colors relative ${
-          value ? "bg-active-border" : "bg-primary-border"
-        }`}
-      >
-        <span
-          className={`absolute top-0.5 w-3 h-3 rounded-full bg-background transition-all ${
-            value ? "left-4" : "left-0.5"
-          }`}
-        />
-      </button>
-    </div>
-  );
-}
+        {/* Color pickers */}
+        <div className="flex gap-3">
+          <Field className="gap-1 flex-1">
+            <FieldLabel className="text-xs text-secondary-text font-normal">
+              Font color
+            </FieldLabel>
+            <input
+              type="color"
+              value={settings.fontColor}
+              onChange={(e) => onSettingsChange({ fontColor: e.target.value })}
+              className="w-full h-8 bg-background border border-primary-border cursor-pointer"
+            />
+          </Field>
+          <Field className="gap-1 flex-1">
+            <FieldLabel className="text-xs text-secondary-text font-normal">
+              Background color
+            </FieldLabel>
+            <input
+              type="color"
+              value={settings.backgroundColor}
+              onChange={(e) =>
+                onSettingsChange({ backgroundColor: e.target.value })
+              }
+              className="w-full h-8 bg-background border border-primary-border cursor-pointer"
+            />
+          </Field>
+        </div>
 
-function FontSizePicker({
-  value,
-  onChange,
-}: {
-  value: FontSize;
-  onChange: (v: FontSize) => void;
-}) {
-  return (
-    <div className="flex gap-1">
-      {FONT_SIZES.map((size) => (
-        <button
-          key={size}
-          onClick={() => onChange(size)}
-          className={`flex-1 py-1 text-xs border transition-colors capitalize ${
-            value === size
-              ? "border-active-border text-primary-text"
-              : "border-primary-border text-secondary-text hover:text-primary-text"
-          }`}
-        >
-          {size}
-        </button>
-      ))}
-    </div>
+        <Separator />
+
+        {/* Opacity sliders */}
+        <div className="flex flex-col gap-2">
+          <Field className="gap-1">
+            <FieldLabel className="text-xs text-secondary-text font-normal">
+              Font opacity{" "}
+              <span className="text-primary-text">
+                {Math.round(settings.fontOpacity * 100)}%
+              </span>
+            </FieldLabel>
+            <Slider
+              min={0}
+              max={1}
+              step={0.05}
+              value={[settings.fontOpacity]}
+              onValueChange={([v]) => onSettingsChange({ fontOpacity: v })}
+            />
+          </Field>
+          <Field className="gap-1">
+            <FieldLabel className="text-xs text-secondary-text font-normal">
+              Background opacity{" "}
+              <span className="text-primary-text">
+                {Math.round(settings.backgroundOpacity * 100)}%
+              </span>
+            </FieldLabel>
+            <Slider
+              min={0}
+              max={1}
+              step={0.05}
+              value={[settings.backgroundOpacity]}
+              onValueChange={([v]) =>
+                onSettingsChange({ backgroundOpacity: v })
+              }
+            />
+          </Field>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
