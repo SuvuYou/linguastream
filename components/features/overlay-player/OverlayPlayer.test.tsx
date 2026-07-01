@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import OverlayPlayer from "./OverlayPlayer";
-import { useSearchOverlay } from "@/hooks/useSearchOverlay";
+import { useSearchOverlay } from "@/components/layout/SearchOverlayProvider";
 import { useSearch } from "@/hooks/useSearch";
 import { useStreamUrl } from "@/hooks/useStreamUrl";
 import { useAppStore } from "@/lib/initializations/store";

@@ -34,6 +34,7 @@ interface AppState {
   setAutoPlay: (v: boolean) => void;
   overlayOpen: boolean;
   setOverlayOpen: (v: boolean) => void;
+  toggleOverlay: () => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -48,7 +49,11 @@ export const useAppStore = create<AppState>()(
         setAutoPlay: (v) => set({ autoPlay: v }),
 
         overlayOpen: true,
-        setOverlayOpen: (v) => set({ overlayOpen: v }),
+        setOverlayOpen: (v) => {
+          set({ overlayOpen: v });
+        },
+        toggleOverlay: () =>
+          set((state) => ({ overlayOpen: !state.overlayOpen })),
 
         setPreferredSourceLanguage: (language) =>
           set({ preferredSourceLanguage: language }),
