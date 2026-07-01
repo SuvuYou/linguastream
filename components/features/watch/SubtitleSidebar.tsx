@@ -3,10 +3,16 @@
 import { useState, useMemo } from "react";
 import type { SubtitleLine } from "@/hooks/useSubtitleTrack";
 import { type SubtitleSettings } from "@/lib/initializations/store";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import SubtitleList from "./SubtitleList";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarHeader,
+  SidebarInput,
+  SidebarGroup,
+  SidebarGroupContent,
+} from "@/components/ui/sidebar";
 
 interface SubtitleSidebarProps {
   currentTimeMs: number;
@@ -56,37 +62,43 @@ export default function SubtitleSidebar({
   }, [subtitlePairs, query, shouldShowSourceLine, shouldShowTranslationLine]);
 
   return (
-    <div className="flex flex-col border-l border-primary-border h-full min-h-0 flex-1">
-      <div className="px-3 py-2 shrink-0">
-        <Input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search subtitles..."
-          className="bg-transparent border-none shadow-none focus-visible:ring-0 text-sm px-0"
-        />
-      </div>
+    <Sidebar
+      side="right"
+      collapsible="none"
+      style={{ "--sidebar-width": "24rem" } as React.CSSProperties}
+    >
+      <SidebarHeader>
+        <div className="px-3 py-2">
+          <SidebarInput
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search subtitles..."
+          />
+        </div>
 
-      <Separator />
+        <div className="px-3 py-1.5 flex items-center">
+          <Badge variant="secondary" className="text-xs font-normal">
+            {query.trim()
+              ? `${filteredSubtitlePairs.length} result${filteredSubtitlePairs.length !== 1 ? "s" : ""}`
+              : `${subtitlePairs.length} lines`}
+          </Badge>
+        </div>
+      </SidebarHeader>
 
-      <div className="px-3 py-1.5 shrink-0 flex items-center">
-        <Badge variant="secondary" className="text-xs font-normal">
-          {query.trim()
-            ? `${filteredSubtitlePairs.length} result${filteredSubtitlePairs.length !== 1 ? "s" : ""}`
-            : `${subtitlePairs.length} lines`}
-        </Badge>
-      </div>
-
-      <Separator />
-
-      <SubtitleList
-        query={query}
-        currentTimeMs={currentTimeMs}
-        subtitlePairs={subtitlePairs}
-        filteredSubtitlePairs={filteredSubtitlePairs}
-        shouldShowSourceLine={shouldShowSourceLine}
-        shouldShowTranslationLine={shouldShowTranslationLine}
-      />
-    </div>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SubtitleList
+              query={query}
+              currentTimeMs={currentTimeMs}
+              subtitlePairs={subtitlePairs}
+              filteredSubtitlePairs={filteredSubtitlePairs}
+              shouldShowSourceLine={shouldShowSourceLine}
+              shouldShowTranslationLine={shouldShowTranslationLine}
+            />
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+    </Sidebar>
   );
 }
