@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import type { SubtitleLine } from "@/hooks/useSubtitleTrack";
-import { type SubtitleSettings } from "@/lib/initializations/store";
+import { useAppStore } from "@/lib/initializations/store";
 import { Badge } from "@/components/ui/badge";
 import SubtitleList from "./SubtitleList";
 import {
@@ -18,20 +18,21 @@ interface SubtitleSidebarProps {
   currentTimeMs: number;
   sourceLines: SubtitleLine[];
   translationLines: SubtitleLine[];
-  settings: SubtitleSettings;
 }
 
 export default function SubtitleSidebar({
   currentTimeMs,
   sourceLines,
   translationLines,
-  settings,
 }: SubtitleSidebarProps) {
+  const { subtitleSettings } = useAppStore();
+
   const [query, setQuery] = useState("");
 
-  const shouldShowSourceLine = settings.showSource && sourceLines.length > 0;
+  const shouldShowSourceLine =
+    subtitleSettings.showSource && sourceLines.length > 0;
   const shouldShowTranslationLine =
-    settings.showTranslation && translationLines.length > 0;
+    subtitleSettings.showTranslation && translationLines.length > 0;
 
   const subtitlePairs = useMemo(() => {
     const maxLen = Math.max(sourceLines.length, translationLines.length);

@@ -17,7 +17,6 @@ interface PlayerProps {
   translationLines: SubtitleLine[];
   translationLanguages: string[];
   activeTranslationLang: string | null;
-  onTranslationLangChange: (lang: string) => void;
   setCurrentTimeMs: (timeMs: number) => void;
 }
 

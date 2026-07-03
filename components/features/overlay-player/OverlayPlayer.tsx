@@ -10,6 +10,7 @@ import type { SubtitleLine } from "@/hooks/useSubtitleTrack";
 import Link from "next/link";
 import LanguageFilter from "@/components/features/library/LanguageFilter";
 import { SearchOverlayProvider } from "@/components/layout/SearchOverlayProvider";
+import { useOverlayLanguages } from "@/hooks/useOverlayLanguages";
 
 function msToSubtitleLine(
   text: string,
@@ -40,6 +41,8 @@ export default function OverlayPlayer() {
     translationLanguage: preferredTranslationLanguage ?? "",
     enabled: !!preferredSourceLanguage && !!preferredTranslationLanguage,
   });
+
+  const languages = useOverlayLanguages();
 
   const streamData = useStreamUrl(selected?.media_content_id ?? null);
 
@@ -118,7 +121,12 @@ export default function OverlayPlayer() {
               }`}
             />
             <div className="flex items-center gap-2 shrink-0">
-              <LanguageFilter />
+              <LanguageFilter
+                source={languages.source}
+                translation={languages.translation}
+                isLoading={languages.isLoading || languages.isFetching}
+                isError={languages.isError}
+              />
               <span className="text-xs text-secondary-text">Auto-play</span>
               <button
                 data-testid="autoplay-toggle"

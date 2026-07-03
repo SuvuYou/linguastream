@@ -1,13 +1,10 @@
 "use client";
 
 import { LANGUAGES } from "@/helpers/const";
-import { PUBLIC_LIBRARY_PARAMS_SCHEMA } from "@/helpers/params-schema";
-import { useLanguages } from "@/hooks/useLanguages";
-import { useZodSearchParams } from "@/hooks/useZodSearchParams";
-import { useAppStore } from "@/lib/initializations/store";
+import { Badge } from "@/components/ui/badge";
+import { Empty, EmptyTitle } from "@/components/ui/empty";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Empty, EmptyTitle } from "@/components/ui/empty";
 import {
   Select,
   SelectContent,
@@ -16,30 +13,38 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { InfoIcon, OctagonXIcon } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 
-export default function LanguageFilter() {
-  const searchParams = useZodSearchParams(PUBLIC_LIBRARY_PARAMS_SCHEMA);
-
-  const languages = useLanguages();
-
-  const { availableSourceLanguages, availableTranslationLanguages } = languages;
-
-  const { setPreferredSourceLanguage, setPreferredTranslationLanguage } =
-    useAppStore();
-
-  const updateFilter = (type: "src" | "trans", value: string) => {
-    if (type === "src") setPreferredSourceLanguage(value);
-    if (type === "trans") setPreferredTranslationLanguage(value);
-
-    searchParams.set({ [type]: value });
+interface LanguageFilterProps {
+  source: {
+    value: string | null;
+    available: string[];
+    onChange?: (value: string) => void;
+    disabled?: boolean;
+    label?: string;
   };
 
-  function getLabel(code: string) {
-    return LANGUAGES.find((lang) => lang.code === code)?.label ?? code;
-  }
+  translation: {
+    value: string | null;
+    available: string[];
+    onChange?: (value: string) => void;
+    disabled?: boolean;
+    label?: string;
+  };
 
-  if (languages.isLoading || languages.isFetching) {
+  isLoading?: boolean;
+  isError?: boolean;
+}
+
+export default function LanguageFilter({
+  source,
+  translation,
+  isLoading = false,
+  isError = false,
+}: LanguageFilterProps) {
+  const getLabel = (code: string) =>
+    LANGUAGES.find((lang) => lang.code === code)?.label ?? code;
+
+  if (isLoading) {
     return (
       <div
         className="flex items-center gap-3 px-4 h-full"
@@ -53,75 +58,55 @@ export default function LanguageFilter() {
   }
 
   if (
-    !languages.isError &&
-    (availableSourceLanguages.length === 0 ||
-      availableTranslationLanguages.length === 0)
-  )
+    !isError &&
+    (source.available.length === 0 || translation.available.length === 0)
+  ) {
     return (
-      <Empty
-        className="flex flex-row justify-start p-0"
-        title=" No languages to select from"
-      >
-        <Badge variant={"warning"} size={"default"}>
+      <Empty className="flex flex-row justify-start p-0">
+        <Badge variant="warning">
           <InfoIcon className="size-4" />
-          <EmptyTitle className="text-sm">
-            No languages to select from
-          </EmptyTitle>
-        </Badge>
-
-        <Badge variant={"warning"} size={"default"}>
-          <InfoIcon className="size-4" />
-          <EmptyTitle className="text-sm">
-            No languages to select from
-          </EmptyTitle>
+          <EmptyTitle className="text-sm">No languages available</EmptyTitle>
         </Badge>
       </Empty>
     );
+  }
 
-  if (
-    languages.isError ||
-    !languages.selectedSourceLanguage ||
-    !languages.selectedTranslationLanguage
-  )
+  if (isError || !source.value || !translation.value) {
     return (
-      <Empty
-        className="flex flex-row justify-start p-0"
-        title="Please try refreshing the page."
-      >
-        <Badge variant={"destructive"} size={"default"}>
-          <OctagonXIcon className="size-4" />
-          <EmptyTitle className="text-sm">Failed to load languages</EmptyTitle>
-        </Badge>
-
-        <Badge variant={"destructive"} size={"default"}>
+      <Empty className="flex flex-row justify-start p-0">
+        <Badge variant="destructive">
           <OctagonXIcon className="size-4" />
           <EmptyTitle className="text-sm">Failed to load languages</EmptyTitle>
         </Badge>
       </Empty>
     );
+  }
 
   return (
     <div className="flex items-center h-full">
       <Field orientation="horizontal" className="px-1 w-auto">
         <Select
-          value={languages.selectedSourceLanguage}
-          onValueChange={(value) => updateFilter("src", value)}
+          value={source.value}
+          onValueChange={source.onChange}
+          disabled={source.disabled}
         >
           <SelectTrigger
-            id="content-language"
+            id="source-language"
             size="default"
-            className="*:text-xm min-h-auto"
+            className="*:text-sm min-h-auto"
           >
             <FieldLabel
-              htmlFor="content-language"
+              htmlFor="source-language"
               className="text-muted-foreground/70 pr-1 cursor-pointer"
             >
-              Source:
+              {source.label ?? "Source"}:
             </FieldLabel>
+
             <SelectValue />
           </SelectTrigger>
+
           <SelectContent position="popper">
-            {availableSourceLanguages.map((code) => (
+            {source.available.map((code) => (
               <SelectItem key={code} value={code}>
                 {getLabel(code)}
               </SelectItem>
@@ -132,24 +117,27 @@ export default function LanguageFilter() {
 
       <Field orientation="horizontal" className="px-1 w-auto">
         <Select
-          value={languages.selectedTranslationLanguage || undefined}
-          onValueChange={(value) => updateFilter("trans", value)}
+          value={translation.value}
+          onValueChange={translation.onChange}
+          disabled={translation.disabled}
         >
           <SelectTrigger
             id="translation-language"
             size="default"
-            className="*:text-xm min-h-auto"
+            className="*:text-sm min-h-auto"
           >
             <FieldLabel
               htmlFor="translation-language"
               className="text-muted-foreground/70 pr-1 cursor-pointer"
             >
-              Translations:
+              {translation.label ?? "Translation"}:
             </FieldLabel>
-            <SelectValue placeholder="Select language" />
+
+            <SelectValue />
           </SelectTrigger>
+
           <SelectContent position="popper">
-            {availableTranslationLanguages.map((code) => (
+            {translation.available.map((code) => (
               <SelectItem key={code} value={code}>
                 {getLabel(code)}
               </SelectItem>

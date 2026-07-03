@@ -13,6 +13,7 @@ export async function GET(
   const { mediaContentId } = await params;
 
   const user = await getCurrentUser();
+
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

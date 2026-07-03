@@ -1,6 +1,6 @@
 "use client";
 
-import type { SubtitleSettings } from "@/lib/initializations/store";
+import { useAppStore } from "@/lib/initializations/store";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,18 +9,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 
-interface SubtitleSettingsPanelProps {
-  settings: SubtitleSettings;
-  onSettingsChange: (s: Partial<SubtitleSettings>) => void;
-}
-
 type FontSize = "small" | "medium" | "large";
 const FONT_SIZES: FontSize[] = ["small", "medium", "large"];
 
-export default function SubtitleSettingsPanel({
-  settings,
-  onSettingsChange,
-}: SubtitleSettingsPanelProps) {
+export default function SubtitleSettingsPanel() {
+  const { subtitleSettings, setSubtitleSettings } = useAppStore();
+
   return (
     <Card className="h-auto overflow-scroll">
       <CardHeader className="px-4 pt-4 pb-2">
@@ -41,8 +35,8 @@ export default function SubtitleSettingsPanel({
             </Label>
             <Switch
               id="toggle-source"
-              checked={settings.showSource}
-              onCheckedChange={(v) => onSettingsChange({ showSource: v })}
+              checked={subtitleSettings.showSource}
+              onCheckedChange={(v) => setSubtitleSettings({ showSource: v })}
             />
           </div>
           <div className="flex items-center justify-between">
@@ -54,8 +48,10 @@ export default function SubtitleSettingsPanel({
             </Label>
             <Switch
               id="toggle-translation"
-              checked={settings.showTranslation}
-              onCheckedChange={(v) => onSettingsChange({ showTranslation: v })}
+              checked={subtitleSettings.showTranslation}
+              onCheckedChange={(v) =>
+                setSubtitleSettings({ showTranslation: v })
+              }
             />
           </div>
         </div>
@@ -69,9 +65,9 @@ export default function SubtitleSettingsPanel({
               Source font size
             </FieldLabel>
             <Tabs
-              value={settings.sourceFontSize}
+              value={subtitleSettings.sourceFontSize}
               onValueChange={(v) =>
-                onSettingsChange({ sourceFontSize: v as FontSize })
+                setSubtitleSettings({ sourceFontSize: v as FontSize })
               }
             >
               <TabsList className="w-full">
@@ -93,9 +89,9 @@ export default function SubtitleSettingsPanel({
               Translation font size
             </FieldLabel>
             <Tabs
-              value={settings.translationFontSize}
+              value={subtitleSettings.translationFontSize}
               onValueChange={(v) =>
-                onSettingsChange({ translationFontSize: v as FontSize })
+                setSubtitleSettings({ translationFontSize: v as FontSize })
               }
             >
               <TabsList className="w-full">
@@ -123,8 +119,10 @@ export default function SubtitleSettingsPanel({
             </FieldLabel>
             <input
               type="color"
-              value={settings.fontColor}
-              onChange={(e) => onSettingsChange({ fontColor: e.target.value })}
+              value={subtitleSettings.fontColor}
+              onChange={(e) =>
+                setSubtitleSettings({ fontColor: e.target.value })
+              }
               className="w-full h-8 bg-background border border-primary-border cursor-pointer"
             />
           </Field>
@@ -134,9 +132,9 @@ export default function SubtitleSettingsPanel({
             </FieldLabel>
             <input
               type="color"
-              value={settings.backgroundColor}
+              value={subtitleSettings.backgroundColor}
               onChange={(e) =>
-                onSettingsChange({ backgroundColor: e.target.value })
+                setSubtitleSettings({ backgroundColor: e.target.value })
               }
               className="w-full h-8 bg-background border border-primary-border cursor-pointer"
             />
@@ -151,31 +149,31 @@ export default function SubtitleSettingsPanel({
             <FieldLabel className="text-xs text-secondary-text font-normal">
               Font opacity{" "}
               <span className="text-primary-text">
-                {Math.round(settings.fontOpacity * 100)}%
+                {Math.round(subtitleSettings.fontOpacity * 100)}%
               </span>
             </FieldLabel>
             <Slider
               min={0}
               max={1}
               step={0.05}
-              value={[settings.fontOpacity]}
-              onValueChange={([v]) => onSettingsChange({ fontOpacity: v })}
+              value={[subtitleSettings.fontOpacity]}
+              onValueChange={([v]) => setSubtitleSettings({ fontOpacity: v })}
             />
           </Field>
           <Field className="gap-1">
             <FieldLabel className="text-xs text-secondary-text font-normal">
               Background opacity{" "}
               <span className="text-primary-text">
-                {Math.round(settings.backgroundOpacity * 100)}%
+                {Math.round(subtitleSettings.backgroundOpacity * 100)}%
               </span>
             </FieldLabel>
             <Slider
               min={0}
               max={1}
               step={0.05}
-              value={[settings.backgroundOpacity]}
+              value={[subtitleSettings.backgroundOpacity]}
               onValueChange={([v]) =>
-                onSettingsChange({ backgroundOpacity: v })
+                setSubtitleSettings({ backgroundOpacity: v })
               }
             />
           </Field>

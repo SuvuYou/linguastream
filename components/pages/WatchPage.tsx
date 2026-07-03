@@ -22,6 +22,7 @@ import { ArrowLeft, CommandIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import SubtitleSettingsPanel from "@/components/features/watch/SubtitleSettings";
+import { useWatchLanguages } from "@/hooks/useWatchLanguages";
 
 export default function WatchPage({
   mediaContentId,
@@ -30,31 +31,16 @@ export default function WatchPage({
 }) {
   const router = useRouter();
 
-  const {
-    preferredTranslationLanguage,
-    setPreferredTranslationLanguage,
-    subtitleSettings,
-    setOverlayOpen,
-  } = useAppStore();
+  const { setOverlayOpen } = useAppStore();
 
   const { params } = useZodSearchParams(WATCH_PAGE_PARAMS_SCHEMA);
-
-  const { setSubtitleSettings } = useAppStore();
   const [showSettings, setShowSettings] = useState(false);
 
   const { data, isLoading, isError } = useWatchData(mediaContentId);
 
   const [currentTimeMs, setCurrentTimeMs] = useState(params.t);
 
-  const activeTranslationLang = (() => {
-    if (!data) return null;
-    if (
-      preferredTranslationLanguage &&
-      data.translationLanguages.includes(preferredTranslationLanguage)
-    )
-      return preferredTranslationLanguage;
-    return data.translationLanguages[0] ?? null;
-  })();
+  const languages = useWatchLanguages(data);
 
   const sourceTracks = useSubtitleTrack(
     mediaContentId,
@@ -64,8 +50,8 @@ export default function WatchPage({
 
   const translationTracks = useSubtitleTrack(
     mediaContentId,
-    activeTranslationLang,
-    !!activeTranslationLang,
+    languages.translation.value,
+    !!languages.translation.value,
   );
 
   if (isLoading)
@@ -108,7 +94,12 @@ export default function WatchPage({
           )}
 
           <div className="flex items-center h-full">
-            <LanguageFilter />
+            <LanguageFilter
+              source={{ ...languages.source, disabled: true }}
+              translation={languages.translation}
+              isLoading={isLoading}
+              isError={isError}
+            />
           </div>
 
           <div className="ml-auto">
@@ -132,10 +123,9 @@ export default function WatchPage({
               sourceLines={sourceTracks.data ?? []}
               translationLines={translationTracks.data ?? []}
               translationLanguages={data.translationLanguages}
-              activeTranslationLang={activeTranslationLang}
+              activeTranslationLang={languages.translation.value}
               initialTimeMs={params.t}
               currentTimeMs={currentTimeMs}
-              onTranslationLangChange={setPreferredTranslationLanguage}
               setCurrentTimeMs={setCurrentTimeMs}
             />
           </div>
@@ -159,21 +149,17 @@ export default function WatchPage({
             id="subtitle-settings-panel"
             className="flex-1 min-h-0 overflow-y-auto"
           >
-            <SubtitleSettingsPanel
-              settings={subtitleSettings}
-              onSettingsChange={setSubtitleSettings}
-            />
+            <SubtitleSettingsPanel />
           </div>
         )}
-
-        <OverlayPlayer />
       </section>
       <SubtitleSidebar
         currentTimeMs={currentTimeMs}
         sourceLines={sourceTracks.data ?? []}
         translationLines={translationTracks.data ?? []}
-        settings={subtitleSettings}
       />
+
+      <OverlayPlayer />
     </SidebarProvider>
   );
 }

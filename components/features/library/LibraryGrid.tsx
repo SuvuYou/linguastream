@@ -5,7 +5,6 @@ import LibrarySkeleton from "@/components/features/library/LibrarySkeleton";
 import LibraryCard from "@/components/features/library/LibraryCard";
 import { useUser } from "@/hooks/useUser";
 import { DEFAULT_LIBRARY_RESPONSE, useLibrary } from "@/hooks/useLibrary";
-import { useLanguages } from "@/hooks/useLanguages";
 import ContentConfigurationModal from "@/components/features/library/ContentConfigurationModal/Modal";
 import type { MergedContentItem } from "@/types";
 import { Badge } from "@/components/ui/badge";
@@ -15,13 +14,18 @@ import {
   EmptyTitle,
   EmptyDescription,
 } from "@/components/ui/empty";
+import { useLibraryLanguages } from "@/hooks/useLibraryLanguages";
 
 export default function LibraryGrid() {
   const user = useUser();
-  const languages = useLanguages();
+  const languages = useLibraryLanguages();
   const library = useLibrary({
-    selectedSourceLanguage: languages.selectedSourceLanguage!,
-    selectedTranslationLanguage: languages.selectedTranslationLanguage!,
+    selectedSourceLanguage: languages.source.value!,
+    selectedTranslationLanguage: languages.translation.value!,
+    areLanguagesSelected:
+      !languages.isLoading &&
+      !!languages.source.value &&
+      !!languages.translation.value,
   });
 
   const isLoading = user.isLoading || library.isLoading || languages.isLoading;
