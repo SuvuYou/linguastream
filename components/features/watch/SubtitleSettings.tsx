@@ -22,7 +22,7 @@ export default function SubtitleSettingsPanel({
   onSettingsChange,
 }: SubtitleSettingsPanelProps) {
   return (
-    <Card className="absolute bottom-14 right-0 w-72 z-20 shadow-xl rounded-none">
+    <Card className="h-auto overflow-scroll">
       <CardHeader className="px-4 pt-4 pb-2">
         <CardTitle className="text-xs text-secondary-text font-medium uppercase tracking-wider">
           Subtitle Settings

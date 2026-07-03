@@ -21,6 +21,7 @@ import LanguageFilter from "@/components/features/library/LanguageFilter";
 import { ArrowLeft, CommandIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import SubtitleSettingsPanel from "@/components/features/watch/SubtitleSettings";
 
 export default function WatchPage({
   mediaContentId,
@@ -37,6 +38,9 @@ export default function WatchPage({
   } = useAppStore();
 
   const { params } = useZodSearchParams(WATCH_PAGE_PARAMS_SCHEMA);
+
+  const { setSubtitleSettings } = useAppStore();
+  const [showSettings, setShowSettings] = useState(false);
 
   const { data, isLoading, isError } = useWatchData(mediaContentId);
 
@@ -84,64 +88,85 @@ export default function WatchPage({
 
   return (
     <SidebarProvider>
-      <section className="flex w-full flex-col bg-background m-2 ml-0 p-2 rounded-r-lg">
-        <div>
-          <div className="flex flex-col flex-1 overflow-hidden">
-            <div className="flex items-center h-12 shrink-0">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => router.back()}
-                aria-label="Go back"
-              >
-                <ArrowLeft className="size-4" />
-              </Button>
+      <section className="w-full h-[calc(100vh-1rem)] bg-background m-2 ml-0 p-2 rounded-r-lg flex flex-col overflow-hidden">
+        <div className="flex items-center h-12 shrink-0">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => router.back()}
+            aria-label="Go back"
+          >
+            <ArrowLeft className="size-4" />
+          </Button>
 
-              {data.title && (
-                <>
-                  <span className="px-4 text-sm font-medium truncate max-w-xs">
-                    {data.title}
-                  </span>
-                </>
-              )}
+          {data.title && (
+            <>
+              <span className="px-4 text-sm font-medium truncate max-w-xs">
+                {data.title}
+              </span>
+            </>
+          )}
 
-              <div className="flex items-center h-full">
-                <LanguageFilter />
-              </div>
-
-              <div className="ml-auto">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setOverlayOpen(true)}
-                  aria-label="Open overlay player"
-                >
-                  <CommandIcon className="size-4" />
-                  <kbd className="text-xs text-secondary-text font-sans">K</kbd>
-                </Button>
-              </div>
-            </div>
-
-            <div className="flex flex-1 overflow-hidden">
-              <div className="flex flex-col flex-2 min-w-0 bg-background items-center justify-start pt-1">
-                <Player
-                  streamUrl={data.streamUrl}
-                  title={data.title}
-                  sourceLines={sourceTracks.data ?? []}
-                  translationLines={translationTracks.data ?? []}
-                  translationLanguages={data.translationLanguages}
-                  activeTranslationLang={activeTranslationLang}
-                  initialTimeMs={params.t}
-                  currentTimeMs={currentTimeMs}
-                  onTranslationLangChange={setPreferredTranslationLanguage}
-                  setCurrentTimeMs={setCurrentTimeMs}
-                />
-              </div>
-            </div>
+          <div className="flex items-center h-full">
+            <LanguageFilter />
           </div>
 
-          <OverlayPlayer />
+          <div className="ml-auto">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setOverlayOpen(true)}
+              aria-label="Open overlay player"
+            >
+              <CommandIcon className="size-4" />
+              <kbd className="text-xs text-secondary-text font-sans">K</kbd>
+            </Button>
+          </div>
         </div>
+
+        <div className="flex overflow-hidden">
+          <div className="flex flex-col flex-2 min-w-0 bg-background items-center justify-start pt-1">
+            <Player
+              streamUrl={data.streamUrl}
+              title={data.title}
+              sourceLines={sourceTracks.data ?? []}
+              translationLines={translationTracks.data ?? []}
+              translationLanguages={data.translationLanguages}
+              activeTranslationLang={activeTranslationLang}
+              initialTimeMs={params.t}
+              currentTimeMs={currentTimeMs}
+              onTranslationLangChange={setPreferredTranslationLanguage}
+              setCurrentTimeMs={setCurrentTimeMs}
+            />
+          </div>
+        </div>
+
+        <div className="">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowSettings((v) => !v)}
+            className="bg-background/80 text-xs"
+            aria-expanded={showSettings}
+            aria-controls="subtitle-settings-panel"
+          >
+            Subtitles
+          </Button>
+        </div>
+
+        {showSettings && (
+          <div
+            id="subtitle-settings-panel"
+            className="flex-1 min-h-0 overflow-y-auto"
+          >
+            <SubtitleSettingsPanel
+              settings={subtitleSettings}
+              onSettingsChange={setSubtitleSettings}
+            />
+          </div>
+        )}
+
+        <OverlayPlayer />
       </section>
       <SubtitleSidebar
         currentTimeMs={currentTimeMs}
