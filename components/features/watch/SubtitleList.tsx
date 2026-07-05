@@ -23,6 +23,7 @@ interface SubtitleLinePair {
 }
 
 const RESUME_AUTOSCROLL_DELAY_MS = 3000;
+const SCROLL_INTO_VIEW_MS = 500;
 
 function highlight(text: string, q: string) {
   if (!q.trim()) return <span>{text}</span>;
@@ -57,12 +58,15 @@ export default function SubtitleList({
   shouldShowSourceLine,
   shouldShowTranslationLine,
 }: SubtitleListProps) {
-  const isAutoScrollEnabled = useRef(true);
+  const shouldScrollSyncWithVideo = useRef(true);
+  const isScrollingIntoView = useRef(false);
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const activeRef = useRef<HTMLDivElement>(null);
+
   const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isProgrammaticScrollRef = useRef(false);
-  const isProgrammaticScrollTimerRef = useRef<ReturnType<
+
+  const isScrollingIntoViewTimerRef = useRef<ReturnType<
     typeof setTimeout
   > | null>(null);
 
@@ -79,34 +83,35 @@ export default function SubtitleList({
 
   useEffect(() => {
     if (
-      !isAutoScrollEnabled.current ||
+      !shouldScrollSyncWithVideo.current ||
       activePairIndex === null ||
       query.trim()
     )
       return;
 
     if (activeRef.current && scrollRef.current) {
-      isProgrammaticScrollRef.current = true;
+      isScrollingIntoView.current = true;
       activeRef.current.scrollIntoView({ block: "center", behavior: "smooth" });
 
-      if (isProgrammaticScrollTimerRef.current)
-        clearTimeout(isProgrammaticScrollTimerRef.current);
+      if (isScrollingIntoViewTimerRef.current)
+        clearTimeout(isScrollingIntoViewTimerRef.current);
 
-      isProgrammaticScrollTimerRef.current = setTimeout(() => {
-        isProgrammaticScrollRef.current = false;
-      }, 500);
+      isScrollingIntoViewTimerRef.current = setTimeout(() => {
+        isScrollingIntoView.current = false;
+      }, SCROLL_INTO_VIEW_MS);
     }
   }, [activePairIndex, query]);
 
   const handleScroll = useCallback(() => {
-    if (isProgrammaticScrollRef.current) return;
+    // We need to distinguish between user-initiated scrolls and programmatic scrolls (e.g., when we call `scrollIntoView`)
+    if (isScrollingIntoView.current) return;
 
-    isAutoScrollEnabled.current = false;
+    shouldScrollSyncWithVideo.current = false;
 
     if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
 
     resumeTimerRef.current = setTimeout(() => {
-      isAutoScrollEnabled.current = true;
+      shouldScrollSyncWithVideo.current = true;
     }, RESUME_AUTOSCROLL_DELAY_MS);
   }, []);
 
