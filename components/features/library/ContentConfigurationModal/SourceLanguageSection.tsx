@@ -25,11 +25,7 @@ export function SourceLanguageSection({
         Content source language
       </FieldLabel>
       <Select value={value} onValueChange={onChange}>
-        <SelectTrigger
-          aria-labelledby="source-language-label"
-          variant="secondary"
-          size="default"
-        >
+        <SelectTrigger aria-labelledby="source-language-label" size="default">
           <SelectValue />
         </SelectTrigger>
         <SelectContent position="popper">

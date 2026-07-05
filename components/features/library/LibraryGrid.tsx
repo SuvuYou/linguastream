@@ -52,9 +52,7 @@ export default function LibraryGrid() {
   return (
     <>
       <div className="px-2 pb-4">
-        <Badge variant="secondary" className="text-xs font-normal">
-          {total} titles
-        </Badge>
+        <Badge className="text-xs font-normal">{total} titles</Badge>
       </div>
 
       <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4 px-2">

@@ -44,7 +44,7 @@ export default function AppSidebar() {
       <SidebarContent className="pr-3 pt-3">
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu className="gap-1">
+            <SidebarMenu className="gap-3">
               {NAV_LINKS.map(({ href, label, icon }) => {
                 const isActive = pathname === href;
 

@@ -72,7 +72,11 @@ export default function SubtitleSettingsPanel() {
             >
               <TabsList className="w-full">
                 {FONT_SIZES.map((size) => (
-                  <TabsTrigger key={size} value={size} className="capitalize">
+                  <TabsTrigger
+                    key={size}
+                    value={size}
+                    className="capitalize dark:data-active:bg-primary"
+                  >
                     {size}
                   </TabsTrigger>
                 ))}
@@ -92,7 +96,11 @@ export default function SubtitleSettingsPanel() {
             >
               <TabsList className="w-full">
                 {FONT_SIZES.map((size) => (
-                  <TabsTrigger key={size} value={size} className="capitalize">
+                  <TabsTrigger
+                    key={size}
+                    value={size}
+                    className="capitalize dark:data-active:bg-primary"
+                  >
                     {size}
                   </TabsTrigger>
                 ))}

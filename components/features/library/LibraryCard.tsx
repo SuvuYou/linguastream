@@ -103,7 +103,7 @@ export default function LibraryCard({
           <div className="text-sm font-medium truncate">
             {item.jellyfinItem.Name}
           </div>
-          <Badge variant="secondary" className="text-xs font-normal mt-1">
+          <Badge className="text-xs font-normal mt-1">
             {item.jellyfinItem.Type}
           </Badge>
         </CardContent>
@@ -130,20 +130,17 @@ export default function LibraryCard({
           <div className="text-base font-medium truncate ml-4">
             {item.jellyfinItem.Name}
           </div>
-          <Badge
-            variant="secondary"
-            className="text-xs font-normal mt-4 ml-4 mb-4"
-          >
+          <Badge className="text-xs font-normal mt-4 ml-4 mb-4">
             {item.jellyfinItem.Type}
           </Badge>
         </CardContent>
       </Link>
       {isAdmin && onOpenConfigModal && (
         <Button
-          variant="secondary"
           size="sm"
+          variant={"outline"}
           onClick={() => onOpenConfigModal(item)}
-          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-all"
+          className="dark:bg-card absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-all"
         >
           Configure
         </Button>

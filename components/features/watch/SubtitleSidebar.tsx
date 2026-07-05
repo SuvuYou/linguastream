@@ -79,7 +79,7 @@ export default function SubtitleSidebar({
         </div>
 
         <div className="px-3 py-1.5 flex items-center">
-          <Badge variant="secondary" className="text-xs font-normal">
+          <Badge className="text-xs font-normal">
             {query.trim()
               ? `${filteredSubtitlePairs.length} result${filteredSubtitlePairs.length !== 1 ? "s" : ""}`
               : `${subtitlePairs.length} lines`}

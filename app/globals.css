@@ -28,3 +28,10 @@
     background: color-mix(in srgb, var(--primary) 30%, transparent);
   }
 }
+
+.plyr {
+  --plyr-color-main: var(--secondary);
+
+  --plyr-range-fill-background: var(--secondary);
+  --plyr-menu-background: var(--secondary);
+}

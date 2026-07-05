@@ -26,12 +26,15 @@ export default function DetailsSection() {
         className="h-full m-0"
       >
         <TabsList className="h-full! my-0">
-          <TabsTrigger value={"word"} className="flex-1 text-xs capitalize">
+          <TabsTrigger
+            value={"words"}
+            className="flex-1 text-xs capitalize dark:data-active:bg-primary"
+          >
             <BookA className="size-5" />
           </TabsTrigger>
           <TabsTrigger
             value={"subtitles"}
-            className="flex-1 text-xs capitalize"
+            className="flex-1 text-xs capitalize dark:data-active:bg-primary"
           >
             <SlidersHorizontal className="size-5" />
           </TabsTrigger>
