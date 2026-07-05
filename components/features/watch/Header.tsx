@@ -30,7 +30,7 @@ export default function Header({ mediaContentId }: { mediaContentId: string }) {
 
       {data?.title && (
         <>
-          <span className="px-4 text-sm font-medium truncate max-w-xs">
+          <span className="px-4 text-lg font-medium truncate max-w-xs text-primary-foreground">
             {data.title}
           </span>
         </>
@@ -53,7 +53,7 @@ export default function Header({ mediaContentId }: { mediaContentId: string }) {
           aria-label="Open overlay player"
         >
           <CommandIcon className="size-4" />
-          <kbd className="text-xs text-secondary-text font-sans">K</kbd>
+          <kbd className="text-xs text-secondary-foreground font-sans">K</kbd>
         </Button>
       </div>
     </div>

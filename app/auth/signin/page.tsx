@@ -49,7 +49,7 @@ export default function SignIn() {
       <div className="w-full max-w-sm border border-primary-border p-8 flex flex-col gap-6">
         <div>
           <div className="text-lg font-medium">LinguaStream</div>
-          <div className="text-sm text-secondary-text mt-1">
+          <div className="text-sm text-secondary-foreground mt-1">
             {isSignUp ? "Create an account" : "Sign in to continue"}
           </div>
         </div>
@@ -60,7 +60,7 @@ export default function SignIn() {
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="bg-background border border-primary-border px-3 py-2 text-sm outline-none text-primary-text placeholder-secondary-text"
+            className="bg-background border border-primary-border px-3 py-2 text-sm outline-none text-primary-foreground placeholder-secondary-text"
           />
           <input
             type="password"
@@ -68,7 +68,7 @@ export default function SignIn() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-            className="bg-background border border-primary-border px-3 py-2 text-sm outline-none text-primary-text placeholder-secondary-text"
+            className="bg-background border border-primary-border px-3 py-2 text-sm outline-none text-primary-foreground placeholder-secondary-text"
           />
         </div>
 
@@ -84,7 +84,7 @@ export default function SignIn() {
           </button>
           <button
             onClick={() => setIsSignUp(!isSignUp)}
-            className="text-xs text-secondary-text hover:text-primary-text transition-colors"
+            className="text-xs text-secondary-foreground hover:text-primary-foreground transition-colors"
           >
             {isSignUp
               ? "Already have an account? Sign in"

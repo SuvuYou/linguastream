@@ -16,20 +16,20 @@ export default function SubtitleSettingsPanel() {
   const { subtitleSettings, setSubtitleSettings } = useAppStore();
 
   return (
-    <Card className="h-auto overflow-scroll m-0.5">
-      <CardHeader className="px-4 pt-4 pb-2">
-        <CardTitle className="text-xs text-secondary-text font-medium uppercase tracking-wider">
+    <Card className="h-auto overflow-scroll m-0.5 bg-background ring-0 pt-2">
+      <CardHeader className="px-4 pb-2">
+        <CardTitle className="text-lg text-primary-foreground font-medium uppercase tracking-wider">
           Subtitle Settings
         </CardTitle>
       </CardHeader>
 
       <CardContent className="px-4 pb-4 flex flex-col gap-4">
         {/* Visibility toggles */}
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
+        <div className="flex gap-2">
+          <div className="flex flex-1 items-center gap-4">
             <Label
               htmlFor="toggle-source"
-              className="text-xs text-primary-text font-normal cursor-pointer"
+              className="text-sm text-primary-foreground font-normal cursor-pointer"
             >
               Show source
             </Label>
@@ -39,10 +39,10 @@ export default function SubtitleSettingsPanel() {
               onCheckedChange={(v) => setSubtitleSettings({ showSource: v })}
             />
           </div>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-1 items-center gap-4">
             <Label
               htmlFor="toggle-translation"
-              className="text-xs text-primary-text font-normal cursor-pointer"
+              className="text-sm text-primary-foreground font-normal cursor-pointer"
             >
               Show translation
             </Label>
@@ -59,9 +59,9 @@ export default function SubtitleSettingsPanel() {
         <Separator />
 
         {/* Font size pickers */}
-        <div className="flex flex-col gap-2">
-          <Field className="gap-1">
-            <FieldLabel className="text-xs text-secondary-text font-normal">
+        <div className="flex flex-col gap-4">
+          <Field className="gap-2">
+            <FieldLabel className="text-sm text-primary-foreground font-normal">
               Source font size
             </FieldLabel>
             <Tabs
@@ -72,11 +72,7 @@ export default function SubtitleSettingsPanel() {
             >
               <TabsList className="w-full">
                 {FONT_SIZES.map((size) => (
-                  <TabsTrigger
-                    key={size}
-                    value={size}
-                    className="flex-1 text-xs capitalize"
-                  >
+                  <TabsTrigger key={size} value={size} className="capitalize">
                     {size}
                   </TabsTrigger>
                 ))}
@@ -84,8 +80,8 @@ export default function SubtitleSettingsPanel() {
             </Tabs>
           </Field>
 
-          <Field className="gap-1">
-            <FieldLabel className="text-xs text-secondary-text font-normal">
+          <Field className="gap-2">
+            <FieldLabel className="text-sm text-primary-foreground font-normal">
               Translation font size
             </FieldLabel>
             <Tabs
@@ -96,11 +92,7 @@ export default function SubtitleSettingsPanel() {
             >
               <TabsList className="w-full">
                 {FONT_SIZES.map((size) => (
-                  <TabsTrigger
-                    key={size}
-                    value={size}
-                    className="flex-1 text-xs capitalize"
-                  >
+                  <TabsTrigger key={size} value={size} className="capitalize">
                     {size}
                   </TabsTrigger>
                 ))}
@@ -113,8 +105,8 @@ export default function SubtitleSettingsPanel() {
 
         {/* Color pickers */}
         <div className="flex gap-3">
-          <Field className="gap-1 flex-1">
-            <FieldLabel className="text-xs text-secondary-text font-normal">
+          <Field className="gap-2 flex-1">
+            <FieldLabel className="text-sm text-primary-foreground font-normal">
               Font color
             </FieldLabel>
             <input
@@ -123,11 +115,11 @@ export default function SubtitleSettingsPanel() {
               onChange={(e) =>
                 setSubtitleSettings({ fontColor: e.target.value })
               }
-              className="w-full h-8 bg-background border border-primary-border cursor-pointer"
+              className="h-8 cursor-pointer"
             />
           </Field>
-          <Field className="gap-1 flex-1">
-            <FieldLabel className="text-xs text-secondary-text font-normal">
+          <Field className="gap-2 flex-1">
+            <FieldLabel className="text-sm text-primary-foreground font-normal">
               Background color
             </FieldLabel>
             <input
@@ -136,7 +128,7 @@ export default function SubtitleSettingsPanel() {
               onChange={(e) =>
                 setSubtitleSettings({ backgroundColor: e.target.value })
               }
-              className="w-full h-8 bg-background border border-primary-border cursor-pointer"
+              className="h-8 cursor-pointer"
             />
           </Field>
         </div>
@@ -144,33 +136,33 @@ export default function SubtitleSettingsPanel() {
         <Separator />
 
         {/* Opacity sliders */}
-        <div className="flex flex-col gap-2">
-          <Field className="gap-1">
-            <FieldLabel className="text-xs text-secondary-text font-normal">
-              Font opacity{" "}
-              <span className="text-primary-text">
+        <div className="flex flex-col gap-4">
+          <Field className="gap-2">
+            <FieldLabel className="text-sm text-primary-foreground font-normal">
+              Font opacity
+              <span className="text-primary-foreground">
                 {Math.round(subtitleSettings.fontOpacity * 100)}%
               </span>
             </FieldLabel>
             <Slider
               min={0}
               max={1}
-              step={0.05}
+              step={0.01}
               value={[subtitleSettings.fontOpacity]}
               onValueChange={([v]) => setSubtitleSettings({ fontOpacity: v })}
             />
           </Field>
-          <Field className="gap-1">
-            <FieldLabel className="text-xs text-secondary-text font-normal">
+          <Field className="gap-2">
+            <FieldLabel className="text-sm text-primary-foreground font-normal">
               Background opacity{" "}
-              <span className="text-primary-text">
+              <span className="text-primary-foreground">
                 {Math.round(subtitleSettings.backgroundOpacity * 100)}%
               </span>
             </FieldLabel>
             <Slider
               min={0}
               max={1}
-              step={0.05}
+              step={0.01}
               value={[subtitleSettings.backgroundOpacity]}
               onValueChange={([v]) =>
                 setSubtitleSettings({ backgroundOpacity: v })

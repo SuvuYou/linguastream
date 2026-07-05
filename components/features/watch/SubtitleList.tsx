@@ -33,7 +33,7 @@ function highlight(text: string, q: string) {
   return (
     <span>
       {text.slice(0, idx)}
-      <mark className="bg-active-border/40 text-primary-text rounded-sm">
+      <mark className="bg-active-border/40 text-primary-foreground rounded-sm">
         {text.slice(idx, idx + q.length)}
       </mark>
       {text.slice(idx + q.length)}
@@ -114,7 +114,7 @@ export default function SubtitleList({
     return (
       <Empty className="p-6">
         <EmptyHeader>
-          <EmptyTitle className="text-xs font-normal text-secondary-text">
+          <EmptyTitle className="text-xs font-normal text-secondary-foreground">
             All subtitle tracks are hidden.
           </EmptyTitle>
         </EmptyHeader>
@@ -126,7 +126,7 @@ export default function SubtitleList({
     return (
       <Empty className="p-6">
         <EmptyHeader>
-          <EmptyTitle className="text-xs font-normal text-secondary-text">
+          <EmptyTitle className="text-xs font-normal text-secondary-foreground">
             No results for &ldquo;{query}&rdquo;
           </EmptyTitle>
         </EmptyHeader>
@@ -158,19 +158,19 @@ export default function SubtitleList({
                   }
                 `}
           >
-            <div className="text-xs text-secondary-text mb-1 tabular-nums">
+            <div className="text-xs text-secondary-foreground mb-1 tabular-nums">
               {formatTime(pair.start_ms)}
             </div>
 
             {shouldShowSourceLine && pair.source && (
-              <div className="text-sm text-primary-text leading-snug">
+              <div className="text-sm text-primary-foreground leading-snug">
                 {highlight(pair.source.text, query)}
               </div>
             )}
 
             {shouldShowTranslationLine && pair.translation && (
               <div
-                className={`text-xs text-secondary-text leading-snug ${
+                className={`text-xs text-secondary-foreground leading-snug ${
                   shouldShowSourceLine && pair.source ? "mt-0.5" : ""
                 }`}
               >

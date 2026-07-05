@@ -126,7 +126,7 @@ export default function PlayerSmall({
         <div className="absolute inset-0 flex items-center justify-center bg-background/40">
           <button
             onClick={handleReplay}
-            className="w-14 h-14 rounded-full bg-background/80 border border-primary-border flex items-center justify-center text-primary-text hover:bg-background transition-colors"
+            className="w-14 h-14 rounded-full bg-background/80 border border-primary-border flex items-center justify-center text-primary-foreground hover:bg-background transition-colors"
           >
             <svg
               viewBox="0 0 24 24"

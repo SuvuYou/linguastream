@@ -116,7 +116,7 @@ export default function OverlayPlayer() {
               placeholder="Search word uses across your library..."
               value={visualQuery}
               onChange={handleChangeQuery}
-              className={`flex-1 bg-transparent border-b border-primary-border focus:border-active-border outline-none py-2 px-1 text-primary-text transition-colors ${
+              className={`flex-1 bg-transparent border-b border-primary-border focus:border-active-border outline-none py-2 px-1 text-primary-foreground transition-colors ${
                 searchResult.isLoading ? "opacity-50" : "opacity-100"
               }`}
             />
@@ -127,7 +127,7 @@ export default function OverlayPlayer() {
                 isLoading={languages.isLoading || languages.isFetching}
                 isError={languages.isError}
               />
-              <span className="text-xs text-secondary-text">Auto-play</span>
+              <span className="text-xs text-secondary-foreground">Auto-play</span>
               <button
                 data-testid="autoplay-toggle"
                 onClick={() => setAutoPlay(!autoPlay)}
@@ -145,7 +145,7 @@ export default function OverlayPlayer() {
 
             <button
               onClick={() => setOverlayOpen(false)}
-              className="text-secondary-text hover:text-primary-text transition-colors shrink-0"
+              className="text-secondary-foreground hover:text-primary-foreground transition-colors shrink-0"
             >
               <svg
                 viewBox="0 0 24 24"
@@ -177,13 +177,13 @@ export default function OverlayPlayer() {
                     href={`/watch/${selected.media_content_id}?t=${selected.start_ms}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="absolute top-2 right-2 text-xs px-2 py-1 bg-background/80 border border-primary-border text-secondary-text hover:text-primary-text transition-colors"
+                    className="absolute top-2 right-2 text-xs px-2 py-1 bg-background/80 border border-primary-border text-secondary-foreground hover:text-primary-foreground transition-colors"
                   >
                     Go to video ↗
                   </Link>
                 </>
               ) : (
-                <div className="flex items-center justify-center h-full text-secondary-text text-sm">
+                <div className="flex items-center justify-center h-full text-secondary-foreground text-sm">
                   {selected && streamData.isLoading
                     ? "Loading..."
                     : "Select a result to preview"}
@@ -192,15 +192,15 @@ export default function OverlayPlayer() {
             </div>
             <div className="flex-1 min-w-0 overflow-y-auto flex flex-col gap-1">
               {!searchQuery.trim() ? (
-                <div className="flex items-center justify-center h-full text-secondary-text text-sm">
+                <div className="flex items-center justify-center h-full text-secondary-foreground text-sm">
                   Start typing to search
                 </div>
               ) : searchResult.isLoading ? (
-                <div className="flex items-center justify-center h-full text-secondary-text text-sm">
+                <div className="flex items-center justify-center h-full text-secondary-foreground text-sm">
                   Searching...
                 </div>
               ) : items.length === 0 ? (
-                <div className="flex items-center justify-center h-full text-secondary-text text-sm">
+                <div className="flex items-center justify-center h-full text-secondary-foreground text-sm">
                   No results for &ldquo;{searchQuery}&rdquo;
                 </div>
               ) : (
@@ -216,17 +216,17 @@ export default function OverlayPlayer() {
                           : "border-primary-border hover:bg-background-hover"
                       }`}
                     >
-                      <div className="text-xs text-secondary-text mb-1 flex items-center justify-between">
+                      <div className="text-xs text-secondary-foreground mb-1 flex items-center justify-between">
                         <span className="truncate">{item.media_title}</span>
                         <span className="tabular-nums ml-2 shrink-0">
                           {formatTime(item.start_ms)}
                         </span>
                       </div>
-                      <div className="text-sm text-primary-text leading-snug">
+                      <div className="text-sm text-primary-foreground leading-snug">
                         {item.source_text}
                       </div>
                       {item.translation_text && (
-                        <div className="text-xs text-secondary-text mt-0.5 leading-snug">
+                        <div className="text-xs text-secondary-foreground mt-0.5 leading-snug">
                           {item.translation_text}
                         </div>
                       )}

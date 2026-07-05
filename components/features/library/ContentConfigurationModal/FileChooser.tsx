@@ -32,7 +32,7 @@ export default function FileChooser({
       <FileStatus state={uploadState} />
 
       {uploadState?.status === "done" && (
-        <span className="text-xs text-secondary-text truncate max-w-30">
+        <span className="text-xs text-primary-foreground truncate max-w-30">
           {uploadState.file.name}
         </span>
       )}

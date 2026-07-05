@@ -41,7 +41,7 @@ export default function TranslationSubtitleRow({
 
         <Label
           htmlFor={`lang-${lang.code}`}
-          className="text-sm text-primary-text font-normal cursor-pointer flex-1 py-1.5"
+          className="text-sm text-primary-foreground font-normal cursor-pointer flex-1 py-1.5"
         >
           {lang.label}
         </Label>

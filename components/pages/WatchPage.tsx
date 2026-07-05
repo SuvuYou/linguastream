@@ -47,7 +47,7 @@ export default function WatchPage({
 
   if (isLoading)
     return (
-      <div className="flex items-center justify-center h-64 gap-2 text-secondary-text text-sm">
+      <div className="flex items-center justify-center h-64 gap-2 text-secondary-foreground text-sm">
         <Spinner className="size-4" />
         Loading...
       </div>

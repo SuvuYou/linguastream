@@ -29,7 +29,7 @@ export function SourceSubtitlesSection({
 }: SourceSubtitlesSectionProps) {
   return (
     <Field className="gap-2">
-      <FieldLabel className="text-xs text-secondary-text font-normal">
+      <FieldLabel className="text-sm text-primary-foreground font-normal">
         Source subtitles
       </FieldLabel>
 
