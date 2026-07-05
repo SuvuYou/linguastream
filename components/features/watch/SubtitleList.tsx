@@ -138,7 +138,7 @@ export default function SubtitleList({
     <div
       ref={scrollRef}
       onScroll={handleScroll}
-      className="flex-1 overflow-y-auto min-h-0"
+      className="flex-1 overflow-y-auto min-h-0 h-full"
     >
       {filteredSubtitlePairs.map((pair) => {
         const isActive = pair.index === activePairIndex;

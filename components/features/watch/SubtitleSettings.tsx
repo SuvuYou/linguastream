@@ -16,7 +16,7 @@ export default function SubtitleSettingsPanel() {
   const { subtitleSettings, setSubtitleSettings } = useAppStore();
 
   return (
-    <Card className="h-auto overflow-scroll">
+    <Card className="h-auto overflow-scroll m-0.5">
       <CardHeader className="px-4 pt-4 pb-2">
         <CardTitle className="text-xs text-secondary-text font-medium uppercase tracking-wider">
           Subtitle Settings

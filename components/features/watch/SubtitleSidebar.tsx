@@ -66,6 +66,7 @@ export default function SubtitleSidebar({
     <Sidebar
       side="right"
       collapsible="none"
+      className="h-screen"
       style={{ "--sidebar-width": "24rem" } as React.CSSProperties}
     >
       <SidebarHeader>
@@ -86,7 +87,7 @@ export default function SubtitleSidebar({
         </div>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="mb-3">
         <SidebarGroup>
           <SidebarGroupContent>
             <SubtitleList
