@@ -36,7 +36,7 @@ function highlight(text: string, q: string) {
   return (
     <span>
       {text.slice(0, idx)}
-      <mark className="bg-highlight/40 p-1 rounded-[6px] text-primary-foreground">
+      <mark className="bg-highlight/50 p-1 rounded-[6px] text-primary-foreground">
         {text.slice(idx, idx + q.length)}
       </mark>
       {text.slice(idx + q.length)}
@@ -157,7 +157,7 @@ export default function SubtitleList({
       role="listbox"
       aria-label="Subtitle lines"
     >
-      <Table className="w-full table-fixed border-spacing-y-4">
+      <Table className="w-full table-fixed border-separate border-spacing-y-2 box-border">
         <TableBody>
           {filteredSubtitlePairs.map((pair, i) => {
             const isActive = pair.index === activePairIndex;
@@ -170,25 +170,41 @@ export default function SubtitleList({
                 ref={isActive ? activeRef : undefined}
                 onClick={() => Events.player.triggerJumpTo(pair.start_ms)}
                 className={cn(
-                  "border-none overflow-hidden cursor-pointer transition-colors hover:bg-background",
-                  isActive && "bg-background",
+                  "border-none overflow-hidden cursor-pointer transition-colors rounded-xl hover:bg-background",
+                  isActive && "bg-primary/5 hover:bg-primary/10",
                 )}
               >
-                <TableCell className="w-16 pr-2 pl-5 py-4 align-top text-xs leading-6 text-primary-foreground tabular-nums rounded-l-sm whitespace-nowrap truncate">
+                <TableCell
+                  className={cn(
+                    "w-16 pr-2 pl-5 py-4 align-top text-xs leading-6 text-primary-foreground tabular-nums rounded-l-xl rounded-bl-xs border-2 border-r-0 border-transparent border-b border-b-border",
+                    isActive && "border-primary/50 border-b-2",
+                  )}
+                >
                   {formatTime(pair.start_ms)}
                 </TableCell>
 
-                <TableCell className="pl-0 pr-3 py-4 align-top rounded-r-sm">
+                <TableCell
+                  className={cn(
+                    "pl-0 pr-3 py-4 align-top rounded-r-xl border-2 border-l-0 border-transparent border-b border-b-border",
+                    isActive && "border-primary/50 border-b-2",
+                  )}
+                >
                   {shouldShowSourceLine && pair.source && (
-                    <div className="text-base text-primary-foreground whitespace-nowrap truncate mb-2">
+                    <div
+                      className={cn(
+                        "text-lg text-primary-foreground text-wrap mb-2",
+                        isActive && "font-semibold",
+                      )}
+                    >
                       {highlight(pair.source.text, query)}
                     </div>
                   )}
                   {shouldShowTranslationLine && pair.translation && (
                     <div
                       className={cn(
-                        "text-sm text-primary/70 whitespace-nowrap truncate",
+                        "text-sm text-muted-foreground/80 text-wrap",
                         shouldShowSourceLine && pair.source && "mt-0.5",
+                        isActive && "text-primary",
                       )}
                     >
                       {highlight(pair.translation.text, query)}
