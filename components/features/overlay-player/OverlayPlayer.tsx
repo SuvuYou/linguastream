@@ -10,6 +10,15 @@ import Link from "next/link";
 import { SearchOverlayProvider } from "@/components/layout/SearchOverlayProvider";
 import Header from "./Header";
 import SearchResults from "./SearchResults";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@/components/ui/empty";
 
 export default function OverlayPlayer() {
   const { overlayOpen, setOverlayOpen } = useAppStore();
@@ -39,15 +48,16 @@ export default function OverlayPlayer() {
   return (
     <>
       <SearchOverlayProvider />
-      <div
-        className={`fixed inset-0 z-50 bg-background/80 backdrop-blur-sm transition-all ${overlayOpen ? "h-full" : "h-0"} overflow-hidden`}
-        data-testid={"close-button"}
-        onClick={() => setOverlayOpen(false)}
-      >
-        <div
-          className="flex flex-col h-full w-full p-6 gap-4"
-          onClick={(e) => e.stopPropagation()}
+
+      <Sheet open={overlayOpen} onOpenChange={setOverlayOpen}>
+        <SheetContent
+          side="top"
+          className="h-screen w-screen p-6 gap-4 flex flex-col border-none bg-background/80 backdrop-blur-sm inset-0"
         >
+          <SheetTitle className="sr-only">
+            Video Search Player Overlay
+          </SheetTitle>
+
           <Header
             isOverlayOpen={overlayOpen}
             isSearchLoading={searchResult.isLoading}
@@ -55,7 +65,9 @@ export default function OverlayPlayer() {
           />
           <div className="flex flex-1 gap-4 min-h-0">
             <div
-              className={`${selectedItem && streamData.data ? "flex-3" : "flex-0"} transition-all min-w-0 bg-background relative overflow-hidden`}
+              className={`${
+                selectedItem && streamData.data ? "flex-3" : "flex-0 border-0"
+              } transition-all min-w-0 bg-background border rounded-lg relative overflow-hidden`}
             >
               {selectedItem && streamData.data ? (
                 <>
@@ -63,20 +75,38 @@ export default function OverlayPlayer() {
                     streamUrl={streamData.data.streamUrl}
                     mediaItem={selectedItem}
                   />
-                  <Link
-                    href={`/watch/${selectedItem.media_content_id}?t=${selectedItem.start_ms}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="absolute top-2 right-2 text-xs px-2 py-1 bg-background/80 border border-primary-border text-secondary-foreground hover:text-primary-foreground transition-colors"
+                  <Button
+                    asChild
+                    variant="secondary"
+                    size="sm"
+                    className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm border"
                   >
-                    Go to video ↗
-                  </Link>
+                    <Link
+                      href={`/watch/${selectedItem.media_content_id}?t=${selectedItem.start_ms}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Go to video ↗
+                    </Link>
+                  </Button>
                 </>
               ) : (
-                <div className="flex items-center justify-center h-full text-secondary-foreground text-sm">
-                  {selectedItem && streamData.isLoading
-                    ? "Loading..."
-                    : "Select a result to preview"}
+                <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-sm gap-2">
+                  {selectedItem && streamData.isLoading ? (
+                    <>
+                      <Spinner className="h-6 w-6 text-primary" />
+                      <span>Loading stream preview...</span>
+                    </>
+                  ) : (
+                    <Empty>
+                      <EmptyHeader>
+                        <EmptyTitle>No preview active</EmptyTitle>
+                        <EmptyDescription>
+                          Select a result to preview.
+                        </EmptyDescription>
+                      </EmptyHeader>
+                    </Empty>
+                  )}
                 </div>
               )}
             </div>
@@ -87,8 +117,8 @@ export default function OverlayPlayer() {
               onSelect={setSelected}
             />
           </div>
-        </div>
-      </div>
+        </SheetContent>
+      </Sheet>
     </>
   );
 }
