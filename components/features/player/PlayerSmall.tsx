@@ -6,35 +6,42 @@ import SubtitleOverlay from "@/components/features/watch/SubtitleOverlay";
 import { useAppStore } from "@/lib/initializations/store";
 import type { SubtitleLine } from "@/hooks/useSubtitleTrack";
 import { useAnimationTick } from "@/hooks/useAnimationTick";
+import type { SubtitleSearchDocument } from "@/lib/db-helpers/search";
+
+function generateSubtitleLine(
+  mediaItem: SubtitleSearchDocument,
+  type: "sub" | "trans",
+): SubtitleLine | null {
+  if (!mediaItem) {
+    return null;
+  }
+
+  return {
+    index: 0,
+    text: type === "sub" ? mediaItem.source_text : mediaItem.translation_text,
+    start_ms: mediaItem.start_ms,
+    end_ms: mediaItem.end_ms,
+  };
+}
 
 interface PlayerSmallProps {
   streamUrl: string;
-  title: string;
-  sourceLine: SubtitleLine | null;
-  translationLine: SubtitleLine | null;
-  startMs: number;
-  endMs: number;
-  autoPlay: boolean;
+  mediaItem: SubtitleSearchDocument;
 }
 
 export default function PlayerSmall({
   streamUrl,
-  title,
-  sourceLine,
-  translationLine,
-  startMs,
-  endMs,
-  autoPlay,
+  mediaItem,
 }: PlayerSmallProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const plyrRef = useRef<Plyr | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const hasSeenEndRef = useRef(false);
 
-  const [currentTimeMs, setCurrentTimeMs] = useState(startMs);
+  const [currentTimeMs, setCurrentTimeMs] = useState(mediaItem.start_ms);
   const [hasEnded, setHasEnded] = useState(false);
 
-  const { subtitleSettings } = useAppStore();
+  const { autoPlay, subtitleSettings } = useAppStore();
 
   useEffect(() => {
     const setup = async () => {
@@ -68,13 +75,13 @@ export default function PlayerSmall({
     setHasEnded(false);
 
     const onCanPlay = () => {
-      video.currentTime = startMs / 1000;
+      video.currentTime = mediaItem.start_ms / 1000;
       if (autoPlay) video.play();
     };
 
     video.addEventListener("canplay", onCanPlay, { once: true });
     return () => video.removeEventListener("canplay", onCanPlay);
-  }, [streamUrl, startMs, autoPlay]);
+  }, [streamUrl, mediaItem, autoPlay]);
 
   useAnimationTick(
     () => {
@@ -84,7 +91,7 @@ export default function PlayerSmall({
       const ms = Math.floor(video.currentTime * 1000);
       setCurrentTimeMs(ms);
 
-      if (ms >= endMs && !hasSeenEndRef.current) {
+      if (ms >= mediaItem.end_ms && !hasSeenEndRef.current) {
         hasSeenEndRef.current = true;
         video.pause();
         setHasEnded(true);
@@ -98,9 +105,12 @@ export default function PlayerSmall({
     if (!video) return;
     hasSeenEndRef.current = false;
     setHasEnded(false);
-    video.currentTime = startMs / 1000;
+    video.currentTime = mediaItem.start_ms / 1000;
     video.play();
   }
+
+  const sourceLine = generateSubtitleLine(mediaItem, "sub");
+  const translationLine = generateSubtitleLine(mediaItem, "trans");
 
   return (
     <div
@@ -108,7 +118,7 @@ export default function PlayerSmall({
       className="relative w-full h-full grid content-center"
     >
       <div className="w-full h-full object-contain col-start-1 row-start-1">
-        <video ref={videoRef} title={title} playsInline>
+        <video ref={videoRef} title={mediaItem.media_title} playsInline>
           <source src={streamUrl} type="video/mp4" />
         </video>
       </div>

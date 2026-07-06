@@ -1,39 +1,26 @@
 "use client";
 
-import { useRef, useState, useEffect, startTransition } from "react";
+import { useState, useCallback } from "react";
 import { useSearch } from "@/hooks/useSearch";
 import { useStreamUrl } from "@/hooks/useStreamUrl";
 import { useAppStore } from "@/lib/initializations/store";
 import PlayerSmall from "@/components/features/player/PlayerSmall";
 import type { SubtitleSearchDocument } from "@/lib/db-helpers/search";
-import type { SubtitleLine } from "@/hooks/useSubtitleTrack";
 import Link from "next/link";
-import LanguageFilter from "@/components/features/library/LanguageFilter";
 import { SearchOverlayProvider } from "@/components/layout/SearchOverlayProvider";
-import { useOverlayLanguages } from "@/hooks/useOverlayLanguages";
-
-function msToSubtitleLine(
-  text: string,
-  start_ms: number,
-  end_ms: number,
-): SubtitleLine {
-  return { index: 0, text, start_ms, end_ms };
-}
+import Header from "./Header";
+import SearchResults from "./SearchResults";
 
 export default function OverlayPlayer() {
   const { overlayOpen, setOverlayOpen } = useAppStore();
-  const [selected, setSelected] = useState<SubtitleSearchDocument | null>(null);
-  const [visualQuery, setVisualQuery] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const debounceRef = useRef<NodeJS.Timeout | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [selectedItem, setSelected] = useState<SubtitleSearchDocument | null>(
+    null,
+  );
 
-  const {
-    autoPlay,
-    setAutoPlay,
-    preferredSourceLanguage,
-    preferredTranslationLanguage,
-  } = useAppStore();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const { preferredSourceLanguage, preferredTranslationLanguage } =
+    useAppStore();
 
   const searchResult = useSearch({
     query: searchQuery,
@@ -42,60 +29,12 @@ export default function OverlayPlayer() {
     enabled: !!preferredSourceLanguage && !!preferredTranslationLanguage,
   });
 
-  const languages = useOverlayLanguages();
+  const streamData = useStreamUrl(selectedItem?.media_content_id ?? null);
 
-  const streamData = useStreamUrl(selected?.media_content_id ?? null);
-
-  const items = searchResult.data?.results ?? [];
-
-  const wasOpenRef = useRef(false);
-
-  useEffect(() => {
-    const wasOpen = wasOpenRef.current;
-
-    if (wasOpen && !overlayOpen) {
-      startTransition(() => {
-        setSelected(null);
-        setVisualQuery("");
-        setSearchQuery("");
-      });
-    }
-
-    wasOpenRef.current = overlayOpen;
-  }, [overlayOpen]);
-
-  const handleChangeQuery = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setVisualQuery(e.target.value);
+  const OnSearchChange = useCallback((query: string) => {
     setSelected(null);
-
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-
-    debounceRef.current = setTimeout(() => {
-      setSearchQuery(e.target.value);
-    }, 300);
-  };
-
-  const sourceLine = selected
-    ? msToSubtitleLine(selected.source_text, selected.start_ms, selected.end_ms)
-    : null;
-
-  const translationLine =
-    selected &&
-    preferredTranslationLanguage &&
-    selected.translation_language === preferredTranslationLanguage
-      ? msToSubtitleLine(
-          selected.translation_text,
-          selected.start_ms,
-          selected.end_ms,
-        )
-      : null;
-
-  function formatTime(ms: number) {
-    const s = Math.floor(ms / 1000);
-    const m = Math.floor(s / 60);
-
-    return `${m}:${(s % 60).toString().padStart(2, "0")}`;
-  }
+    setSearchQuery(query);
+  }, []);
 
   return (
     <>
@@ -109,72 +48,23 @@ export default function OverlayPlayer() {
           className="flex flex-col h-full w-full p-6 gap-4"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex items-center gap-4 shrink-0">
-            <input
-              ref={inputRef}
-              type="text"
-              placeholder="Search word uses across your library..."
-              value={visualQuery}
-              onChange={handleChangeQuery}
-              className={`flex-1 bg-transparent border-b border-primary-border focus:border-active-border outline-none py-2 px-1 text-primary-foreground transition-colors ${
-                searchResult.isLoading ? "opacity-50" : "opacity-100"
-              }`}
-            />
-            <div className="flex items-center gap-2 shrink-0">
-              <LanguageFilter
-                source={languages.source}
-                translation={languages.translation}
-                isLoading={languages.isLoading || languages.isFetching}
-                isError={languages.isError}
-              />
-              <span className="text-xs text-secondary-foreground">Auto-play</span>
-              <button
-                data-testid="autoplay-toggle"
-                onClick={() => setAutoPlay(!autoPlay)}
-                className={`w-8 h-4 rounded-full transition-colors relative ${
-                  autoPlay ? "bg-active-border" : "bg-primary-border"
-                }`}
-              >
-                <span
-                  className={`absolute top-0.5 w-3 h-3 rounded-full bg-background transition-all ${
-                    autoPlay ? "left-4" : "left-0.5"
-                  }`}
-                />
-              </button>
-            </div>
-
-            <button
-              onClick={() => setOverlayOpen(false)}
-              className="text-secondary-foreground hover:text-primary-foreground transition-colors shrink-0"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="w-5 h-5"
-              >
-                <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" />
-              </svg>
-            </button>
-          </div>
+          <Header
+            isOverlayOpen={overlayOpen}
+            isSearchLoading={searchResult.isLoading}
+            onSearchQueryChange={OnSearchChange}
+          />
           <div className="flex flex-1 gap-4 min-h-0">
             <div
-              className={`${selected && streamData.data ? "flex-3" : "flex-0"} transition-all min-w-0 bg-background relative overflow-hidden`}
+              className={`${selectedItem && streamData.data ? "flex-3" : "flex-0"} transition-all min-w-0 bg-background relative overflow-hidden`}
             >
-              {selected && streamData.data ? (
+              {selectedItem && streamData.data ? (
                 <>
                   <PlayerSmall
                     streamUrl={streamData.data.streamUrl}
-                    title={selected.media_title}
-                    sourceLine={sourceLine}
-                    translationLine={translationLine}
-                    startMs={selected.start_ms}
-                    endMs={selected.end_ms}
-                    autoPlay={autoPlay}
+                    mediaItem={selectedItem}
                   />
                   <Link
-                    href={`/watch/${selected.media_content_id}?t=${selected.start_ms}`}
+                    href={`/watch/${selectedItem.media_content_id}?t=${selectedItem.start_ms}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="absolute top-2 right-2 text-xs px-2 py-1 bg-background/80 border border-primary-border text-secondary-foreground hover:text-primary-foreground transition-colors"
@@ -184,57 +74,18 @@ export default function OverlayPlayer() {
                 </>
               ) : (
                 <div className="flex items-center justify-center h-full text-secondary-foreground text-sm">
-                  {selected && streamData.isLoading
+                  {selectedItem && streamData.isLoading
                     ? "Loading..."
                     : "Select a result to preview"}
                 </div>
               )}
             </div>
-            <div className="flex-1 min-w-0 overflow-y-auto flex flex-col gap-1">
-              {!searchQuery.trim() ? (
-                <div className="flex items-center justify-center h-full text-secondary-foreground text-sm">
-                  Start typing to search
-                </div>
-              ) : searchResult.isLoading ? (
-                <div className="flex items-center justify-center h-full text-secondary-foreground text-sm">
-                  Searching...
-                </div>
-              ) : items.length === 0 ? (
-                <div className="flex items-center justify-center h-full text-secondary-foreground text-sm">
-                  No results for &ldquo;{searchQuery}&rdquo;
-                </div>
-              ) : (
-                items.map((item) => {
-                  const isSelected = selected?.id === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => setSelected(item)}
-                      className={`w-full text-left p-3 border transition-colors ${
-                        isSelected
-                          ? "border-active-border bg-background-hover"
-                          : "border-primary-border hover:bg-background-hover"
-                      }`}
-                    >
-                      <div className="text-xs text-secondary-foreground mb-1 flex items-center justify-between">
-                        <span className="truncate">{item.media_title}</span>
-                        <span className="tabular-nums ml-2 shrink-0">
-                          {formatTime(item.start_ms)}
-                        </span>
-                      </div>
-                      <div className="text-sm text-primary-foreground leading-snug">
-                        {item.source_text}
-                      </div>
-                      {item.translation_text && (
-                        <div className="text-xs text-secondary-foreground mt-0.5 leading-snug">
-                          {item.translation_text}
-                        </div>
-                      )}
-                    </button>
-                  );
-                })
-              )}
-            </div>
+            <SearchResults
+              searchQuery={searchQuery}
+              searchResults={searchResult}
+              selectedItem={selectedItem}
+              onSelect={setSelected}
+            />
           </div>
         </div>
       </div>
