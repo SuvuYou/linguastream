@@ -11,7 +11,6 @@ import {
   SidebarHeader,
   SidebarInput,
   SidebarGroup,
-  SidebarGroupContent,
 } from "@/components/ui/sidebar";
 
 interface SubtitleSidebarProps {
@@ -67,7 +66,7 @@ export default function SubtitleSidebar({
       side="right"
       collapsible="none"
       className="h-screen"
-      style={{ "--sidebar-width": "24rem" } as React.CSSProperties}
+      style={{ "--sidebar-width": "36rem" } as React.CSSProperties}
     >
       <SidebarHeader>
         <div className="px-3 py-2">
@@ -87,18 +86,16 @@ export default function SubtitleSidebar({
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="mb-3">
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SubtitleList
-              query={query}
-              currentTimeMs={currentTimeMs}
-              subtitlePairs={subtitlePairs}
-              filteredSubtitlePairs={filteredSubtitlePairs}
-              shouldShowSourceLine={shouldShowSourceLine}
-              shouldShowTranslationLine={shouldShowTranslationLine}
-            />
-          </SidebarGroupContent>
+      <SidebarContent className="mb-3 overflow-hidden">
+        <SidebarGroup className="h-full pl-0">
+          <SubtitleList
+            query={query}
+            currentTimeMs={currentTimeMs}
+            subtitlePairs={subtitlePairs}
+            filteredSubtitlePairs={filteredSubtitlePairs}
+            shouldShowSourceLine={shouldShowSourceLine}
+            shouldShowTranslationLine={shouldShowTranslationLine}
+          />
         </SidebarGroup>
       </SidebarContent>
     </Sidebar>

@@ -4,6 +4,8 @@ import { useEffect, useRef, useMemo, useCallback } from "react";
 import type { SubtitleLine } from "@/hooks/useSubtitleTrack";
 import Events from "@/events";
 import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 
 interface SubtitleListProps {
   query: string;
@@ -34,7 +36,7 @@ function highlight(text: string, q: string) {
   return (
     <span>
       {text.slice(0, idx)}
-      <mark className="bg-active-border/40 text-primary-foreground rounded-sm">
+      <mark className="bg-highlight/40 p-1 rounded-[6px] text-primary-foreground">
         {text.slice(idx, idx + q.length)}
       </mark>
       {text.slice(idx + q.length)}
@@ -61,9 +63,8 @@ export default function SubtitleList({
   const shouldScrollSyncWithVideo = useRef(true);
   const isScrollingIntoView = useRef(false);
 
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const activeRef = useRef<HTMLDivElement>(null);
-
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const activeRef = useRef<HTMLTableRowElement>(null);
   const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isScrollingIntoViewTimerRef = useRef<ReturnType<
@@ -82,24 +83,29 @@ export default function SubtitleList({
   }, [subtitlePairs, currentTimeMs]);
 
   useEffect(() => {
+    if (!shouldScrollSyncWithVideo.current) return;
+    if (query.trim()) return;
     if (
-      !shouldScrollSyncWithVideo.current ||
-      activePairIndex === null ||
-      query.trim()
+      !activeRef.current ||
+      !scrollContainerRef.current ||
+      activePairIndex === null
     )
       return;
 
-    if (activeRef.current && scrollRef.current) {
-      isScrollingIntoView.current = true;
-      activeRef.current.scrollIntoView({ block: "center", behavior: "smooth" });
+    isScrollingIntoView.current = true;
+    activeRef.current.scrollIntoView({ block: "center", behavior: "smooth" });
 
+    if (isScrollingIntoViewTimerRef.current)
+      clearTimeout(isScrollingIntoViewTimerRef.current);
+
+    isScrollingIntoViewTimerRef.current = setTimeout(() => {
+      isScrollingIntoView.current = false;
+    }, SCROLL_INTO_VIEW_MS);
+
+    return () => {
       if (isScrollingIntoViewTimerRef.current)
         clearTimeout(isScrollingIntoViewTimerRef.current);
-
-      isScrollingIntoViewTimerRef.current = setTimeout(() => {
-        isScrollingIntoView.current = false;
-      }, SCROLL_INTO_VIEW_MS);
-    }
+    };
   }, [activePairIndex, query]);
 
   const handleScroll = useCallback(() => {
@@ -113,6 +119,10 @@ export default function SubtitleList({
     resumeTimerRef.current = setTimeout(() => {
       shouldScrollSyncWithVideo.current = true;
     }, RESUME_AUTOSCROLL_DELAY_MS);
+
+    return () => {
+      if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+    };
   }, []);
 
   if (!shouldShowSourceLine && !shouldShowTranslationLine) {
@@ -141,50 +151,55 @@ export default function SubtitleList({
 
   return (
     <div
-      ref={scrollRef}
+      ref={scrollContainerRef}
       onScroll={handleScroll}
-      className="flex-1 overflow-y-auto min-h-0 h-full"
+      className="flex-1 overflow-y-scroll min-h-0 h-full outline-none"
+      role="listbox"
+      aria-label="Subtitle lines"
     >
-      {filteredSubtitlePairs.map((pair) => {
-        const isActive = pair.index === activePairIndex;
+      <Table className="w-full table-fixed border-spacing-y-4">
+        <TableBody>
+          {filteredSubtitlePairs.map((pair, i) => {
+            const isActive = pair.index === activePairIndex;
 
-        return (
-          <div
-            key={pair.index}
-            ref={isActive ? activeRef : undefined}
-            onClick={() => Events.player.triggerJumpTo(pair.start_ms)}
-            className={`
-                  px-3 py-2.5 cursor-pointer border-b border-primary-border/50
-                  transition-colors hover:bg-background-hover
-                  ${
-                    isActive
-                      ? "border-l-2 border-l-active-border bg-background-hover"
-                      : "border-l-2 border-l-transparent"
-                  }
-                `}
-          >
-            <div className="text-xs text-secondary-foreground mb-1 tabular-nums">
-              {formatTime(pair.start_ms)}
-            </div>
-
-            {shouldShowSourceLine && pair.source && (
-              <div className="text-sm text-primary-foreground leading-snug">
-                {highlight(pair.source.text, query)}
-              </div>
-            )}
-
-            {shouldShowTranslationLine && pair.translation && (
-              <div
-                className={`text-xs text-secondary-foreground leading-snug ${
-                  shouldShowSourceLine && pair.source ? "mt-0.5" : ""
-                }`}
+            return (
+              <TableRow
+                key={pair.index}
+                id={`subtitle-row-${i}`}
+                role="option"
+                ref={isActive ? activeRef : undefined}
+                onClick={() => Events.player.triggerJumpTo(pair.start_ms)}
+                className={cn(
+                  "border-none overflow-hidden cursor-pointer transition-colors hover:bg-background",
+                  isActive && "bg-background",
+                )}
               >
-                {highlight(pair.translation.text, query)}
-              </div>
-            )}
-          </div>
-        );
-      })}
+                <TableCell className="w-16 pr-2 pl-5 py-4 align-top text-xs leading-6 text-primary-foreground tabular-nums rounded-l-sm whitespace-nowrap truncate">
+                  {formatTime(pair.start_ms)}
+                </TableCell>
+
+                <TableCell className="pl-0 pr-3 py-4 align-top rounded-r-sm">
+                  {shouldShowSourceLine && pair.source && (
+                    <div className="text-base text-primary-foreground whitespace-nowrap truncate mb-2">
+                      {highlight(pair.source.text, query)}
+                    </div>
+                  )}
+                  {shouldShowTranslationLine && pair.translation && (
+                    <div
+                      className={cn(
+                        "text-sm text-primary/70 whitespace-nowrap truncate",
+                        shouldShowSourceLine && pair.source && "mt-0.5",
+                      )}
+                    >
+                      {highlight(pair.translation.text, query)}
+                    </div>
+                  )}
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
     </div>
   );
 }
