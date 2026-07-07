@@ -8,10 +8,10 @@ import { useStreamUrl } from "@/hooks/useStreamUrl";
 import { useZodSearchParams } from "@/hooks/useZodSearchParams";
 import { UseQueryResult } from "@tanstack/react-query";
 import { SearchResponse } from "@/types/search";
-import { mockUseLanguages } from "@/helpers/tests/mocks/useLanguages";
+import { mockUseLanguageSelectors } from "@/helpers/tests/mocks/useLanguageSelectors";
 
-vi.mock("@/hooks/useLanguages", () => ({
-  useLanguages: vi.fn(),
+vi.mock("@/hooks/useLanguageSelectors", () => ({
+  useLanguageSelectors: vi.fn(),
 }));
 
 vi.mock("@/hooks/useStreamUrl", () => ({
@@ -56,7 +56,7 @@ vi.mock("@/components/features/player/Player", () => ({
   ),
 }));
 
-beforeEach(() => vi.resetAllMocks());
+beforeEach(() => vi.clearAllMocks());
 
 const mockedUseZodSearchParams = vi.mocked(useZodSearchParams);
 const mockedUseWatchData = vi.mocked(useWatchData);
@@ -66,7 +66,7 @@ const mockedUseStreamUrl = vi.mocked(useStreamUrl);
 
 describe("watch content page", () => {
   it("renders Player with fetched data", async () => {
-    mockUseLanguages.empty();
+    mockUseLanguageSelectors.base();
 
     mockedUseStreamUrl.mockReturnValue({
       isLoading: false,

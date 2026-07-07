@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import { SourceSubtitlesSection } from "@/components/features/library/ContentConfigurationModal/SourceSubtitlesSection";
@@ -7,10 +7,30 @@ import { SourceSubtitlesSection } from "@/components/features/library/ContentCon
 import { SUBTITLE_ACQUISITION_METHODS } from "@/helpers/const";
 
 vi.mock(
-  "@/components/features/library/ContentConfigurationModal/FileStatus",
+  "@/components/features/library/ContentConfigurationModal/FileChooser",
   () => ({
-    default: ({ state }: { state: { status: string } | null }) => (
-      <div>{state ? `Status: ${state.status}` : "No status"}</div>
+    default: ({
+      uploadState,
+      onUpload,
+    }: {
+      uploadState: { status: string } | null;
+      onUpload: (file: File) => void;
+    }) => (
+      <div data-testid="file-chooser">
+        <div>{uploadState ? `Status: ${uploadState.status}` : "No status"}</div>
+
+        <button
+          onClick={() =>
+            onUpload(
+              new File(["subtitle"], "movie.srt", {
+                type: "text/plain",
+              }),
+            )
+          }
+        >
+          Upload
+        </button>
+      </div>
     ),
   }),
 );
@@ -20,6 +40,7 @@ const baseProps = {
   onChangeMethod: vi.fn(),
   uploadState: null,
   onUpload: vi.fn(),
+  isExisting: false,
 };
 
 describe("SourceSubtitlesSection", () => {
@@ -27,25 +48,25 @@ describe("SourceSubtitlesSection", () => {
     vi.resetAllMocks();
   });
 
-  it("renders acquisition method buttons", () => {
+  it("renders acquisition method tabs", () => {
     render(<SourceSubtitlesSection {...baseProps} />);
 
     expect(screen.getByText(/source subtitles/i)).toBeInTheDocument();
 
     expect(
-      screen.getByRole("button", {
+      screen.getByRole("tab", {
         name: /upload file/i,
       }),
     ).toBeInTheDocument();
 
     expect(
-      screen.getByRole("button", {
+      screen.getByRole("tab", {
         name: /generate with whisperx/i,
       }),
     ).toBeInTheDocument();
   });
 
-  it("calls onChangeMethod when upload button is clicked", async () => {
+  it("calls onChangeMethod when whisperx tab is clicked", async () => {
     const user = userEvent.setup();
     const onChangeMethod = vi.fn();
 
@@ -54,26 +75,7 @@ describe("SourceSubtitlesSection", () => {
     );
 
     await user.click(
-      screen.getByRole("button", {
-        name: /upload file/i,
-      }),
-    );
-
-    expect(onChangeMethod).toHaveBeenCalledWith(
-      SUBTITLE_ACQUISITION_METHODS.UPLOAD,
-    );
-  });
-
-  it("calls onChangeMethod when whisperx button is clicked", async () => {
-    const user = userEvent.setup();
-    const onChangeMethod = vi.fn();
-
-    render(
-      <SourceSubtitlesSection {...baseProps} onChangeMethod={onChangeMethod} />,
-    );
-
-    await user.click(
-      screen.getByRole("button", {
+      screen.getByRole("tab", {
         name: /generate with whisperx/i,
       }),
     );
@@ -91,16 +93,23 @@ describe("SourceSubtitlesSection", () => {
       />,
     );
 
-    expect(
-      screen.getByRole("button", {
-        name: /choose file/i,
-      }),
-    ).toBeInTheDocument();
-
+    expect(screen.getByTestId("file-chooser")).toBeInTheDocument();
     expect(screen.getByText("No status")).toBeInTheDocument();
   });
 
-  it("shows change file button when upload state exists", () => {
+  it("shows existing badge when subtitles already exist", () => {
+    render(<SourceSubtitlesSection {...baseProps} isExisting />);
+
+    expect(screen.getByText("Existing")).toBeInTheDocument();
+  });
+
+  it("does not show existing badge when subtitles do not exist", () => {
+    render(<SourceSubtitlesSection {...baseProps} />);
+
+    expect(screen.queryByText("Existing")).not.toBeInTheDocument();
+  });
+
+  it("passes upload state to FileChooser", () => {
     render(
       <SourceSubtitlesSection
         {...baseProps}
@@ -111,90 +120,20 @@ describe("SourceSubtitlesSection", () => {
       />,
     );
 
-    expect(
-      screen.getByRole("button", {
-        name: /change file/i,
-      }),
-    ).toBeInTheDocument();
-
     expect(screen.getByText("Status: uploading")).toBeInTheDocument();
   });
 
-  it("shows uploaded file name when upload is done", () => {
-    render(
-      <SourceSubtitlesSection
-        {...baseProps}
-        uploadState={{
-          status: "done",
-          file: new File(["subtitle"], "movie.srt", {
-            type: "text/plain",
-          }),
-        }}
-      />,
-    );
-
-    expect(screen.getByText("movie.srt")).toBeInTheDocument();
-  });
-
-  it("calls onUpload when a file is selected", () => {
-    const onUpload = vi.fn();
-
-    render(<SourceSubtitlesSection {...baseProps} onUpload={onUpload} />);
-
-    const input = document.querySelector(
-      "input[type='file']",
-    ) as HTMLInputElement;
-
-    const file = new File(["subtitle"], "movie.srt", {
-      type: "text/plain",
-    });
-
-    fireEvent.change(input, {
-      target: {
-        files: [file],
-      },
-    });
-
-    expect(onUpload).toHaveBeenCalledWith(file);
-    expect(onUpload).toHaveBeenCalledTimes(1);
-  });
-
-  it("does not call onUpload when no file is selected", () => {
-    const onUpload = vi.fn();
-
-    render(<SourceSubtitlesSection {...baseProps} onUpload={onUpload} />);
-
-    const input = document.querySelector(
-      "input[type='file']",
-    ) as HTMLInputElement;
-
-    fireEvent.change(input, {
-      target: {
-        files: [],
-      },
-    });
-
-    expect(onUpload).not.toHaveBeenCalled();
-  });
-
-  it("clicks hidden input when choose file button is clicked", async () => {
+  it("passes onUpload to FileChooser", async () => {
     const user = userEvent.setup();
+    const onUpload = vi.fn();
 
-    render(<SourceSubtitlesSection {...baseProps} />);
+    render(<SourceSubtitlesSection {...baseProps} onUpload={onUpload} />);
 
-    const input = document.querySelector(
-      "input[type='file']",
-    ) as HTMLInputElement;
+    await user.click(screen.getByRole("button", { name: /upload/i }));
 
-    const clickSpy = vi.spyOn(input, "click");
+    expect(onUpload).toHaveBeenCalledTimes(1);
 
-    await user.click(
-      screen.getByRole("button", {
-        name: /choose file/i,
-      }),
-    );
-
-    expect(clickSpy).toHaveBeenCalled();
+    expect(onUpload.mock.calls[0][0]).toBeInstanceOf(File);
   });
 
   it("shows whisperx description when whisperx method is selected", () => {
@@ -218,10 +157,6 @@ describe("SourceSubtitlesSection", () => {
       />,
     );
 
-    expect(
-      screen.queryByRole("button", {
-        name: /choose file/i,
-      }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByTestId("file-chooser")).not.toBeInTheDocument();
   });
 });
