@@ -65,7 +65,6 @@ describe("AppSidebar", () => {
     expect(screen.getByText("Personal")).toBeInTheDocument();
     expect(screen.getByText("Decks")).toBeInTheDocument();
     expect(screen.getByText("Study")).toBeInTheDocument();
-    expect(screen.getByText("Design")).toBeInTheDocument();
   });
 
   it("renders sign out button", () => {

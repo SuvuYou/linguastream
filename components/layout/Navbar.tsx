@@ -14,20 +14,13 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import {
-  BookHeart,
-  Layers,
-  BookOpen,
-  Paintbrush,
-  SquareLibrary,
-} from "lucide-react";
+import { BookHeart, Layers, BookOpen, SquareLibrary } from "lucide-react";
 
 const NAV_LINKS = [
   { href: "/dashboard", label: "Library", icon: <SquareLibrary /> },
   { href: "/dashboard/personal", label: "Personal", icon: <BookHeart /> },
   { href: "/dashboard/decks", label: "Decks", icon: <Layers /> },
   { href: "/dashboard/study", label: "Study", icon: <BookOpen /> },
-  { href: "/dashboard/design", label: "Design", icon: <Paintbrush /> },
 ] as const;
 
 export default function AppSidebar() {
