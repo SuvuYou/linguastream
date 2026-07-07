@@ -200,7 +200,7 @@ export default function ContentConfigurationModal({
           </div>
         </ScrollArea>
 
-        <DialogFooter className="px-6 py-4 border-t border-primary-border">
+        <DialogFooter className="px-6 py-4 border-t border-border">
           <Button variant="ghost" size="lg" onClick={onClose}>
             Cancel
           </Button>

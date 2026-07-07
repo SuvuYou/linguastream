@@ -26,7 +26,7 @@ export default function UnregisteredCheckbox() {
       />
       <Label
         htmlFor="unregistered-filter"
-        className="text-xs text-secondary-text font-normal cursor-pointer"
+        className="text-xs text-secondary-foreground font-normal cursor-pointer"
       >
         Unregistered only
       </Label>

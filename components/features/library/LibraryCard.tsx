@@ -42,10 +42,10 @@ export default function LibraryCard({
   // — Unavailable state —
   if (!item.jellyfinItem) {
     return (
-      <Card className="rounded-none border-r border-b border-t-0 border-l-0 border-primary-border shadow-none">
+      <Card className="rounded-none border-r border-b border-t-0 border-l-0 border-border shadow-none">
         <CardContent className="p-4">
           <div className="aspect-video bg-background mb-3 flex items-center justify-center">
-            <span className="text-xs text-secondary-text">
+            <span className="text-xs text-secondary-foreground">
               No longer available
             </span>
           </div>
@@ -60,7 +60,7 @@ export default function LibraryCard({
     return (
       <Card
         ref={elementRef}
-        className="rounded-none border-r border-b border-t-0 border-l-0 border-primary-border shadow-none"
+        className="rounded-none border-r border-b border-t-0 border-l-0 border-border shadow-none"
       >
         <CardContent className="p-4">
           <div className="aspect-video bg-background mb-3 flex flex-col items-center justify-center gap-3 px-4">
@@ -90,10 +90,10 @@ export default function LibraryCard({
                     Reset job
                   </Button>
                 )}
-                <Spinner className="size-5 text-active-border" />
+                <Spinner className="size-5 text-contrast" />
                 <div className="w-full flex flex-col gap-1.5">
                   <Progress value={jobState.progress} className="h-0.5" />
-                  <span className="text-xs text-secondary-text text-center tabular-nums">
+                  <span className="text-xs text-secondary-foreground text-center tabular-nums">
                     {jobState.progress}%
                   </span>
                 </div>

@@ -60,7 +60,7 @@ export default function SignIn() {
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="bg-background border border-primary-border px-3 py-2 text-sm outline-none text-primary-foreground placeholder-secondary-text"
+            className="bg-background border border-primary-border px-3 py-2 text-sm outline-none text-primary-foreground placeholder-secondary-foreground"
           />
           <input
             type="password"
@@ -68,7 +68,7 @@ export default function SignIn() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-            className="bg-background border border-primary-border px-3 py-2 text-sm outline-none text-primary-foreground placeholder-secondary-text"
+            className="bg-background border border-primary-border px-3 py-2 text-sm outline-none text-primary-foreground placeholder-secondary-foreground"
           />
         </div>
 
