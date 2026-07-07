@@ -4,6 +4,10 @@ import { useRef, useState, useEffect, startTransition } from "react";
 import { useAppStore } from "@/lib/initializations/store";
 import LanguageFilter from "@/components/features/library/LanguageFilter";
 import { useOverlayLanguages } from "@/hooks/useOverlayLanguages";
+import { Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 interface HeaderProps {
   isOverlayOpen: boolean;
@@ -42,38 +46,44 @@ export default function Header({
   };
 
   return (
-    <div className="flex items-center gap-4 shrink-0">
-      <input
-        ref={inputRef}
-        type="text"
-        placeholder="Search word uses across your library..."
-        value={visualQuery}
-        onChange={handleChangeQuery}
-        className={`flex-1 bg-transparent border-b border-primary-border focus:border-active-border outline-none py-2 px-1 text-primary-foreground transition-colors ${
-          isSearchLoading ? "opacity-50" : "opacity-100"
-        }`}
-      />
-      <div className="flex items-center gap-2 shrink-0">
+    <div className="flex items-center gap-6 shrink-0 pb-2 border-b">
+      <div className="relative flex-1">
+        <Input
+          ref={inputRef}
+          type="text"
+          placeholder="Search word uses across your library..."
+          value={visualQuery}
+          onChange={handleChangeQuery}
+          className="w-full pr-10"
+        />
+        {isSearchLoading && (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-center gap-4 shrink-0">
         <LanguageFilter
           source={languages.source}
           translation={languages.translation}
           isLoading={languages.isLoading || languages.isFetching}
           isError={languages.isError}
         />
-        <span className="text-xs text-secondary-foreground">Auto-play</span>
-        <button
-          data-testid="autoplay-toggle"
-          onClick={() => setAutoPlay(!autoPlay)}
-          className={`w-8 h-4 rounded-full transition-colors relative ${
-            autoPlay ? "bg-active-border" : "bg-primary-border"
-          }`}
-        >
-          <span
-            className={`absolute top-0.5 w-3 h-3 rounded-full bg-background transition-all ${
-              autoPlay ? "left-4" : "left-0.5"
-            }`}
+        <div className="flex items-center gap-2 mr-12">
+          <Label
+            htmlFor="autoplay-switch"
+            className="text-xs cursor-pointer select-none"
+          >
+            Auto play
+          </Label>
+          <Switch
+            id="autoplay-switch"
+            data-testid="autoplay-toggle"
+            checked={autoPlay}
+            onCheckedChange={setAutoPlay}
           />
-        </button>
+        </div>
       </div>
     </div>
   );

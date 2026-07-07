@@ -48,7 +48,7 @@ export const useAppStore = create<AppState>()(
         autoPlay: true,
         setAutoPlay: (v) => set({ autoPlay: v }),
 
-        overlayOpen: true,
+        overlayOpen: false,
         setOverlayOpen: (v) => {
           set({ overlayOpen: v });
         },
@@ -69,6 +69,12 @@ export const useAppStore = create<AppState>()(
     },
     {
       name: "linguastream-store",
+      // Add the partialize option here:
+      partialize: (state) => {
+        const { overlayOpen: _, ...rest } = state;
+
+        return rest;
+      },
     },
   ),
 );

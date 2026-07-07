@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import "plyr/dist/plyr.css";
 import SubtitleOverlay from "@/components/features/watch/SubtitleOverlay";
 import { useAppStore } from "@/lib/initializations/store";
 import type { SubtitleLine } from "@/hooks/useSubtitleTrack";
 import { useAnimationTick } from "@/hooks/useAnimationTick";
 import type { SubtitleSearchDocument } from "@/lib/db-helpers/search";
+import { Button } from "@/components/ui/button";
+import { RotateCcw } from "lucide-react";
 
 function generateSubtitleLine(
   mediaItem: SubtitleSearchDocument,
@@ -43,6 +45,16 @@ export default function PlayerSmall({
 
   const { autoPlay, subtitleSettings } = useAppStore();
 
+  const handleReplay = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    hasSeenEndRef.current = false;
+    setHasEnded(false);
+    video.currentTime = mediaItem.start_ms / 1000;
+    video.play();
+  }, [mediaItem]);
+
   useEffect(() => {
     const setup = async () => {
       if (!videoRef.current || typeof window === "undefined") return;
@@ -66,6 +78,10 @@ export default function PlayerSmall({
       sources: [{ src: streamUrl, type: "video/mp4" }],
     };
   }, [streamUrl]);
+
+  useEffect(() => {
+    handleReplay();
+  }, [mediaItem, handleReplay]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -100,30 +116,20 @@ export default function PlayerSmall({
     { autoStart: true },
   );
 
-  function handleReplay() {
-    const video = videoRef.current;
-    if (!video) return;
-    hasSeenEndRef.current = false;
-    setHasEnded(false);
-    video.currentTime = mediaItem.start_ms / 1000;
-    video.play();
-  }
-
   const sourceLine = generateSubtitleLine(mediaItem, "sub");
   const translationLine = generateSubtitleLine(mediaItem, "trans");
 
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-full grid content-center"
+      className="relative w-full h-full grid content-center bg-black overflow-hidden group"
     >
       <div className="w-full h-full object-contain col-start-1 row-start-1">
         <video ref={videoRef} title={mediaItem.media_title} playsInline>
           <source src={streamUrl} type="video/mp4" />
         </video>
       </div>
-
-      <div className="relative col-start-1 row-start-1 self-end">
+      <div className="relative col-start-1 row-start-1 self-end z-10 pointer-events-none">
         <SubtitleOverlay
           currentTimeMs={currentTimeMs}
           sourceLines={sourceLine ? [sourceLine] : []}
@@ -131,28 +137,17 @@ export default function PlayerSmall({
           settings={subtitleSettings}
         />
       </div>
-
       {hasEnded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-background/40">
-          <button
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/50 backdrop-blur-[2px] transition-all animate-in fade-in duration-200">
+          <Button
             onClick={handleReplay}
-            className="w-14 h-14 rounded-full bg-background/80 border border-primary-border flex items-center justify-center text-primary-foreground hover:bg-background transition-colors"
+            size="icon"
+            variant="outline"
+            aria-label="Replay Clip"
+            className="w-14 h-14 rounded-full bg-background/90 text-foreground border shadow-md hover:scale-105 active:scale-95 transition-all"
           >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              className="w-6 h-6"
-            >
-              <path d="M1 4v6h6" strokeLinecap="round" strokeLinejoin="round" />
-              <path
-                d="M3.51 15a9 9 0 1 0 .49-3.14"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
+            <RotateCcw className="size-4" />
+          </Button>
         </div>
       )}
     </div>
