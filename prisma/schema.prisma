@@ -55,7 +55,6 @@ model MediaContent {
   user             User           @relation(fields: [user_id], references: [id])
   subtitle_tracks  SubtitleTrack[]
   subtitle_lines   SubtitleLine[]
-  cards            Card[]
 }
 
 model SubtitleTrack {
@@ -82,14 +81,13 @@ model SubtitleLine {
 
   media_content  MediaContent  @relation(fields: [media_content_id], references: [id])
   subtitle_track SubtitleTrack @relation(fields: [subtitle_track_id], references: [id])
-  cards          Card[]
 }
 
 model Deck {
   id         String   @id @default(uuid())
   user_id    String
   name       String
-  language   String
+  is_default Boolean  @default(false)
   created_at DateTime @default(now())
 
   user  User   @relation(fields: [user_id], references: [id])
@@ -112,24 +110,25 @@ model WordProfile {
 }
 
 model Card {
-  id               String   @id @default(uuid())
-  user_id          String
-  deck_id          String
-  subtitle_line_id String
-  media_content_id String
-  word_profile_id  String?
-  word             String
-  source_language  String
-  translation_language  String
-  timestamp_ms     Int
-  next_review      DateTime @default(now())
-  interval_days    Int      @default(1)
-  ease_factor      Float    @default(2.5)
-  created_at       DateTime @default(now())
+  id                      String   @id @default(uuid())
+  user_id                 String
+  deck_id                 String
+  word                    String
+  source_language         String
+  translation_language    String
+  translation_text        String
+  source_subtitle_line_id String
+  media_content_id        String
+  start_ms                Int
+  end_ms                  Int
+  next_review             DateTime @default(now())
+  interval_days           Int      @default(1)
+  ease_factor             Float    @default(2.5)
+  repetitions             Int      @default(0)
+  word_profile_id         String?
+  created_at              DateTime @default(now())
 
-  user          User         @relation(fields: [user_id], references: [id])
-  deck          Deck         @relation(fields: [deck_id], references: [id])
-  subtitle_line SubtitleLine @relation(fields: [subtitle_line_id], references: [id])
-  media_content MediaContent @relation(fields: [media_content_id], references: [id])
-  word_profile  WordProfile? @relation(fields: [word_profile_id], references: [id])
+  user         User         @relation(fields: [user_id], references: [id])
+  deck         Deck         @relation(fields: [deck_id], references: [id])
+  word_profile WordProfile? @relation(fields: [word_profile_id], references: [id])
 }
