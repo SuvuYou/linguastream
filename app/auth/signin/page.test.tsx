@@ -3,11 +3,9 @@ import SignIn from "./page";
 import { render, screen, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { useRouter } from "next/navigation";
-import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  UserCredential,
 } from "firebase/auth";
 
 vi.mock("firebase/auth", () => ({
@@ -16,130 +14,219 @@ vi.mock("firebase/auth", () => ({
   getAuth: vi.fn(),
 }));
 
+const pushMock = vi.fn();
+const refreshMock = vi.fn();
+
 vi.mock("next/navigation", () => ({
   useRouter: vi.fn(() => ({
-    push: vi.fn(),
-    refresh: vi.fn(),
+    push: pushMock,
+    refresh: refreshMock,
   })),
 }));
 
-beforeEach(() => vi.resetAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
 
+  global.fetch = vi.fn(
+    () => Promise.resolve({ ok: true }) as Promise<Response>,
+  );
+});
+
+const mockedSignIn = vi.mocked(signInWithEmailAndPassword);
+const mockedSignUp = vi.mocked(createUserWithEmailAndPassword);
 const mockedUseRouter = vi.mocked(useRouter);
 
-const mockedSignInWithEmailAndPassword = vi.mocked(signInWithEmailAndPassword);
-const mockedCreateUserWithEmailAndPassword = vi.mocked(
-  createUserWithEmailAndPassword,
-);
+function mockCredential(token = "token") {
+  return {
+    user: {
+      getIdToken: vi.fn().mockResolvedValue(token),
+    },
+  } as any;
+}
 
-describe("auth/signin page", () => {
-  it("renders sign in by default", () => {
+describe("SignIn", () => {
+  it("renders sign in mode by default", () => {
     render(<SignIn />);
 
-    expect(screen.getByText(/sign in to continue/i)).toBeInTheDocument();
+    expect(screen.getByText("Sign in to continue")).toBeInTheDocument();
+
+    expect(screen.getByRole("button", { name: "Sign in" })).toBeInTheDocument();
+  });
+
+  it("switches between sign in and sign up modes", async () => {
+    const user = userEvent.setup();
+
+    render(<SignIn />);
+
+    await user.click(
+      screen.getByRole("button", {
+        name: /no account\? sign up/i,
+      }),
+    );
+
+    expect(screen.getByText("Create an account")).toBeInTheDocument();
+
     expect(
-      screen.getByRole("button", { name: /sign in/i }),
+      screen.getByRole("button", {
+        name: "Create account",
+      }),
     ).toBeInTheDocument();
-  });
 
-  it("toggles to sign up mode", async () => {
-    render(<SignIn />);
-
-    await userEvent.click(screen.getByText(/no account\? sign up/i));
-
-    expect(screen.getByText(/create an account/i)).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /create account/i }),
-    ).toBeInTheDocument();
-  });
-
-  it("handles sign in", async () => {
-    const pushMock = vi.fn();
-    const refreshMock = vi.fn();
-
-    mockedUseRouter.mockReturnValue({
-      push: pushMock,
-      refresh: refreshMock,
-    } as unknown as AppRouterInstance);
-
-    const getIdTokenMock = vi.fn().mockResolvedValue("token");
-
-    mockedSignInWithEmailAndPassword.mockResolvedValue({
-      user: { getIdToken: getIdTokenMock },
-    } as unknown as UserCredential);
-
-    global.fetch = vi.fn(
-      () => Promise.resolve({ ok: true }) as Promise<Response>,
+    await user.click(
+      screen.getByRole("button", {
+        name: /already have an account/i,
+      }),
     );
 
+    expect(screen.getByText("Sign in to continue")).toBeInTheDocument();
+  });
+
+  it("signs in successfully", async () => {
+    const user = userEvent.setup();
+
+    mockedSignIn.mockResolvedValue(mockCredential());
+
     render(<SignIn />);
 
-    await userEvent.type(screen.getByPlaceholderText("Email"), "test@test.com");
-    await userEvent.type(screen.getByPlaceholderText("Password"), "123456");
+    await user.type(
+      screen.getByPlaceholderText("you@example.com"),
+      "test@test.com",
+    );
 
-    await userEvent.click(screen.getByRole("button", { name: /sign in/i }));
+    await user.type(screen.getByPlaceholderText("••••••••"), "password");
+
+    await user.click(screen.getByRole("button", { name: "Sign in" }));
 
     await waitFor(() => {
-      expect(signInWithEmailAndPassword).toHaveBeenCalled();
-      expect(getIdTokenMock).toHaveBeenCalled();
-      expect(global.fetch).toHaveBeenCalledWith(
-        "/api/auth/session",
-        expect.objectContaining({
-          method: "POST",
+      expect(mockedSignIn).toHaveBeenCalled();
+    });
+
+    expect(fetch).toHaveBeenCalledWith(
+      "/api/auth/session",
+      expect.objectContaining({
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          idToken: "token",
         }),
-      );
-      expect(pushMock).toHaveBeenCalledWith("/");
-      expect(refreshMock).toHaveBeenCalled();
-    });
+      }),
+    );
+
+    expect(pushMock).toHaveBeenCalledWith("/");
+    expect(refreshMock).toHaveBeenCalled();
   });
 
-  it("handles sign up", async () => {
-    const getIdTokenMock = vi.fn().mockResolvedValue("token");
+  it("creates account successfully", async () => {
+    const user = userEvent.setup();
 
-    mockedCreateUserWithEmailAndPassword.mockResolvedValue({
-      user: { getIdToken: getIdTokenMock },
-    } as unknown as UserCredential);
-
-    global.fetch = vi.fn(
-      () => Promise.resolve({ ok: true }) as Promise<Response>,
-    );
+    mockedSignUp.mockResolvedValue(mockCredential());
 
     render(<SignIn />);
 
-    await userEvent.click(screen.getByText(/no account\? sign up/i));
+    await user.click(
+      screen.getByRole("button", {
+        name: /no account\? sign up/i,
+      }),
+    );
 
-    await userEvent.type(screen.getByPlaceholderText("Email"), "test@test.com");
-    await userEvent.type(
-      screen.getByPlaceholderText("Password"),
-      "123456{enter}",
+    await user.type(
+      screen.getByPlaceholderText("you@example.com"),
+      "new@test.com",
+    );
+
+    await user.type(screen.getByPlaceholderText("••••••••"), "password");
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "Create account",
+      }),
     );
 
     await waitFor(() => {
-      expect(createUserWithEmailAndPassword).toHaveBeenCalled();
-      expect(getIdTokenMock).toHaveBeenCalled();
-      expect(global.fetch).toHaveBeenCalledWith(
-        "/api/auth/session",
-        expect.objectContaining({
-          method: "POST",
-        }),
+      expect(mockedSignUp).toHaveBeenCalled();
+    });
+
+    expect(fetch).toHaveBeenCalled();
+  });
+
+  it("submits when pressing Enter in password field", async () => {
+    const user = userEvent.setup();
+
+    mockedSignIn.mockResolvedValue(mockCredential());
+
+    render(<SignIn />);
+
+    await user.type(
+      screen.getByPlaceholderText("you@example.com"),
+      "test@test.com",
+    );
+
+    await user.type(screen.getByPlaceholderText("••••••••"), "password{enter}");
+
+    await waitFor(() => {
+      expect(mockedSignIn).toHaveBeenCalled();
+    });
+  });
+
+  it("shows firebase error", async () => {
+    const user = userEvent.setup();
+
+    mockedSignIn.mockRejectedValue(new Error("Invalid credentials"));
+
+    render(<SignIn />);
+
+    await user.click(screen.getByRole("button", { name: "Sign in" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "Invalid credentials",
       );
     });
   });
 
-  it("shows error message", async () => {
-    mockedSignInWithEmailAndPassword.mockRejectedValue(
-      new Error("Invalid credentials"),
-    );
+  it("shows fallback error for non Error exceptions", async () => {
+    const user = userEvent.setup();
+
+    mockedSignIn.mockRejectedValue("unknown");
 
     render(<SignIn />);
 
-    await userEvent.type(screen.getByPlaceholderText("Email"), "test@test.com");
-    await userEvent.type(screen.getByPlaceholderText("Password"), "wrong");
-
-    await userEvent.click(screen.getByRole("button", { name: /sign in/i }));
+    await user.click(screen.getByRole("button", { name: "Sign in" }));
 
     await waitFor(() => {
-      expect(screen.getByText(/invalid credentials/i)).toBeInTheDocument();
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "Something went wrong",
+      );
     });
+  });
+
+  it("clears error when switching auth mode", async () => {
+    const user = userEvent.setup();
+
+    mockedSignIn.mockRejectedValue(new Error("Bad login"));
+
+    render(<SignIn />);
+
+    await user.click(screen.getByRole("button", { name: "Sign in" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("alert")).toBeInTheDocument();
+    });
+
+    await user.click(
+      screen.getByRole("button", {
+        name: /no account\? sign up/i,
+      }),
+    );
+
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("uses router instance", async () => {
+    render(<SignIn />);
+
+    expect(mockedUseRouter).toHaveBeenCalled();
   });
 });
