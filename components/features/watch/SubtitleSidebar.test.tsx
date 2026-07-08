@@ -1,208 +1,210 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import SubtitleSidebar from "./SubtitleSidebar";
-import Events from "@/events";
 import { useAppStore } from "@/lib/initializations/store";
 
 vi.mock("@/lib/initializations/store", () => ({
   useAppStore: vi.fn(),
 }));
 
-vi.mock("@/events", () => ({
-  default: {
-    player: {
-      triggerJumpTo: vi.fn(),
-    },
+const subtitleListMock = vi.fn();
+
+vi.mock("./SubtitleList", () => ({
+  default: (props: any) => {
+    subtitleListMock(props);
+
+    return (
+      <div data-testid="subtitle-list">
+        {props.filteredSubtitlePairs.map((pair: any) => (
+          <div key={pair.index}>
+            {pair.source?.text}
+            {pair.translation?.text}
+          </div>
+        ))}
+      </div>
+    );
   },
 }));
 
-const triggerJumpToMock = Events.player.triggerJumpTo;
+vi.mock("@/components/ui/sidebar", () => ({
+  Sidebar: ({ children }: any) => <div>{children}</div>,
+  SidebarHeader: ({ children }: any) => <div>{children}</div>,
+  SidebarContent: ({ children }: any) => <div>{children}</div>,
+  SidebarGroup: ({ children }: any) => <div>{children}</div>,
+  SidebarInput: (props: any) => <input {...props} />,
+}));
 
-const baseSettings = {
+vi.mock("@/components/ui/badge", () => ({
+  Badge: ({ children }: any) => <div>{children}</div>,
+}));
+
+const mockedUseAppStore = vi.mocked(useAppStore);
+
+const settings = {
   showSource: true,
   showTranslation: true,
-  sourceFontSize: "medium" as "medium" | "small" | "large",
-  translationFontSize: "medium" as "medium" | "small" | "large",
-  fontColor: "#fff",
-  backgroundColor: "#000",
-  fontOpacity: 1,
-  backgroundOpacity: 1,
 };
 
 const sourceLines = [
-  { index: 0, start_ms: 0, end_ms: 1000, text: "hello world" },
-  { index: 0, start_ms: 2000, end_ms: 3000, text: "second line" },
+  {
+    index: 0,
+    start_ms: 0,
+    end_ms: 1000,
+    text: "hello world",
+  },
+  {
+    index: 1,
+    start_ms: 2000,
+    end_ms: 3000,
+    text: "second line",
+  },
 ];
 
 const translationLines = [
-  { index: 0, start_ms: 0, end_ms: 1000, text: "hallo welt" },
+  {
+    index: 0,
+    start_ms: 0,
+    end_ms: 1000,
+    text: "hallo welt",
+  },
 ];
-
-const mockedUseAppStore = vi.mocked(useAppStore);
-Element.prototype.scrollIntoView = vi.fn();
 
 beforeEach(() => {
   vi.resetAllMocks();
 
   mockedUseAppStore.mockReturnValue({
-    subtitleSettings: baseSettings,
-  });
+    subtitleSettings: settings,
+  } as never);
 });
 
 describe("SubtitleSidebar", () => {
-  it("renders subtitle lines", () => {
+  it("renders search input", () => {
     render(
       <SubtitleSidebar
-        currentTimeMs={500}
+        currentTimeMs={0}
         sourceLines={sourceLines}
         translationLines={translationLines}
-        settings={baseSettings}
-      />,
-    );
-
-    expect(screen.getByText("hello world")).toBeInTheDocument();
-
-    expect(screen.getByText("hallo welt")).toBeInTheDocument();
-  });
-
-  it("renders empty state when all tracks hidden", () => {
-    render(
-      <SubtitleSidebar
-        currentTimeMs={500}
-        sourceLines={sourceLines}
-        translationLines={translationLines}
-        settings={{
-          ...baseSettings,
-          showSource: false,
-          showTranslation: false,
-        }}
       />,
     );
 
     expect(
-      screen.getByText(/all subtitle tracks are hidden/i),
+      screen.getByPlaceholderText(/search subtitles/i),
     ).toBeInTheDocument();
   });
 
-  it("shows no results message when query has no match", () => {
+  it("shows total line count initially", () => {
     render(
       <SubtitleSidebar
-        currentTimeMs={500}
+        currentTimeMs={0}
         sourceLines={sourceLines}
         translationLines={translationLines}
-        settings={baseSettings}
       />,
     );
 
-    const input = screen.getByPlaceholderText(/search subtitles/i);
+    expect(screen.getByText("2 lines")).toBeInTheDocument();
+  });
 
-    fireEvent.change(input, {
+  it("filters subtitle pairs by query", () => {
+    render(
+      <SubtitleSidebar
+        currentTimeMs={0}
+        sourceLines={sourceLines}
+        translationLines={translationLines}
+      />,
+    );
+
+    fireEvent.change(screen.getByPlaceholderText(/search subtitles/i), {
+      target: { value: "hello" },
+    });
+
+    expect(screen.getByText("1 result")).toBeInTheDocument();
+
+    expect(screen.getByText(/hello world/i)).toBeInTheDocument();
+
+    expect(screen.queryByText(/second line/i)).not.toBeInTheDocument();
+  });
+
+  it("shows zero results when nothing matches", () => {
+    render(
+      <SubtitleSidebar
+        currentTimeMs={0}
+        sourceLines={sourceLines}
+        translationLines={translationLines}
+      />,
+    );
+
+    fireEvent.change(screen.getByPlaceholderText(/search subtitles/i), {
       target: { value: "zzz" },
     });
 
-    expect(screen.getByText(/no results/i)).toBeInTheDocument();
+    expect(screen.getByText("0 results")).toBeInTheDocument();
   });
 
-  it("filters subtitles by query", () => {
+  it("passes current time to SubtitleList", () => {
     render(
       <SubtitleSidebar
-        currentTimeMs={500}
+        currentTimeMs={1234}
         sourceLines={sourceLines}
         translationLines={translationLines}
-        settings={baseSettings}
       />,
     );
 
-    const input = screen.getByPlaceholderText(/search subtitles/i);
+    expect(subtitleListMock).toHaveBeenCalled();
 
-    fireEvent.change(input, {
-      target: { value: "hello" },
-    });
-
-    expect(screen.getByText("hello")).toBeInTheDocument();
-    expect(screen.getByText("world")).toBeInTheDocument();
-
-    expect(screen.queryByText("second line")).not.toBeInTheDocument();
+    expect(subtitleListMock.mock.calls.at(-1)?.[0].currentTimeMs).toBe(1234);
   });
 
-  it("shows result count", () => {
+  it("passes visibility flags from settings", () => {
     render(
       <SubtitleSidebar
-        currentTimeMs={500}
+        currentTimeMs={0}
         sourceLines={sourceLines}
         translationLines={translationLines}
-        settings={baseSettings}
       />,
     );
 
-    expect(screen.getByText(/2 lines/i)).toBeInTheDocument();
+    const props = subtitleListMock.mock.calls.at(-1)?.[0];
+
+    expect(props.shouldShowSourceLine).toBe(true);
+    expect(props.shouldShowTranslationLine).toBe(true);
   });
 
-  it("shows filtered result count", () => {
+  it("respects hidden source setting", () => {
+    mockedUseAppStore.mockReturnValue({
+      subtitleSettings: {
+        showSource: false,
+        showTranslation: true,
+      },
+    } as never);
+
     render(
       <SubtitleSidebar
-        currentTimeMs={500}
+        currentTimeMs={0}
         sourceLines={sourceLines}
         translationLines={translationLines}
-        settings={baseSettings}
       />,
     );
 
-    const input = screen.getByPlaceholderText(/search subtitles/i);
+    const props = subtitleListMock.mock.calls.at(-1)?.[0];
 
-    fireEvent.change(input, {
-      target: { value: "hello" },
-    });
-
-    expect(screen.getByText(/1 result/i)).toBeInTheDocument();
+    expect(props.shouldShowSourceLine).toBe(false);
+    expect(props.shouldShowTranslationLine).toBe(true);
   });
 
-  it("jumps to subtitle on click", () => {
+  it("handles empty subtitle arrays", () => {
     render(
       <SubtitleSidebar
-        currentTimeMs={500}
-        sourceLines={sourceLines}
-        translationLines={translationLines}
-        settings={baseSettings}
-      />,
-    );
-
-    fireEvent.click(screen.getByText("hello world"));
-
-    expect(triggerJumpToMock).toHaveBeenCalledWith(0);
-  });
-
-  it("does not crash when empty arrays", () => {
-    render(
-      <SubtitleSidebar
-        currentTimeMs={500}
+        currentTimeMs={0}
         sourceLines={[]}
         translationLines={[]}
-        settings={baseSettings}
       />,
     );
 
-    expect(screen.getByText(/0 lines/i)).toBeInTheDocument();
-    expect(
-      screen.getByText(/All subtitle tracks are hidden./i),
-    ).toBeInTheDocument();
-  });
+    expect(screen.getByText("0 lines")).toBeInTheDocument();
 
-  it("does not show hidden tracks", () => {
-    render(
-      <SubtitleSidebar
-        currentTimeMs={500}
-        sourceLines={sourceLines}
-        translationLines={translationLines}
-        settings={{
-          ...baseSettings,
-          showSource: false,
-        }}
-      />,
-    );
+    const props = subtitleListMock.mock.calls.at(-1)?.[0];
 
-    expect(screen.queryByText("hello world")).not.toBeInTheDocument();
-
-    expect(screen.getByText("hallo welt")).toBeInTheDocument();
+    expect(props.subtitlePairs).toEqual([]);
+    expect(props.filteredSubtitlePairs).toEqual([]);
   });
 });

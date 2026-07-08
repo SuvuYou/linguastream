@@ -14,6 +14,18 @@ import { useState, useTransition } from "react";
 import { SourceLanguageSection } from "@/components/features/library/ContentConfigurationModal/SourceLanguageSection";
 import { SourceSubtitlesSection } from "@/components/features/library/ContentConfigurationModal/SourceSubtitlesSection";
 import { TranslationSubtitlesSection } from "@/components/features/library/ContentConfigurationModal/TranslationSubtitlesSection";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface ContentConfigurationModalProps {
   item: MergedContentItem;
@@ -57,7 +69,10 @@ export default function ContentConfigurationModal({
   const allFileUploadsReady = (() => {
     if (
       acquisitionMethod === SUBTITLE_ACQUISITION_METHODS.UPLOAD &&
-      !sourceFileUpload.areFilesReady()
+      !sourceFileUpload.areFilesReady([
+        languageSelector.data.selectedSourceLang,
+      ]) &&
+      !languageSelector.checks.isSourceLanguageExisting
     )
       return false;
 
@@ -112,81 +127,100 @@ export default function ContentConfigurationModal({
   }
 
   return (
-    <div
-      className="fixed inset-0 bg-background/80 flex items-center justify-center z-50"
-      onClick={onClose}
-    >
-      <div
-        className="bg-background border border-primary-border w-full max-w-md p-6 flex flex-col gap-6 max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div>
-          <div className="text-xs text-secondary-text mb-1">Configuration</div>
-          <div className="text-sm font-medium truncate">{title}</div>
-        </div>
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-md p-0 gap-0 overflow-hidden">
+        <DialogHeader className="px-4 mt-6">
+          <DialogTitle className="text-xl font-medium truncate h-auto pt-0.5 pb-3 pl-2">
+            {title}
+          </DialogTitle>
+          <Separator />
+        </DialogHeader>
 
-        <SourceLanguageSection
-          value={languageSelector.data.selectedSourceLang}
-          onChange={languageSelector.actions.setSelectedSourceLang}
-        />
+        <ScrollArea className="max-h-[70vh]">
+          <div className="flex flex-col gap-6 px-6 py-4">
+            <SourceLanguageSection
+              value={languageSelector.data.selectedSourceLang}
+              onChange={languageSelector.actions.setSelectedSourceLang}
+            />
 
-        <SourceSubtitlesSection
-          acquisitionMethod={acquisitionMethod}
-          onChangeMethod={setAcquisitionMethod}
-          uploadState={sourceFileUpload.fileUploads["source"] ?? null}
-          onUpload={(file) => sourceFileUpload.handleUploadFile("source", file)}
-        />
+            <SourceSubtitlesSection
+              isExisting={languageSelector.checks.isSourceLanguageExisting}
+              acquisitionMethod={acquisitionMethod}
+              onChangeMethod={setAcquisitionMethod}
+              uploadState={sourceFileUpload.fileUploads["source"] ?? null}
+              onUpload={(file) =>
+                sourceFileUpload.handleUploadFile("source", file)
+              }
+            />
 
-        <TranslationSubtitlesSection
-          acquisitionMethod={acquisitionMethod}
-          effectiveTranslateMethod={effectiveTranslateMethod}
-          translateMethod={translateMethod}
-          setTranslateMethod={setTranslateMethod}
-          availableTranslationLangs={
-            languageSelector.data.availableTranslationLangs
-          }
-          isTranslationLanguageSelected={
-            languageSelector.checks.isTranslationLanguageSelected
-          }
-          isTranslationLanguageExisting={
-            languageSelector.checks.isTranslationLanguageExisting
-          }
-          toggleTranslateLang={languageSelector.actions.toggleTranslateLang}
-          getUploadState={(code) =>
-            translationsFileUpload.fileUploads[code] ?? null
-          }
-          onUploadFile={(code, file) =>
-            translationsFileUpload.handleUploadFile(code, file)
-          }
-        />
+            <TranslationSubtitlesSection
+              acquisitionMethod={acquisitionMethod}
+              effectiveTranslateMethod={effectiveTranslateMethod}
+              translateMethod={translateMethod}
+              setTranslateMethod={setTranslateMethod}
+              availableTranslationLangs={
+                languageSelector.data.availableTranslationLangs
+              }
+              isTranslationLanguageSelected={
+                languageSelector.checks.isTranslationLanguageSelected
+              }
+              isTranslationLanguageExisting={
+                languageSelector.checks.isTranslationLanguageExisting
+              }
+              toggleTranslateLang={languageSelector.actions.toggleTranslateLang}
+              getUploadState={(code) =>
+                translationsFileUpload.fileUploads[code] ?? null
+              }
+              onUploadFile={(code, file) =>
+                translationsFileUpload.handleUploadFile(code, file)
+              }
+            />
 
-        {languageSelector.data.removedTranslationLangs.length > 0 && (
-          <div className="text-xs text-red-400 border border-red-400/20 px-3 py-2">
-            The following tracks will be permanently deleted:{" "}
-            {languageSelector.data.removedTranslationLangs
-              .map((l) => LANGUAGES.find((lang) => lang.code === l)?.label ?? l)
-              .join(", ")}
+            {languageSelector.data.removedTranslationLangs.length > 0 && (
+              <Alert className="text-xs text-red-400 border border-red-400/20 px-3 py-2">
+                <AlertTitle>
+                  The following tracks will be permanently deleted:{" "}
+                </AlertTitle>
+                <AlertDescription>
+                  {languageSelector.data.removedTranslationLangs
+                    .map(
+                      (l) =>
+                        LANGUAGES.find((lang) => lang.code === l)?.label ?? l,
+                    )
+                    .join(", ")}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {error && (
+              <p role="alert" className="text-xs text-red-400">
+                {error}
+              </p>
+            )}
           </div>
-        )}
+        </ScrollArea>
 
-        {error && <div className="text-xs text-red-400">{error}</div>}
-
-        <div className="flex gap-2 justify-end">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-sm text-secondary-text hover:text-primary-text transition-colors"
-          >
+        <DialogFooter className="px-6 py-4 border-t border-border">
+          <Button variant="ghost" size="lg" onClick={onClose}>
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
+            size="lg"
             onClick={handleSubmit}
             disabled={!canSubmit}
-            className="px-4 py-2 text-sm bg-active-border text-background font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-busy={isPending}
           >
-            {isPending ? "Saving..." : "Save"}
-          </button>
-        </div>
-      </div>
-    </div>
+            {isPending ? (
+              <>
+                <Spinner className="size-3.5" />
+                Saving...
+              </>
+            ) : (
+              "Save"
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

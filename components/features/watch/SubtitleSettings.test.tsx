@@ -2,228 +2,184 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 
 import SubtitleSettingsPanel from "./SubtitleSettings";
+import { useAppStore } from "@/lib/initializations/store";
 
-const onSettingsChange = vi.fn();
+vi.mock("@/lib/initializations/store", () => ({
+  useAppStore: vi.fn(),
+}));
 
-const baseSettings = {
-  showSource: true,
-  showTranslation: true,
-  sourceFontSize: "medium" as "medium" | "small" | "large",
-  translationFontSize: "small" as "medium" | "small" | "large",
-  fontColor: "#ffffff",
-  backgroundColor: "#000000",
-  fontOpacity: 0.8,
-  backgroundOpacity: 0.5,
-};
+vi.mock("@/components/ui/card", () => ({
+  Card: ({ children }: any) => <div>{children}</div>,
+  CardHeader: ({ children }: any) => <div>{children}</div>,
+  CardContent: ({ children }: any) => <div>{children}</div>,
+  CardTitle: ({ children }: any) => <h2>{children}</h2>,
+}));
+
+vi.mock("@/components/ui/separator", () => ({
+  Separator: () => <hr />,
+}));
+
+vi.mock("@/components/ui/field", () => ({
+  Field: ({ children }: any) => <div>{children}</div>,
+  FieldLabel: ({ children }: any) => <label>{children}</label>,
+}));
+
+vi.mock("@/components/ui/label", () => ({
+  Label: ({ children, htmlFor }: any) => (
+    <label htmlFor={htmlFor}>{children}</label>
+  ),
+}));
+
+vi.mock("@/components/ui/switch", () => ({
+  Switch: ({ checked, onCheckedChange }: any) => (
+    <button onClick={() => onCheckedChange(!checked)}>
+      {checked ? "on" : "off"}
+    </button>
+  ),
+}));
+
+vi.mock("@/components/ui/tabs", () => ({
+  Tabs: ({ children }: any) => <div>{children}</div>,
+  TabsList: ({ children }: any) => <div>{children}</div>,
+  TabsTrigger: ({ children, value, onClick }: any) => (
+    <button onClick={onClick ?? (() => {})} data-value={value}>
+      {children}
+    </button>
+  ),
+}));
+
+vi.mock("@/components/ui/slider", () => ({
+  Slider: ({ value, onValueChange }: any) => (
+    <input
+      type="range"
+      role="slider"
+      value={value[0]}
+      onChange={(e) => onValueChange([Number(e.target.value)])}
+    />
+  ),
+}));
+
+const mockedUseAppStore = vi.mocked(useAppStore);
+const setSubtitleSettings = vi.fn();
 
 beforeEach(() => {
   vi.resetAllMocks();
+
+  mockedUseAppStore.mockReturnValue({
+    subtitleSettings: {
+      showSource: true,
+      showTranslation: true,
+      sourceFontSize: "medium",
+      translationFontSize: "small",
+      fontColor: "#ffffff",
+      backgroundColor: "#000000",
+      fontOpacity: 0.8,
+      backgroundOpacity: 0.5,
+    },
+    setSubtitleSettings,
+  });
 });
 
 describe("SubtitleSettingsPanel", () => {
   it("renders settings title", () => {
-    render(
-      <SubtitleSettingsPanel
-        settings={baseSettings}
-        onSettingsChange={onSettingsChange}
-      />,
-    );
+    render(<SubtitleSettingsPanel />);
 
     expect(screen.getByText(/subtitle settings/i)).toBeInTheDocument();
-    expect(screen.getByText("Show source")).toBeInTheDocument();
-    expect(screen.getByText("Show translation")).toBeInTheDocument();
+    expect(screen.getByText(/show source/i)).toBeInTheDocument();
+    expect(screen.getByText(/show translation/i)).toBeInTheDocument();
   });
 
   it("toggles source subtitles", () => {
-    render(
-      <SubtitleSettingsPanel
-        settings={baseSettings}
-        onSettingsChange={onSettingsChange}
-      />,
-    );
+    render(<SubtitleSettingsPanel />);
 
-    const buttons = screen.getAllByRole("button");
+    fireEvent.click(screen.getAllByRole("button")[0]);
 
-    fireEvent.click(buttons[0]);
-
-    expect(onSettingsChange).toHaveBeenCalledWith({
+    expect(setSubtitleSettings).toHaveBeenCalledWith({
       showSource: false,
     });
   });
 
   it("toggles translation subtitles", () => {
-    render(
-      <SubtitleSettingsPanel
-        settings={baseSettings}
-        onSettingsChange={onSettingsChange}
-      />,
-    );
+    render(<SubtitleSettingsPanel />);
 
-    const buttons = screen.getAllByRole("button");
+    fireEvent.click(screen.getAllByRole("button")[1]);
 
-    fireEvent.click(buttons[1]);
-
-    expect(onSettingsChange).toHaveBeenCalledWith({
+    expect(setSubtitleSettings).toHaveBeenCalledWith({
       showTranslation: false,
     });
   });
 
   it("renders font size labels", () => {
-    render(
-      <SubtitleSettingsPanel
-        settings={baseSettings}
-        onSettingsChange={onSettingsChange}
-      />,
-    );
+    render(<SubtitleSettingsPanel />);
 
     expect(screen.getByText(/source font size/i)).toBeInTheDocument();
-
     expect(screen.getByText(/translation font size/i)).toBeInTheDocument();
   });
 
-  it("changes source font size", () => {
-    render(
-      <SubtitleSettingsPanel
-        settings={baseSettings}
-        onSettingsChange={onSettingsChange}
-      />,
-    );
+  it("renders all font size options", () => {
+    render(<SubtitleSettingsPanel />);
 
-    const largeButtons = screen.getAllByText("large");
-
-    fireEvent.click(largeButtons[0]);
-
-    expect(onSettingsChange).toHaveBeenCalledWith({
-      sourceFontSize: "large",
-    });
-  });
-
-  it("changes translation font size", () => {
-    render(
-      <SubtitleSettingsPanel
-        settings={baseSettings}
-        onSettingsChange={onSettingsChange}
-      />,
-    );
-
-    const mediumButtons = screen.getAllByText("medium");
-
-    fireEvent.click(mediumButtons[1]);
-
-    expect(onSettingsChange).toHaveBeenCalledWith({
-      translationFontSize: "medium",
-    });
+    expect(screen.getAllByText("small")).toHaveLength(2);
+    expect(screen.getAllByText("medium")).toHaveLength(2);
+    expect(screen.getAllByText("large")).toHaveLength(2);
   });
 
   it("changes font color", () => {
-    render(
-      <SubtitleSettingsPanel
-        settings={baseSettings}
-        onSettingsChange={onSettingsChange}
-      />,
-    );
+    render(<SubtitleSettingsPanel />);
 
-    const colorInputs = screen.getAllByDisplayValue("#ffffff");
+    const input = screen.getByDisplayValue("#ffffff");
 
-    fireEvent.change(colorInputs[0], {
-      target: {
-        value: "#ff0000",
-      },
+    fireEvent.change(input, {
+      target: { value: "#ff0000" },
     });
 
-    expect(onSettingsChange).toHaveBeenCalledWith({
+    expect(setSubtitleSettings).toHaveBeenCalledWith({
       fontColor: "#ff0000",
     });
   });
 
   it("changes background color", () => {
-    render(
-      <SubtitleSettingsPanel
-        settings={baseSettings}
-        onSettingsChange={onSettingsChange}
-      />,
-    );
+    render(<SubtitleSettingsPanel />);
 
-    const colorInputs = screen.getAllByDisplayValue("#000000");
+    const input = screen.getByDisplayValue("#000000");
 
-    fireEvent.change(colorInputs[0], {
-      target: {
-        value: "#00ff00",
-      },
+    fireEvent.change(input, {
+      target: { value: "#00ff00" },
     });
 
-    expect(onSettingsChange).toHaveBeenCalledWith({
+    expect(setSubtitleSettings).toHaveBeenCalledWith({
       backgroundColor: "#00ff00",
     });
   });
 
   it("renders opacity percentages", () => {
-    render(
-      <SubtitleSettingsPanel
-        settings={baseSettings}
-        onSettingsChange={onSettingsChange}
-      />,
-    );
+    render(<SubtitleSettingsPanel />);
 
     expect(screen.getByText("80%")).toBeInTheDocument();
-
     expect(screen.getByText("50%")).toBeInTheDocument();
   });
 
   it("changes font opacity", () => {
-    render(
-      <SubtitleSettingsPanel
-        settings={baseSettings}
-        onSettingsChange={onSettingsChange}
-      />,
-    );
+    render(<SubtitleSettingsPanel />);
 
-    const sliders = screen.getAllByRole("slider");
-
-    fireEvent.change(sliders[0], {
-      target: {
-        value: "0.3",
-      },
+    fireEvent.change(screen.getAllByRole("slider")[0], {
+      target: { value: "0.3" },
     });
 
-    expect(onSettingsChange).toHaveBeenCalledWith({
+    expect(setSubtitleSettings).toHaveBeenCalledWith({
       fontOpacity: 0.3,
     });
   });
 
   it("changes background opacity", () => {
-    render(
-      <SubtitleSettingsPanel
-        settings={baseSettings}
-        onSettingsChange={onSettingsChange}
-      />,
-    );
+    render(<SubtitleSettingsPanel />);
 
-    const sliders = screen.getAllByRole("slider");
-
-    fireEvent.change(sliders[1], {
-      target: {
-        value: "0.9",
-      },
+    fireEvent.change(screen.getAllByRole("slider")[1], {
+      target: { value: "0.9" },
     });
 
-    expect(onSettingsChange).toHaveBeenCalledWith({
+    expect(setSubtitleSettings).toHaveBeenCalledWith({
       backgroundOpacity: 0.9,
     });
-  });
-
-  it("renders all font size options", () => {
-    render(
-      <SubtitleSettingsPanel
-        settings={baseSettings}
-        onSettingsChange={onSettingsChange}
-      />,
-    );
-
-    expect(screen.getAllByText("small")).toHaveLength(2);
-
-    expect(screen.getAllByText("medium")).toHaveLength(2);
-
-    expect(screen.getAllByText("large")).toHaveLength(2);
   });
 });

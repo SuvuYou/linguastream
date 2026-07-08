@@ -1,7 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+
 import ContentConfigurationModal from "@/components/features/library/ContentConfigurationModal/Modal";
+
+import { createBaseLibraryItem } from "@/helpers/tests/mocks/useLibrary";
+import { useFileUpload } from "@/hooks/useFileUpload";
+import { useLanguageSelectors } from "@/hooks/useLanguageSelectors";
 
 vi.mock("@/hooks/useFileUpload", () => ({
   useFileUpload: vi.fn(),
@@ -32,10 +37,6 @@ vi.mock(
   }),
 );
 
-import { useFileUpload } from "@/hooks/useFileUpload";
-import { useLanguageSelectors } from "@/hooks/useLanguageSelectors";
-import { createBaseLibraryItem } from "@/helpers/tests/mocks/useLibrary";
-
 const mockUseFileUpload = vi.mocked(useFileUpload);
 const mockUseLanguageSelectors = vi.mocked(useLanguageSelectors);
 
@@ -60,6 +61,7 @@ const setupMocks = () => {
       toggleTranslateLang: vi.fn(),
     },
     checks: {
+      isSourceLanguageExisting: false,
       isTranslationLanguageSelected: vi.fn(),
       isTranslationLanguageExisting: vi.fn(),
     },
@@ -72,7 +74,7 @@ describe("ContentConfigurationModal", () => {
     setupMocks();
   });
 
-  it("renders modal content and title", () => {
+  it("renders dialog and title", () => {
     render(
       <ContentConfigurationModal
         item={createBaseLibraryItem()}
@@ -81,7 +83,7 @@ describe("ContentConfigurationModal", () => {
       />,
     );
 
-    expect(screen.getByText("Configuration")).toBeInTheDocument();
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
     expect(screen.getByText("title")).toBeInTheDocument();
   });
 
@@ -99,24 +101,7 @@ describe("ContentConfigurationModal", () => {
     expect(screen.getByText("TranslationSubtitlesSection")).toBeInTheDocument();
   });
 
-  it("calls onClose when backdrop is clicked", async () => {
-    const user = userEvent.setup();
-    const onClose = vi.fn();
-
-    const { container } = render(
-      <ContentConfigurationModal
-        item={createBaseLibraryItem()}
-        onClose={onClose}
-        onSuccess={vi.fn()}
-      />,
-    );
-
-    await user.click(container.firstChild as HTMLElement);
-
-    expect(onClose).toHaveBeenCalled();
-  });
-
-  it("does NOT close when clicking modal content", async () => {
+  it("does not close when clicking inside dialog", async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
 
@@ -133,7 +118,28 @@ describe("ContentConfigurationModal", () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
-  it("enables save button when ready", () => {
+  it("calls onClose when Cancel is clicked", async () => {
+    const user = userEvent.setup();
+    const onClose = vi.fn();
+
+    render(
+      <ContentConfigurationModal
+        item={createBaseLibraryItem()}
+        onClose={onClose}
+        onSuccess={vi.fn()}
+      />,
+    );
+
+    await user.click(
+      screen.getByRole("button", {
+        name: /cancel/i,
+      }),
+    );
+
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("enables save button when uploads are ready", () => {
     render(
       <ContentConfigurationModal
         item={createBaseLibraryItem()}
@@ -142,11 +148,11 @@ describe("ContentConfigurationModal", () => {
       />,
     );
 
-    const saveButton = screen.getByRole("button", {
-      name: /save/i,
-    });
-
-    expect(saveButton).toBeEnabled();
+    expect(
+      screen.getByRole("button", {
+        name: /save/i,
+      }),
+    ).toBeEnabled();
   });
 
   it("shows cancel button", () => {
@@ -158,6 +164,10 @@ describe("ContentConfigurationModal", () => {
       />,
     );
 
-    expect(screen.getByRole("button", { name: /cancel/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: /cancel/i,
+      }),
+    ).toBeInTheDocument();
   });
 });

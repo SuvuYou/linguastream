@@ -1,8 +1,69 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import React from "react";
+
 import { SourceLanguageSection } from "@/components/features/library/ContentConfigurationModal/SourceLanguageSection";
 import { AUTO_DETECT } from "@/helpers/const";
+
+vi.mock("@/components/ui/select", () => {
+  const SelectContent = ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  );
+
+  const Select = ({
+    value,
+    onValueChange,
+    children,
+  }: {
+    value: string;
+    onValueChange: (value: string) => void;
+    children: React.ReactNode;
+  }) => {
+    const options: { value: string; label: React.ReactNode }[] = [];
+
+    React.Children.forEach(children, (child: any) => {
+      if (!React.isValidElement(child)) return;
+
+      if (child.type === SelectContent) {
+        React.Children.forEach(child.props.children, (item: any) => {
+          if (!React.isValidElement(item)) return;
+
+          options.push({
+            value: item.props.value,
+            label: item.props.children,
+          });
+        });
+      }
+    });
+
+    return (
+      <select value={value} onChange={(e) => onValueChange(e.target.value)}>
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    );
+  };
+
+  const SelectTrigger = ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  );
+  const SelectValue = () => null;
+  const SelectItem = ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  );
+
+  return {
+    Select,
+    SelectTrigger,
+    SelectValue,
+    SelectContent,
+    SelectItem,
+  };
+});
 
 describe("SourceLanguageSection", () => {
   const baseProps = {
@@ -13,7 +74,7 @@ describe("SourceLanguageSection", () => {
   it("renders label", () => {
     render(<SourceLanguageSection {...baseProps} />);
 
-    expect(screen.getByText(/content language/i)).toBeInTheDocument();
+    expect(screen.getByText(/content source language/i)).toBeInTheDocument();
   });
 
   it("renders auto-detect option", () => {
@@ -44,8 +105,7 @@ describe("SourceLanguageSection", () => {
 
     await user.selectOptions(select, "auto");
 
-    expect(onChange).toHaveBeenCalled();
-    expect(onChange.mock.calls[0][0]).toBe("auto");
+    expect(onChange).toHaveBeenCalledWith("auto");
   });
 
   it("renders language options from constants", () => {
@@ -53,7 +113,6 @@ describe("SourceLanguageSection", () => {
 
     const options = screen.getAllByRole("option");
 
-    // at least auto-detect + some languages
     expect(options.length).toBeGreaterThan(1);
   });
 });

@@ -18,7 +18,12 @@ export default defineConfig({
         "lib/**/*.{ts,tsx}",
         "helpers/**/*.{ts,tsx}",
       ],
-      exclude: ["**/*.test.*", "lib/initializations/**", "helpers/tests/**"],
+      exclude: [
+        "**/*.test.*",
+        "lib/initializations/**",
+        "helpers/tests/**",
+        "components/ui/**",
+      ],
       thresholds: {
         lines: 75,
         functions: 75,

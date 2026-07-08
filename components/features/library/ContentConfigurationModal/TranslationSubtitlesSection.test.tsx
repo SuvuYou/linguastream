@@ -69,47 +69,46 @@ const baseProps = {
 describe("TranslationSubtitlesSection", () => {
   beforeEach(() => {
     vi.resetAllMocks();
-
     mockUseUser.base();
   });
 
-  it("renders translation method buttons for regular user", () => {
+  it("renders translation method tabs for regular user", () => {
     render(<TranslationSubtitlesSection {...baseProps} />);
 
     expect(screen.getByText(/translation subtitles/i)).toBeInTheDocument();
 
     expect(
-      screen.getByRole("button", {
+      screen.getByRole("tab", {
         name: /libretranslate/i,
       }),
     ).toBeInTheDocument();
 
     expect(
-      screen.getByRole("button", {
+      screen.getByRole("tab", {
         name: /upload/i,
       }),
     ).toBeInTheDocument();
 
     expect(
-      screen.queryByRole("button", {
+      screen.queryByRole("tab", {
         name: /deepl/i,
       }),
     ).not.toBeInTheDocument();
   });
 
-  it("renders deepl button for admin", () => {
+  it("renders deepl tab for admin", () => {
     mockUseUser.admin();
 
     render(<TranslationSubtitlesSection {...baseProps} />);
 
     expect(
-      screen.getByRole("button", {
+      screen.getByRole("tab", {
         name: /deepl/i,
       }),
     ).toBeInTheDocument();
   });
 
-  it("hides upload button for whisperx acquisition method", () => {
+  it("hides upload tab for whisperx acquisition method", () => {
     render(
       <TranslationSubtitlesSection
         {...baseProps}
@@ -118,13 +117,13 @@ describe("TranslationSubtitlesSection", () => {
     );
 
     expect(
-      screen.queryByRole("button", {
+      screen.queryByRole("tab", {
         name: /upload/i,
       }),
     ).not.toBeInTheDocument();
   });
 
-  it("calls setTranslateMethod when method button is clicked", async () => {
+  it("calls setTranslateMethod when upload tab is clicked", async () => {
     const user = userEvent.setup();
     const setTranslateMethod = vi.fn();
 
@@ -136,7 +135,7 @@ describe("TranslationSubtitlesSection", () => {
     );
 
     await user.click(
-      screen.getByRole("button", {
+      screen.getByRole("tab", {
         name: /upload/i,
       }),
     );
@@ -148,7 +147,6 @@ describe("TranslationSubtitlesSection", () => {
     render(<TranslationSubtitlesSection {...baseProps} />);
 
     expect(screen.getByTestId("row-en")).toBeInTheDocument();
-
     expect(screen.getByTestId("row-de")).toBeInTheDocument();
   });
 

@@ -1,83 +1,37 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-@theme inline {
-  --color-background: #08090b;
-  --color-background-hover: #1f1e1e;
+@import "./reset.css";
+@import "./theme.css";
+@import "./tailwind-theme.css";
 
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@custom-variant dark (&:is(.dark *));
 
-  --color-primary-text: #e2e4e8;
-  --color-secondary-text: #c8ccd2;
+@layer base {
+  *,
+  *::before,
+  *::after {
+    @apply border-border outline-ring/50;
+  }
 
-  --color-primary-border: #ffffff12;
-  --color-active-border: #6d9c75;
-}
-
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-*:not(dialog) {
-  margin: 0;
-}
-
-@media (prefers-reduced-motion: no-preference) {
   html {
-    interpolate-size: allow-keywords;
+    @apply font-sans;
+  }
+
+  body {
+    @apply min-h-screen bg-background text-foreground;
+    letter-spacing: var(--tracking-normal);
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--primary) 30%, transparent);
   }
 }
 
-body {
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-}
+.plyr {
+  --plyr-color-main: var(--secondary);
 
-img,
-picture,
-video,
-canvas,
-svg {
-  display: block;
-  max-width: 100%;
-}
-
-input,
-button,
-textarea,
-select {
-  font: inherit;
-}
-
-p,
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  overflow-wrap: break-word;
-}
-
-p {
-  text-wrap: pretty;
-}
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  text-wrap: balance;
-}
-
-#root,
-#__next {
-  isolation: isolate;
-}
-
-body {
-  font-family: Arial, Helvetica, sans-serif;
+  --plyr-range-fill-background: var(--secondary);
+  --plyr-menu-background: var(--secondary);
 }
