@@ -3,37 +3,70 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import SignOutButton from "@/components/features/signin/SignOutButton";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarHeader,
+  SidebarFooter,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from "@/components/ui/sidebar";
+import { BookHeart, Layers, BookOpen, SquareLibrary } from "lucide-react";
 
-export default function Navbar() {
+const NAV_LINKS = [
+  { href: "/dashboard", label: "Library", icon: <SquareLibrary /> },
+  { href: "/dashboard/personal", label: "Personal", icon: <BookHeart /> },
+  { href: "/dashboard/decks", label: "Decks", icon: <Layers /> },
+  { href: "/dashboard/study", label: "Study", icon: <BookOpen /> },
+] as const;
+
+export default function AppSidebar() {
   const pathname = usePathname();
 
-  const linkClass = (href: string) =>
-    `px-4 text-sm h-full flex items-center border-r border-primary-border border-b-2 ${
-      pathname === href
-        ? "border-b-active-border text-primary-text"
-        : "border-b-transparent text-secondary-text hover:bg-background-hover"
-    }`;
-
   return (
-    <nav className="flex flex-wrap overflow-visible items-center h-12 border-b border-primary-border">
-      <div className="flex items-center px-4 font-medium text-sm border-r border-primary-border h-full ">
-        LinguaStream
-      </div>
-      <Link href="/" className={linkClass("/")}>
-        Library
-      </Link>
-      <Link href="/personal" className={linkClass("/personal")}>
-        Personal
-      </Link>
-      <Link href="/decks" className={linkClass("/decks")}>
-        Decks
-      </Link>
-      <Link href="/study" className={linkClass("/study")}>
-        Study
-      </Link>
-      <div className="ml-auto mr-4">
-        <SignOutButton />
-      </div>
-    </nav>
+    <Sidebar className="shrink-0 h-lvh" collapsible="none">
+      <SidebarHeader>
+        <div className="px-4 py-1.5 pt-5 text-default font-medium underline underline-offset-4 decoration-primary decoration-2">
+          LinguaStream
+        </div>
+      </SidebarHeader>
+
+      <SidebarContent className="pr-3 pt-3">
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu className="gap-3">
+              {NAV_LINKS.map(({ href, label, icon }) => {
+                const isActive = pathname === href;
+
+                return (
+                  <SidebarMenuItem key={href}>
+                    <SidebarMenuButton asChild isActive={isActive}>
+                      <Link
+                        href={href}
+                        aria-current={isActive ? "page" : undefined}
+                      >
+                        {icon}
+                        {label}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SignOutButton />
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+    </Sidebar>
   );
 }

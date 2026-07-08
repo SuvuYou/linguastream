@@ -9,9 +9,11 @@ export default function FileStatus({
 }) {
   if (!state) return null;
   if (state.status === "uploading")
-    return <span className="text-xs text-secondary-text">Uploading...</span>;
+    return (
+      <span className="text-xs text-primary-foreground">Uploading...</span>
+    );
   if (state.status === "done")
-    return <span className="text-xs text-active-border">Ready</span>;
+    return <span className="text-xs text-contrast">Ready</span>;
   if (state.status === "error")
     return <span className="text-xs text-red-400">{state.error}</span>;
   return null;

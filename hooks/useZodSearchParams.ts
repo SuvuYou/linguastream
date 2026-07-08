@@ -20,7 +20,12 @@ export function useZodSearchParams<T extends z.ZodTypeAny>(schema: T) {
       }
     });
 
-    router.replace(`${pathname}?${params.toString()}`);
+    const next = params.toString();
+    const current = searchParams.toString();
+
+    if (next !== current) {
+      router.replace(`${pathname}?${next}`);
+    }
   };
 
   const remove = (...keys: (keyof z.infer<T>)[]) => {
@@ -30,7 +35,12 @@ export function useZodSearchParams<T extends z.ZodTypeAny>(schema: T) {
       params.delete(key as string);
     });
 
-    router.replace(`${pathname}?${params.toString()}`);
+    const next = params.toString();
+    const current = searchParams.toString();
+
+    if (next !== current) {
+      router.replace(`${pathname}?${next}`);
+    }
   };
 
   return { params: parsedParams, set, remove };

@@ -2,26 +2,17 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import RootLayout from "./layout";
 
-vi.mock("next/font/google", () => ({
-  Geist: () => ({
-    variable: "geist-sans",
-  }),
-  Geist_Mono: () => ({
-    variable: "geist-mono",
-  }),
-}));
-
 vi.mock("@/components/layout/Navbar", () => ({
   default: () => <div data-testid="navbar" />,
 }));
 
-vi.mock("@/components/layout/Providers", () => ({
-  default: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="providers">{children}</div>
+vi.mock("@/components/ui/sidebar", () => ({
+  SidebarProvider: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="sidebar-provider">{children}</div>
   ),
 }));
 
-describe("layout page", () => {
+describe("RootLayout", () => {
   it("renders children", () => {
     render(
       <RootLayout>
@@ -42,15 +33,25 @@ describe("layout page", () => {
     expect(screen.getByTestId("navbar")).toBeInTheDocument();
   });
 
-  it("wraps children with Providers", () => {
+  it("wraps children with SidebarProvider", () => {
     render(
       <RootLayout>
         <div data-testid="child" />
       </RootLayout>,
     );
 
-    const providers = screen.getByTestId("providers");
+    const provider = screen.getByTestId("sidebar-provider");
 
-    expect(providers).toContainElement(screen.getByTestId("child"));
+    expect(provider).toContainElement(screen.getByTestId("child"));
+  });
+
+  it("renders the main element", () => {
+    const { container } = render(
+      <RootLayout>
+        <div />
+      </RootLayout>,
+    );
+
+    expect(container.querySelector("main")).toBeInTheDocument();
   });
 });

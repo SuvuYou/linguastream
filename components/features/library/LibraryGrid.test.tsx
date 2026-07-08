@@ -5,7 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { mockUseJobPolling } from "@/helpers/tests/mocks/useJobPolling";
 import { mockUseLibrary } from "@/helpers/tests/mocks/useLibrary";
 import { mockUseUser } from "@/helpers/tests/mocks/useUser";
-import { mockUseLanguages } from "@/helpers/tests/mocks/useLanguages";
+import { useLibraryLanguages } from "@/hooks/useLibraryLanguages";
 
 vi.mock("@/hooks/useUser", () => ({
   useUser: vi.fn(),
@@ -20,16 +20,18 @@ vi.mock("@/hooks/useLibrary", () => ({
   DEFAULT_LIBRARY_RESPONSE: { items: [], total: 0, pageCount: 0 },
 }));
 
-vi.mock("@/hooks/useLanguages", () => ({
-  useLanguages: vi.fn(),
+vi.mock("@/hooks/useLibraryLanguages", () => ({
+  useLibraryLanguages: vi.fn(),
 }));
 
-
-vi.mock("@/components/features/library/ContentConfigurationModal/Modal", () => ({
-  default: ({ onSuccess }: { onSuccess: () => void }) => (
-    <button onClick={onSuccess}>Mock Modal</button>
-  ),
-}));
+vi.mock(
+  "@/components/features/library/ContentConfigurationModal/Modal",
+  () => ({
+    default: ({ onSuccess }: { onSuccess: () => void }) => (
+      <button onClick={onSuccess}>Mock Modal</button>
+    ),
+  }),
+);
 
 const refreshMock = vi.fn();
 
@@ -39,11 +41,28 @@ vi.mock("next/navigation", () => ({
   }),
 }));
 
-beforeEach(() => vi.resetAllMocks());
+const mockedUseLibraryLanguages = vi.mocked(useLibraryLanguages);
+
+beforeEach(() => {
+  vi.clearAllMocks();
+
+  mockedUseLibraryLanguages.mockReturnValue({
+    source: {
+      value: "en",
+      available: ["en"],
+    },
+    translation: {
+      value: "de",
+      available: ["de"],
+    },
+    isLoading: false,
+    isFetching: false,
+    isError: false,
+  });
+});
 
 describe("LibraryGrid", () => {
   it("shows skeleton when loading", () => {
-    mockUseLanguages.loading();
     mockUseUser.loading();
     mockUseLibrary.loading();
 
@@ -54,7 +73,6 @@ describe("LibraryGrid", () => {
 
   it("shows error state", () => {
     mockUseJobPolling.done();
-    mockUseLanguages.error();
     mockUseUser.error();
     mockUseLibrary.error();
 
@@ -66,7 +84,6 @@ describe("LibraryGrid", () => {
   it("renders library items", () => {
     mockUseJobPolling.done();
     mockUseUser.base();
-    mockUseLanguages.selected();
     mockUseLibrary.base();
 
     render(<LibraryGrid />);
@@ -79,7 +96,6 @@ describe("LibraryGrid", () => {
     mockUseUser.base();
     mockUseJobPolling.done();
     mockUseLibrary.base();
-    mockUseLanguages.selected();
 
     render(<LibraryGrid />);
 
@@ -90,18 +106,16 @@ describe("LibraryGrid", () => {
   it("shows empty state", () => {
     mockUseJobPolling.done();
     mockUseUser.base();
-    mockUseLanguages.selected();
     mockUseLibrary.empty();
 
     render(<LibraryGrid />);
 
-    expect(screen.getByText(/no items found/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/no items found/i)).toHaveLength(2);
   });
 
   it("shows add button for admin and unknown language", async () => {
     mockUseJobPolling.done();
     mockUseUser.admin();
-    mockUseLanguages.selected();
     mockUseLibrary.base();
 
     render(<LibraryGrid />);

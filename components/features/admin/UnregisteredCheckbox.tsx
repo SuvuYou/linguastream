@@ -2,15 +2,15 @@
 
 import { PUBLIC_LIBRARY_PARAMS_SCHEMA } from "@/helpers/params-schema";
 import { useZodSearchParams } from "@/hooks/useZodSearchParams";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 export default function UnregisteredCheckbox() {
   const searchParams = useZodSearchParams(PUBLIC_LIBRARY_PARAMS_SCHEMA);
   const checked = searchParams.params.unreg;
 
-  const handleToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const isChecked = e.target.checked;
-
-    if (isChecked) {
+  const handleToggle = (checked: boolean) => {
+    if (checked) {
       searchParams.set({ unreg: true });
     } else {
       searchParams.remove("unreg");
@@ -18,14 +18,18 @@ export default function UnregisteredCheckbox() {
   };
 
   return (
-    <label className="flex items-center gap-2 text-xs text-secondary-text cursor-pointer">
-      <input
-        type="checkbox"
+    <div className="flex items-center gap-2">
+      <Checkbox
+        id="unregistered-filter"
         checked={checked}
-        className="accent-active-border"
-        onChange={handleToggle}
+        onCheckedChange={handleToggle}
       />
-      Unregistered only
-    </label>
+      <Label
+        htmlFor="unregistered-filter"
+        className="text-xs text-secondary-foreground font-normal cursor-pointer"
+      >
+        Unregistered only
+      </Label>
+    </div>
   );
 }

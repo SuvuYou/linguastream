@@ -13,12 +13,6 @@ const appEvents = {
     onJumpTo: (callback: ({ ms }: { ms: number }) => void) =>
       AppEventsBus.on("jump-to", callback),
   },
-  overlay: {
-    toggleOverlay: (isOpen: boolean) =>
-      AppEventsBus.trigger("overlay", { isOpen }),
-    onOverlay: (callback: ({ isOpen }: { isOpen: boolean }) => void) =>
-      AppEventsBus.on("overlay", callback),
-  },
 };
 
 export default appEvents;

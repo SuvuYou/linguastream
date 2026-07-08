@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import "plyr/dist/plyr.css";
 import SubtitleOverlay from "@/components/features/watch/SubtitleOverlay";
-import SubtitleSettingsPanel from "@/components/features/watch/SubtitleSettings";
 import { useAppStore } from "@/lib/initializations/store";
 import type { SubtitleLine } from "@/hooks/useSubtitleTrack";
 import { useAnimationTick } from "@/hooks/useAnimationTick";
@@ -18,7 +17,6 @@ interface PlayerProps {
   translationLines: SubtitleLine[];
   translationLanguages: string[];
   activeTranslationLang: string | null;
-  onTranslationLangChange: (lang: string) => void;
   setCurrentTimeMs: (timeMs: number) => void;
 }
 
@@ -33,12 +31,8 @@ export default function Player({
 }: PlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const plyrRef = useRef<Plyr | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
-  const [showSettings, setShowSettings] = useState(false);
-  const [isHoveringPlayer, setIsHoveringPlayer] = useState(false);
-
-  const { subtitleSettings, setSubtitleSettings } = useAppStore();
+  const { subtitleSettings } = useAppStore();
 
   useEffect(() => {
     const setup = async () => {
@@ -105,30 +99,8 @@ export default function Player({
     { autoStart: true },
   );
 
-  useEffect(() => {
-    if (!showSettings) return;
-    function handleClick(e: MouseEvent) {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
-      ) {
-        setShowSettings(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [showSettings]);
-
   return (
-    <div
-      ref={containerRef}
-      className="relative w-full max-w-5xl"
-      onMouseEnter={() => setIsHoveringPlayer(true)}
-      onMouseLeave={() => {
-        setIsHoveringPlayer(false);
-        setShowSettings(false);
-      }}
-    >
+    <div className="relative w-full max-w-6xl">
       <video ref={videoRef} title={title} playsInline>
         <source src={streamUrl} type="video/mp4" />
       </video>
@@ -139,24 +111,6 @@ export default function Player({
         translationLines={translationLines}
         settings={subtitleSettings}
       />
-
-      {isHoveringPlayer && (
-        <div className="absolute bottom-14 right-2 z-20">
-          <button
-            onClick={() => setShowSettings((v) => !v)}
-            className="text-xs px-2 py-1 bg-background/80 border border-primary-border text-secondary-text hover:text-primary-text transition-colors"
-          >
-            Subtitles
-          </button>
-        </div>
-      )}
-
-      {showSettings && (
-        <SubtitleSettingsPanel
-          settings={subtitleSettings}
-          onSettingsChange={setSubtitleSettings}
-        />
-      )}
     </div>
   );
 }

@@ -1,83 +1,134 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
-import { userEvent } from "@testing-library/user-event";
+import { render, screen, fireEvent } from "@testing-library/react";
 import LanguageFilter from "./LanguageFilter";
-import { mockUseLanguages } from "@/helpers/tests/mocks/useLanguages";
 
-vi.mock("@/hooks/useLanguages", () => ({
-  useLanguages: vi.fn(),
+vi.mock("@/components/ui/select", () => ({
+  Select: ({
+    value,
+    onValueChange,
+    children,
+  }: {
+    value: string;
+    onValueChange?: (value: string) => void;
+    children: React.ReactNode;
+  }) => (
+    <select
+      value={value}
+      onChange={(e) => onValueChange?.(e.target.value)}
+      data-testid="select"
+    >
+      {children}
+    </select>
+  ),
+  SelectTrigger: ({ children }: any) => <>{children}</>,
+  SelectValue: () => null,
+  SelectContent: ({ children }: any) => <>{children}</>,
+  SelectItem: ({
+    value,
+    children,
+  }: {
+    value: string;
+    children: React.ReactNode;
+  }) => <option value={value}>{children}</option>,
 }));
 
-const setPreferredSourceLanguage = vi.fn();
-const setPreferredTranslationLanguage = vi.fn();
-
-vi.mock("@/lib/initializations/store", () => ({
-  useAppStore: () => ({
-    setPreferredSourceLanguage,
-    setPreferredTranslationLanguage,
-  }),
+vi.mock("@/components/ui/field", () => ({
+  Field: ({ children }: any) => <div>{children}</div>,
+  FieldLabel: ({ children }: any) => <label>{children}</label>,
 }));
 
-const setMock = vi.fn();
-
-vi.mock("@/hooks/useZodSearchParams", () => ({
-  useZodSearchParams: () => ({
-    set: setMock,
-  }),
+vi.mock("@/components/ui/badge", () => ({
+  Badge: ({ children }: any) => <div>{children}</div>,
 }));
 
-beforeEach(() => vi.resetAllMocks());
+vi.mock("@/components/ui/empty", () => ({
+  Empty: ({ children }: any) => <div>{children}</div>,
+  EmptyTitle: ({ children }: any) => <div>{children}</div>,
+}));
+
+vi.mock("@/components/ui/skeleton", () => ({
+  Skeleton: () => <div>Loading languages</div>,
+}));
+
+const onSourceChange = vi.fn();
+const onTranslationChange = vi.fn();
+
+const baseProps = {
+  source: {
+    value: "en",
+    available: ["en", "de"],
+    onChange: onSourceChange,
+  },
+  translation: {
+    value: "de",
+    available: ["de", "en"],
+    onChange: onTranslationChange,
+  },
+};
+
+beforeEach(() => {
+  vi.resetAllMocks();
+});
 
 describe("LanguageFilter", () => {
   it("shows loading state", () => {
-    mockUseLanguages.loading();
+    render(<LanguageFilter {...baseProps} isLoading />);
 
-    render(<LanguageFilter />);
-
-    expect(screen.getByText(/loading languages/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/loading languages/i)).toHaveLength(2);
   });
 
   it("shows error state", () => {
-    mockUseLanguages.error();
-
-    render(<LanguageFilter />);
+    render(<LanguageFilter {...baseProps} isError />);
 
     expect(screen.getByText(/failed to load languages/i)).toBeInTheDocument();
   });
 
-  it("updates filters when source language changes", async () => {
-    const user = userEvent.setup();
+  it("shows empty state when no languages are available", () => {
+    render(
+      <LanguageFilter
+        source={{ ...baseProps.source, available: [] }}
+        translation={{ ...baseProps.translation, available: [] }}
+      />,
+    );
 
-    mockUseLanguages.selected();
-
-    render(<LanguageFilter />);
-
-    const selects = screen.getAllByRole("combobox");
-
-    await user.selectOptions(selects[0], "de");
-
-    expect(setMock).toHaveBeenCalledWith({
-      src: "de",
-    });
-
-    expect(setPreferredSourceLanguage).toHaveBeenCalledWith("de");
+    expect(screen.getByText(/no languages available/i)).toBeInTheDocument();
   });
 
-  it("updates filters when translation language changes", async () => {
-    const user = userEvent.setup();
+  it("renders both selects", () => {
+    render(<LanguageFilter {...baseProps} />);
 
-    mockUseLanguages.selected();
+    expect(screen.getAllByTestId("select")).toHaveLength(2);
+  });
 
-    render(<LanguageFilter />);
+  it("calls source onChange", () => {
+    render(<LanguageFilter {...baseProps} />);
 
-    const selects = screen.getAllByRole("combobox");
-
-    await user.selectOptions(selects[1], "en");
-
-    expect(setMock).toHaveBeenCalledWith({
-      trans: "en",
+    fireEvent.change(screen.getAllByTestId("select")[0], {
+      target: { value: "de" },
     });
 
-    expect(setPreferredTranslationLanguage).toHaveBeenCalledWith("en");
+    expect(onSourceChange).toHaveBeenCalledWith("de");
+  });
+
+  it("calls translation onChange", () => {
+    render(<LanguageFilter {...baseProps} />);
+
+    fireEvent.change(screen.getAllByTestId("select")[1], {
+      target: { value: "en" },
+    });
+
+    expect(onTranslationChange).toHaveBeenCalledWith("en");
+  });
+
+  it("renders custom labels", () => {
+    render(
+      <LanguageFilter
+        source={{ ...baseProps.source, label: "Input" }}
+        translation={{ ...baseProps.translation, label: "Output" }}
+      />,
+    );
+
+    expect(screen.getByText("Input:")).toBeInTheDocument();
+    expect(screen.getByText("Output:")).toBeInTheDocument();
   });
 });

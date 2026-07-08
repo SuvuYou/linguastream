@@ -34,6 +34,7 @@ interface AppState {
   setAutoPlay: (v: boolean) => void;
   overlayOpen: boolean;
   setOverlayOpen: (v: boolean) => void;
+  toggleOverlay: () => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -47,8 +48,12 @@ export const useAppStore = create<AppState>()(
         autoPlay: true,
         setAutoPlay: (v) => set({ autoPlay: v }),
 
-        overlayOpen: true,
-        setOverlayOpen: (v) => set({ overlayOpen: v }),
+        overlayOpen: false,
+        setOverlayOpen: (v) => {
+          set({ overlayOpen: v });
+        },
+        toggleOverlay: () =>
+          set((state) => ({ overlayOpen: !state.overlayOpen })),
 
         setPreferredSourceLanguage: (language) =>
           set({ preferredSourceLanguage: language }),
@@ -64,6 +69,12 @@ export const useAppStore = create<AppState>()(
     },
     {
       name: "linguastream-store",
+      // Add the partialize option here:
+      partialize: (state) => {
+        const { overlayOpen: _, ...rest } = state;
+
+        return rest;
+      },
     },
   ),
 );

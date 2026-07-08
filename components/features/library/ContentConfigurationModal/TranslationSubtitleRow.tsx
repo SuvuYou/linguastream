@@ -1,8 +1,10 @@
 "use client";
 
 import FileChooser from "@/components/features/library/ContentConfigurationModal/FileChooser";
-
 import type { FileUploadState } from "@/hooks/useFileUpload";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 
 interface TranslationLanguage {
   code: string;
@@ -14,9 +16,7 @@ interface TranslationSubtitleRowProps {
   isChecked: boolean;
   wasExisting: boolean;
   onToggle: () => void;
-
   showUpload: boolean;
-
   uploadState: FileUploadState | null;
   onUpload: (file: File) => void;
 }
@@ -26,42 +26,50 @@ export default function TranslationSubtitleRow({
   isChecked,
   wasExisting,
   onToggle,
-
   showUpload,
-
   uploadState,
   onUpload,
 }: TranslationSubtitleRowProps) {
   return (
     <div>
       <div className="flex items-center gap-2 py-1">
-        <input
-          type="checkbox"
+        <Checkbox
           id={`lang-${lang.code}`}
           checked={isChecked}
-          onChange={onToggle}
-          className="accent-active-border"
+          onCheckedChange={onToggle}
         />
 
-        <label
+        <Label
           htmlFor={`lang-${lang.code}`}
-          className="text-sm text-primary-text cursor-pointer flex-1"
+          className="text-sm text-primary-foreground font-normal cursor-pointer flex-1 py-1.5"
         >
           {lang.label}
-        </label>
+        </Label>
 
         {wasExisting && !isChecked && (
-          <span className="text-xs text-red-400">Will be removed</span>
+          <Badge
+            size="sm"
+            variant="destructive"
+            className="text-xs font-normal"
+          >
+            Will be removed
+          </Badge>
         )}
 
         {wasExisting && isChecked && (
-          <span className="text-xs text-secondary-text">Existing</span>
+          <Badge size="sm" variant="secondary" className="text-xs font-normal">
+            Existing
+          </Badge>
+        )}
+
+        {isChecked && showUpload && (
+          <FileChooser
+            uploadState={uploadState}
+            onUpload={onUpload}
+            size="sm"
+          />
         )}
       </div>
-
-      {isChecked && showUpload && (
-        <FileChooser uploadState={uploadState} onUpload={onUpload} />
-      )}
     </div>
   );
 }
