@@ -6,29 +6,20 @@ import SubtitleOverlay from "@/components/features/watch/SubtitleOverlay";
 import { useAppStore } from "@/lib/initializations/store";
 import type { SubtitleLine } from "@/hooks/useSubtitleTrack";
 import { useAnimationTick } from "@/hooks/useAnimationTick";
-import type { SubtitleSearchDocument } from "@/lib/db-helpers/search";
 import { Button } from "@/components/ui/button";
 import { RotateCcw } from "lucide-react";
 
-function generateSubtitleLine(
-  mediaItem: SubtitleSearchDocument,
-  type: "sub" | "trans",
-): SubtitleLine | null {
-  if (!mediaItem) {
-    return null;
-  }
-
-  return {
-    index: 0,
-    text: type === "sub" ? mediaItem.source_text : mediaItem.translation_text,
-    start_ms: mediaItem.start_ms,
-    end_ms: mediaItem.end_ms,
-  };
+interface PlayableMediaItem {
+  source_text: string;
+  translation_text: string;
+  start_ms: number;
+  end_ms: number;
+  media_title: string;
 }
 
 interface PlayerSmallProps {
   streamUrl: string;
-  mediaItem: SubtitleSearchDocument;
+  mediaItem: PlayableMediaItem;
 }
 
 export default function PlayerSmall({
@@ -152,4 +143,20 @@ export default function PlayerSmall({
       )}
     </div>
   );
+}
+
+function generateSubtitleLine(
+  mediaItem: PlayableMediaItem,
+  type: "sub" | "trans",
+): SubtitleLine | null {
+  if (!mediaItem) {
+    return null;
+  }
+
+  return {
+    index: 0,
+    text: type === "sub" ? mediaItem.source_text : mediaItem.translation_text,
+    start_ms: mediaItem.start_ms,
+    end_ms: mediaItem.end_ms,
+  };
 }
