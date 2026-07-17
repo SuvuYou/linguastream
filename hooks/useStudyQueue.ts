@@ -117,5 +117,7 @@ export default function useStudyQueue(deckId: string) {
     }
   }, [currentIndex, cards.length]);
 
-  return { isLoading, studyDetails, cards, currentIndex, advance };
+  const currentCard = cards[currentIndex];
+
+  return { isLoading, studyDetails, cards, currentIndex, currentCard, advance };
 }

@@ -15,6 +15,10 @@ export const WATCH_PAGE_PARAMS_SCHEMA = z.object({
     .default(0),
 });
 
+export const STUDY_PAGE_PARAMS_SCHEMA = z.object({
+  deckId: z.string().min(1),
+});
+
 export const PUBLIC_LIBRARY_PARAMS_SCHEMA = z.object({
   q: z.string().optional(),
 

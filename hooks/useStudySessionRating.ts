@@ -51,5 +51,5 @@ export default function useStudySessionRating({ currentCard, advance }: Props) {
     sendReview(currentCard.id, rating);
   }
 
-  return { shouldShowBack, stats, handleRating };
+  return { shouldShowBack, setShouldShowBack, stats, handleRating };
 }

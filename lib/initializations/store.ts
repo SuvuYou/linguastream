@@ -49,22 +49,6 @@ export const useAppStore = create<AppState>()(
         preferredSourceLanguage: null,
         preferredTranslationLanguage: null,
 
-        wordProfilesCache: {},
-        wordDefinitionsCache: {},
-
-        setWordProfilesCache: (key, profile) =>
-          set((state) => ({
-            wordProfilesCache: { ...state.wordProfilesCache, [key]: profile },
-          })),
-
-        setWordDefinitionsCache: (key, definishion) =>
-          set((state) => ({
-            wordDefinitionsCache: {
-              ...state.wordDefinitionsCache,
-              [key]: definishion,
-            },
-          })),
-
         subtitleSettings: DEFAULT_SUBTITLE_SETTINGS,
 
         autoPlay: true,
@@ -87,11 +71,26 @@ export const useAppStore = create<AppState>()(
           set((state) => ({
             subtitleSettings: { ...state.subtitleSettings, ...settings },
           })),
+
+        wordProfilesCache: {},
+        wordDefinitionsCache: {},
+
+        setWordProfilesCache: (key, profile) =>
+          set((state) => ({
+            wordProfilesCache: { ...state.wordProfilesCache, [key]: profile },
+          })),
+
+        setWordDefinitionsCache: (key, definishion) =>
+          set((state) => ({
+            wordDefinitionsCache: {
+              ...state.wordDefinitionsCache,
+              [key]: definishion,
+            },
+          })),
       };
     },
     {
       name: "linguastream-store",
-      // Add the partialize option here:
       partialize: (state) => {
         const {
           overlayOpen: _1,
