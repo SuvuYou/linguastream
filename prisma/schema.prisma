@@ -116,11 +116,13 @@ model Card {
   word                    String
   source_language         String
   translation_language    String
-  translation_text        String
-  source_subtitle_line_id String
+  word_translation        String
+  context_text            String
+  context_translation     String?
   media_content_id        String
   start_ms                Int
   end_ms                  Int
+  contextual_definition   String?
   next_review             DateTime @default(now())
   interval_days           Int      @default(1)
   ease_factor             Float    @default(2.5)
