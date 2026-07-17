@@ -1,3 +1,5 @@
+import DecksPage from "@/components/pages/DecksPage";
+
 export default function Decks() {
-  return <div>Decks list</div>;
+  return <DecksPage />;
 }

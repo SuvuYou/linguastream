@@ -5,7 +5,7 @@ import { SMRating } from "@/lib/algorithms/sm2";
 import { useRouter } from "next/router";
 
 interface Props {
-  studyDetails: { deckTitle: string; nextReviewAt: string };
+  studyDetails: { deckTitle: string; nextReviewAt: string | null };
   stats: { reviewedCount: number; ratingCounts: Record<SMRating, number> };
 }
 

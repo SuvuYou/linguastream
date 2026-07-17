@@ -30,7 +30,12 @@ export default function StudyPage() {
   }
 
   if (queue.studyDetails.isAllDone) {
-    return SessionCompleteState;
+    return (
+      <SessionCompleteState
+        studyDetails={queue.studyDetails}
+        stats={sessionRating.stats}
+      />
+    );
   }
 
   const progress =
