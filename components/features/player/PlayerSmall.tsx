@@ -9,7 +9,7 @@ import { useAnimationTick } from "@/hooks/useAnimationTick";
 import { Button } from "@/components/ui/button";
 import { RotateCcw } from "lucide-react";
 
-interface PlayableMediaItem {
+export interface PlayableMediaItem {
   source_text: string;
   translation_text: string;
   start_ms: number;

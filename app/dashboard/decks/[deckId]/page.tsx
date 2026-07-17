@@ -1,3 +1,6 @@
+import OverlayPlayer from "@/components/features/overlay-player/OverlayPlayer";
+import DeckDetailPage from "@/components/pages/DeckDetailsPage";
+
 export default async function Deck({
   params,
 }: {
@@ -5,5 +8,10 @@ export default async function Deck({
 }) {
   const { deckId } = await params;
 
-  return <div>Deck {deckId}</div>;
+  return (
+    <>
+      <DeckDetailPage deckId={deckId} />
+      <OverlayPlayer />
+    </>
+  );
 }
