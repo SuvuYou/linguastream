@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { getCurrentUser } from "@/lib/firebase/session";
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+import { generateGeminiText } from "@/lib/gemini/caller";
 
 export async function GET(req: NextRequest) {
   const user = await getCurrentUser();
@@ -22,18 +19,21 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  const prompt = `You are a linguistics expert. Give a short contextual definition of the ${lang} word "${word}"${
+  const prompt = `You are a linguistics expert. Give a SHORT simple contextual definition of the ${lang} word "${word}"${
     context ? ` as used in this sentence: "${context}"` : ""
   }.
 Return ONLY a single plain text sentence definition. No extra text, no quotes, no markdown.`;
 
   try {
-    const result = await model.generateContent(prompt);
-    const definition = result.response.text().trim();
+    const definition = (await generateGeminiText(prompt)).trim();
+
     return NextResponse.json({ definition });
-  } catch {
+  } catch (error) {
     return NextResponse.json(
-      { error: "Failed to generate definition" },
+      {
+        error: "Failed to generate definition",
+        details: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 },
     );
   }

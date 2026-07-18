@@ -24,6 +24,17 @@ const DEFAULT_SUBTITLE_SETTINGS: SubtitleSettings = {
   fontOpacity: 1,
 };
 
+export interface ActiveWord {
+  word: string;
+  lang: string;
+  subtitleLineId: string; // key: `${start_ms}__${mediaContentId}`
+  context: string;
+  translationText: string;
+  mediaContentId: string;
+  startMs: number;
+  endMs: number;
+}
+
 interface AppState {
   preferredSourceLanguage: string | null;
   setPreferredSourceLanguage: (language: string) => void;
@@ -40,6 +51,8 @@ interface AppState {
   wordDefinitionsCache: Record<string, string>; // key: `${word}__${subtitleLineId}`
   setWordProfilesCache: (key: string, profile: WordProfile) => void;
   setWordDefinitionsCache: (key: string, definition: string) => void;
+  activeWord: ActiveWord | null;
+  setActiveWord: (word: ActiveWord | null) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -72,6 +85,9 @@ export const useAppStore = create<AppState>()(
             subtitleSettings: { ...state.subtitleSettings, ...settings },
           })),
 
+        activeWord: null,
+        setActiveWord: (word) => set({ activeWord: word }),
+
         wordProfilesCache: {},
         wordDefinitionsCache: {},
 
@@ -96,6 +112,7 @@ export const useAppStore = create<AppState>()(
           overlayOpen: _1,
           wordProfilesCache: _2,
           wordDefinitionsCache: _3,
+          activeWord: _4,
           ...rest
         } = state;
 

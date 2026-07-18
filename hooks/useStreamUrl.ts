@@ -13,7 +13,7 @@ async function fetchStreamUrl(
 export function useStreamUrl(mediaContentId: string | null) {
   return useQuery({
     queryKey: ["stream", mediaContentId],
-    queryFn: () => fetchStreamUrl(mediaContentId!),
+    queryFn: async () => fetchStreamUrl(mediaContentId!),
     enabled: !!mediaContentId,
     staleTime: Infinity,
   });

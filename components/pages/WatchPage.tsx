@@ -4,7 +4,7 @@ import { useState } from "react";
 import Player from "@/components/features/player/Player";
 import SubtitleSidebar from "@/components/features/watch/SubtitleSidebar";
 import { useWatchData } from "@/hooks/useWatchData";
-import { useSubtitleTrack } from "@/hooks/useSubtitleTrack";
+import { SubtitleLine, useSubtitleTrack } from "@/hooks/useSubtitleTrack";
 import OverlayPlayer from "@/components/features/overlay-player/OverlayPlayer";
 import { useZodSearchParams } from "@/hooks/useZodSearchParams";
 import { WATCH_PAGE_PARAMS_SCHEMA } from "@/helpers/params-schema";
@@ -19,6 +19,7 @@ import {
   EmptyDescription,
 } from "@/components/ui/empty";
 import Header from "@/components/features/watch/Header";
+import { useAppStore } from "@/lib/initializations/store";
 
 export default function WatchPage({
   mediaContentId,
@@ -30,6 +31,8 @@ export default function WatchPage({
   const { data, isLoading, isError } = useWatchData(mediaContentId);
 
   const [currentTimeMs, setCurrentTimeMs] = useState(params.t);
+
+  const { activeWord, setActiveWord } = useAppStore();
 
   const languages = useWatchLanguages(data);
 
@@ -44,6 +47,32 @@ export default function WatchPage({
     languages.translation.value,
     !!languages.translation.value,
   );
+
+  function handleSubtitleWordClick(
+    clean: string,
+    line: SubtitleLine,
+    translationText: string,
+  ) {
+    if (
+      activeWord?.word === clean &&
+      activeWord?.subtitleLineId === `${line.start_ms}__${mediaContentId}`
+    ) {
+      setActiveWord(null);
+
+      return;
+    }
+
+    setActiveWord({
+      word: clean,
+      lang: languages.source.value!,
+      subtitleLineId: `${line.start_ms}__${mediaContentId}`,
+      context: line.text,
+      translationText,
+      mediaContentId,
+      startMs: line.start_ms,
+      endMs: line.end_ms,
+    });
+  }
 
   if (isLoading)
     return (
@@ -79,6 +108,7 @@ export default function WatchPage({
               initialTimeMs={params.t}
               currentTimeMs={currentTimeMs}
               setCurrentTimeMs={setCurrentTimeMs}
+              handleSubtitleWordClick={handleSubtitleWordClick}
             />
           </div>
         </div>

@@ -1,0 +1,80 @@
+import { ActiveWord } from "@/lib/initializations/store";
+import { useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+
+export interface SaveCardParams {
+  activeWord: ActiveWord;
+  profileId: string;
+  definition: string;
+  deckId: string;
+  translationLanguage: string;
+}
+
+export function useSaveCard() {
+  const queryClient = useQueryClient();
+
+  const [isSaving, setIsSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const save = async ({
+    activeWord,
+    profileId,
+    definition,
+    deckId,
+    translationLanguage,
+  }: SaveCardParams) => {
+    setError(null);
+    setIsSaving(true);
+
+    try {
+      const res = await fetch("/api/cards", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          deck_id: deckId,
+          word: activeWord.word,
+          source_language: activeWord.lang,
+          translation_language: translationLanguage,
+          word_translation: activeWord.translationText,
+          context_text: activeWord.context,
+          context_translation: activeWord.translationText,
+          media_content_id: activeWord.mediaContentId,
+          start_ms: activeWord.startMs,
+          end_ms: activeWord.endMs,
+          word_profile_id: profileId,
+          contextual_definition: definition,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error ?? "Failed to save");
+      }
+
+      setSaved(true);
+      queryClient.invalidateQueries({
+        queryKey: ["decks"],
+      });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to save");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const reset = () => {
+    setSaved(false);
+    setError(null);
+  };
+
+  return {
+    save,
+    reset,
+    saved,
+    isSaving,
+    error,
+  };
+}

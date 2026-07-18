@@ -1,0 +1,24 @@
+import { useMemo, useState } from "react";
+import { useDecks } from "./useDecks";
+
+export function useDeckSelection() {
+  const { data: decksData } = useDecks();
+
+  const decks = useMemo(() => decksData?.decks ?? [], [decksData?.decks]);
+
+  const defaultDeck = useMemo(
+    () => decks.find((d) => d.is_default) ?? decks[0] ?? null,
+    [decks],
+  );
+
+  const [selectedDeck, setSelectedDeckId] = useState("");
+
+  const selectedDeckId = selectedDeck ?? defaultDeck?.id;
+
+  return {
+    decks,
+    defaultDeck,
+    selectedDeckId,
+    setSelectedDeckId,
+  };
+}

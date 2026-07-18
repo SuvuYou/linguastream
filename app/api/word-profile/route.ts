@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/firebase/session";
 import { db } from "@/lib/initializations/db";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+import { generateGeminiText } from "@/lib/gemini/caller";
 
 const WIKTIONARY_LANG_MAP: Record<string, string> = {
   de: "de",
@@ -52,7 +49,9 @@ async function fetchGeminiProfile(
   } | null,
 ) {
   const alreadyHave = wiktionaryData
-    ? `We already know: POS=${wiktionaryData.part_of_speech}, forms=${JSON.stringify(wiktionaryData.forms)}.`
+    ? `We already know: POS=${wiktionaryData.part_of_speech}, forms=${JSON.stringify(
+        wiktionaryData.forms,
+      )}.`
     : "";
 
   const prompt = `You are a linguistics expert. For the ${lang} word "${word}":
@@ -65,11 +64,10 @@ Return ONLY valid JSON (no markdown, no extra text):
   "collocations": ["3-5 common phrases using this word"]
 }`;
 
-  const result = await model.generateContent(prompt);
-  const text = result.response
-    .text()
-    .replace(/```json|```/g, "")
-    .trim();
+  const text = await generateGeminiText(prompt, {
+    responseMimeType: "application/json",
+  });
+
   return JSON.parse(text);
 }
 
@@ -105,9 +103,12 @@ export async function GET(req: NextRequest) {
 
   try {
     geminiData = await fetchGeminiProfile(word, lang, wiktionaryData);
-  } catch {
+  } catch (error) {
     return NextResponse.json(
-      { error: "Failed to generate word profile" },
+      {
+        error: "Failed to generate word profile",
+        details: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 },
     );
   }

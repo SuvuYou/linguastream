@@ -59,7 +59,7 @@ async function fetchDeckDetail(
 export function useDeckDetail(params: UseDeckDetailParams) {
   return useQuery({
     queryKey: ["deck-detail", params],
-    queryFn: () => fetchDeckDetail(params),
+    queryFn: async () => fetchDeckDetail(params),
     staleTime: 30_000,
     enabled: !!params.deckId,
   });

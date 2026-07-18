@@ -26,7 +26,7 @@ export function useSubtitleTrack(
 ) {
   return useQuery<SubtitleLine[]>({
     queryKey: ["subtitle-track", mediaContentId, lang],
-    queryFn: () => fetchSubtitleTrack(mediaContentId, lang!),
+    queryFn: async () => fetchSubtitleTrack(mediaContentId, lang!),
     enabled: enabled && !!lang,
     staleTime: Infinity,
   });

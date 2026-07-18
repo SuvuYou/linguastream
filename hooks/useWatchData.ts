@@ -19,7 +19,7 @@ async function fetchWatchData(mediaContentId: string): Promise<WatchData> {
 export function useWatchData(mediaContentId: string, enabled = true) {
   return useQuery<WatchData>({
     queryKey: ["watch", mediaContentId],
-    queryFn: () => fetchWatchData(mediaContentId),
+    queryFn: async () => fetchWatchData(mediaContentId),
     staleTime: Infinity,
     enabled,
   });

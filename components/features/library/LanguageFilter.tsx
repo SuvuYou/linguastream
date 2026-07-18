@@ -1,6 +1,5 @@
 "use client";
 
-import { LANGUAGES } from "@/helpers/const";
 import { Badge } from "@/components/ui/badge";
 import { Empty, EmptyTitle } from "@/components/ui/empty";
 import { Field, FieldLabel } from "@/components/ui/field";
@@ -13,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { InfoIcon, OctagonXIcon } from "lucide-react";
+import { getLanguageLabel } from "@/helpers/language-helpers";
 
 interface LanguageFilterProps {
   source: {
@@ -41,9 +41,6 @@ export default function LanguageFilter({
   isLoading = false,
   isError = false,
 }: LanguageFilterProps) {
-  const getLabel = (code: string) =>
-    LANGUAGES.find((lang) => lang.code === code)?.label ?? code;
-
   if (isLoading) {
     return (
       <div
@@ -108,7 +105,7 @@ export default function LanguageFilter({
           <SelectContent position="popper">
             {source.available.map((code) => (
               <SelectItem key={code} value={code}>
-                {getLabel(code)}
+                {getLanguageLabel(code)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -139,7 +136,7 @@ export default function LanguageFilter({
           <SelectContent position="popper">
             {translation.available.map((code) => (
               <SelectItem key={code} value={code}>
-                {getLabel(code)}
+                {getLanguageLabel(code)}
               </SelectItem>
             ))}
           </SelectContent>

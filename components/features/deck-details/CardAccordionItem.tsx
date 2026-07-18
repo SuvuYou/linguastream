@@ -11,12 +11,8 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { LANGUAGES } from "@/helpers/const";
 import { useAppStore } from "@/lib/initializations/store";
-
-function getLangLabel(code: string) {
-  return LANGUAGES.find((l) => l.code === code)?.label ?? code;
-}
+import { getLanguageLabel } from "@/helpers/language-helpers";
 
 function formatTime(ms: number) {
   const s = Math.floor(ms / 1000);
@@ -51,7 +47,7 @@ export default function CardAccordionItem({ card }: Props) {
             {card.word_translation}
           </span>
           <Badge variant="outline" className="text-xs shrink-0">
-            {getLangLabel(card.source_language)}
+            {getLanguageLabel(card.source_language)}
           </Badge>
         </div>
       </AccordionTrigger>

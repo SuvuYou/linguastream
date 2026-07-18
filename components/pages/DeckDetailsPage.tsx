@@ -3,7 +3,6 @@
 import { useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useDeckDetail } from "@/hooks/useDeckDetail";
-import { LANGUAGES } from "@/helpers/const";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,13 +11,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 import CardsPagination from "../features/deck-details/CardsPagination";
 import CardsList from "../features/deck-details/CardsList";
+import { getLanguageLabel } from "@/helpers/language-helpers";
 
 interface DeckDetailPageProps {
   deckId: string;
-}
-
-function getLangLabel(code: string) {
-  return LANGUAGES.find((l) => l.code === code)?.label ?? code;
 }
 
 export default function DeckDetailPage({ deckId }: DeckDetailPageProps) {
@@ -112,7 +108,7 @@ export default function DeckDetailPage({ deckId }: DeckDetailPageProps) {
             <TabsTrigger value="all">All</TabsTrigger>
             {availableLanguages.map((lang) => (
               <TabsTrigger key={lang} value={lang}>
-                {getLangLabel(lang)}
+                {getLanguageLabel(lang)}
               </TabsTrigger>
             ))}
           </TabsList>
