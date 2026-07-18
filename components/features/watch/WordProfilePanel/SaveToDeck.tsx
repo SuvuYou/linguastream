@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Check } from "lucide-react";
 
 interface Props {
   saver: {
@@ -35,16 +36,22 @@ export default function SaveToDeck({
   return (
     <div className="border-t border-primary-border px-4 py-3 shrink-0">
       {saver.error && (
-        <p className="text-xs text-red-400 mb-2">{saver.error}</p>
+        <p className="text-sm text-red-400 mb-2">{saver.error}</p>
       )}
       {saver.saved ? (
-        <p className="text-xs text-active-border text-center">
-          ✓ Saved to deck
-        </p>
+        <div className="flex items-center justify-center gap-2">
+          <Check className="size-5" />
+          <p className="text-sm text-primary-foreground text-center">
+            Saved to deck
+          </p>
+        </div>
       ) : (
         <div className="flex items-center gap-2">
           <Select value={selectedDeckId} onValueChange={onSelectDeckId}>
-            <SelectTrigger className="flex-1 text-xs h-8">
+            <SelectTrigger
+              className="flex-1 text-sm p-2 h-auto"
+              variant="outline"
+            >
               <SelectValue placeholder="Select deck" />
             </SelectTrigger>
             <SelectContent>
@@ -56,10 +63,11 @@ export default function SaveToDeck({
             </SelectContent>
           </Select>
           <Button
-            size="sm"
+            size="default"
+            variant="secondary"
             onClick={handleSave}
             disabled={saver.isSaving || !allowSave}
-            className="text-xs h-8 shrink-0"
+            className="text-sm p-2 px-6 shrink-0 h-auto"
           >
             {saver.isSaving ? "Saving..." : "Add to deck"}
           </Button>

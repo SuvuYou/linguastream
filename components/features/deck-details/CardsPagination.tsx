@@ -37,7 +37,7 @@ export default function CardsPagination({
               />
             </PaginationItem>
             <PaginationItem>
-              <span className="text-xs text-secondary-text px-4 py-2">
+              <span className="text-xs text-primary-foreground px-4 py-2">
                 Page {currentPage + 1} of {pageCount}
               </span>
             </PaginationItem>

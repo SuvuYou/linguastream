@@ -7,7 +7,7 @@
 
 :root {
   --highlight: oklch(0.6449 0.2024 288.1131);
-  --vibrant: oklch(0.6268 0.2325 303.9004);
+  --vibrant: oklch(0.4519 0.102 303.9);
   --contrast: oklch(0.7845 0.1325 181.912);
 
   --background: oklch(0.9946 0.0026 286.3519);
@@ -77,7 +77,9 @@
 
 .dark {
   --highlight: oklch(0.6449 0.2024 288.1131);
-  --vibrant: oklch(0.6268 0.2325 303.9004);
+  /* --vibrant: oklch(0.5286 0.1489 303.9); */
+  --vibrant: oklch(0.5286 0.1489 321.95);
+
   --contrast: oklch(0.7845 0.1325 181.912);
 
   --background: oklch(0.1457 0.0043 285.857);

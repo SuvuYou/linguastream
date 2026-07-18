@@ -59,7 +59,7 @@ export default function DeckDetailPage({ deckId }: DeckDetailPageProps) {
 
   if (isError || !data) {
     return (
-      <div className="max-w-4xl mx-auto px-6 py-8 text-sm text-secondary-text">
+      <div className="max-w-4xl mx-auto px-6 py-8 text-sm text-primary-foreground">
         Failed to load deck.
       </div>
     );
@@ -72,17 +72,17 @@ export default function DeckDetailPage({ deckId }: DeckDetailPageProps) {
       <div className="flex items-center gap-3">
         <button
           onClick={() => router.push("/decks")}
-          className="text-xs text-secondary-text hover:text-primary-text transition-colors"
+          className="text-xs text-primary-foreground hover:text-primary-foreground transition-colors"
         >
           Decks
         </button>
-        <span className="text-secondary-text text-xs">›</span>
-        <span className="text-xs text-primary-text">{deck.name}</span>
+        <span className="text-primary-foreground text-xs">›</span>
+        <span className="text-xs text-primary-foreground">{deck.name}</span>
       </div>
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h1 className="text-xl font-medium text-primary-text">{deck.name}</h1>
+          <h1 className="text-xl font-medium text-primary-foreground">{deck.name}</h1>
           {deck.is_default && (
             <Badge variant="outline" className="text-xs">
               Default
@@ -94,7 +94,7 @@ export default function DeckDetailPage({ deckId }: DeckDetailPageProps) {
         </Button>
       </div>
 
-      <p className="text-sm text-secondary-text -mt-4">{total} cards</p>
+      <p className="text-sm text-primary-foreground -mt-4">{total} cards</p>
 
       {availableLanguages.length > 1 && (
         <Tabs

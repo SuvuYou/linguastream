@@ -24,15 +24,15 @@ export default function StudyCard({
   return (
     <div className="border border-primary-border flex flex-col min-h-120">
       <div className="flex flex-col items-center justify-center gap-3 py-12 px-8 flex-1 border-b border-primary-border">
-        <span className="text-xs text-secondary-text uppercase tracking-wider">
+        <span className="text-xs text-primary-foreground uppercase tracking-wider">
           {card.source_language} → {card.translation_language}
         </span>
 
-        <h1 className="text-5xl font-medium text-primary-text text-center">
+        <h1 className="text-5xl font-medium text-primary-foreground text-center">
           {card.word}
         </h1>
 
-        <p className="text-sm text-secondary-text text-center max-w-sm leading-relaxed mt-2">
+        <p className="text-sm text-primary-foreground text-center max-w-sm leading-relaxed mt-2">
           {card.context_text}
         </p>
       </div>
@@ -40,18 +40,18 @@ export default function StudyCard({
       {shouldShowBack ? (
         <div className="flex flex-col gap-5 px-8 py-6">
           <div className="text-center">
-            <p className="text-2xl text-primary-text">
+            <p className="text-2xl text-primary-foreground">
               {card.word_translation}
             </p>
             {card.contextual_definition && (
-              <p className="text-sm text-secondary-text mt-1">
+              <p className="text-sm text-primary-foreground mt-1">
                 {card.contextual_definition}
               </p>
             )}
           </div>
 
           {card.context_translation && (
-            <p className="text-sm text-secondary-text text-center italic">
+            <p className="text-sm text-primary-foreground text-center italic">
               {card.context_translation}
             </p>
           )}

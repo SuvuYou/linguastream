@@ -36,7 +36,7 @@ export default function DecksPage() {
 
   if (isError) {
     return (
-      <div className="max-w-5xl mx-auto px-6 py-8 text-sm text-secondary-text">
+      <div className="max-w-5xl mx-auto px-6 py-8 text-sm text-primary-foreground">
         Failed to load decks.
       </div>
     );
@@ -47,7 +47,7 @@ export default function DecksPage() {
   return (
     <div className="max-w-5xl mx-auto px-6 py-8 flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-medium text-primary-text">Decks</h1>
+        <h1 className="text-xl font-medium text-primary-foreground">Decks</h1>
         <Button onClick={() => setIsModalOpen(true)}>+ New Deck</Button>
       </div>
       <DecksGrid decks={decks} />

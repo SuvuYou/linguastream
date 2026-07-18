@@ -20,7 +20,7 @@ export default function DecksGrid({ decks }: Props) {
   return (
     <>
       {decks.length === 0 ? (
-        <div className="py-24 text-center text-sm text-secondary-text">
+        <div className="py-24 text-center text-sm text-primary-foreground">
           No decks yet. Create one to get started.
         </div>
       ) : (
@@ -46,7 +46,7 @@ export default function DecksGrid({ decks }: Props) {
                 className="border border-primary-border p-5 flex flex-col gap-4 hover:bg-background-hover transition-colors"
               >
                 <div className="flex items-start justify-between gap-2">
-                  <h2 className="text-sm font-medium text-primary-text leading-tight">
+                  <h2 className="text-sm font-medium text-primary-foreground leading-tight">
                     {deck.name}
                   </h2>
                   {deck.is_default && (
@@ -56,7 +56,7 @@ export default function DecksGrid({ decks }: Props) {
                   )}
                 </div>
 
-                <div className="flex items-center gap-4 text-xs text-secondary-text">
+                <div className="flex items-center gap-4 text-xs text-primary-foreground">
                   <span>{total} cards</span>
                   {due > 0 && (
                     <span className="text-active-border">{due} due</span>
@@ -65,7 +65,7 @@ export default function DecksGrid({ decks }: Props) {
 
                 <div className="flex flex-col gap-1">
                   <Progress value={progress} className="h-1" />
-                  <span className="text-xs text-secondary-text">
+                  <span className="text-xs text-primary-foreground">
                     {progress}% learned
                   </span>
                 </div>
@@ -73,9 +73,17 @@ export default function DecksGrid({ decks }: Props) {
                 <Button
                   className="w-full mt-auto"
                   disabled={due === 0}
-                  onClick={() => router.push(`/study?deckId=${deck.id}`)}
+                  onClick={() =>
+                    router.push(`/dashboard/study?deckId=${deck.id}`)
+                  }
                 >
                   {due === 0 ? "All caught up" : "Study Deck"}
+                </Button>
+                <Button
+                  className="w-full mt-auto"
+                  onClick={() => router.push(`/dashboard/decks/${deck.id}`)}
+                >
+                  View
                 </Button>
               </div>
             );

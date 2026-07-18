@@ -4,7 +4,7 @@ import StudyCard from "@/components/features/study/StudyCard";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import useStudyQueue from "@/hooks/useStudyQueue";
 import useStudySessionRating from "@/hooks/useStudySessionRating";
 import { STUDY_PAGE_PARAMS_SCHEMA } from "@/helpers/params-schema";
@@ -50,7 +50,7 @@ export default function StudyPage() {
     <div className="max-w-2xl mx-auto px-6 py-8 flex flex-col gap-6">
       <div className="flex items-center gap-3">
         <Progress value={progress} className="flex-1 h-1.5" />
-        <span className="text-xs text-secondary-text tabular-nums shrink-0">
+        <span className="text-xs text-primary-foreground tabular-nums shrink-0">
           {sessionRating.stats.reviewedCount} / {queue.studyDetails.totalDue}
         </span>
         <StudyCard
@@ -62,7 +62,7 @@ export default function StudyPage() {
         <Button
           variant="ghost"
           size="sm"
-          className="text-xs text-secondary-text"
+          className="text-xs text-primary-foreground"
           onClick={() => router.push("/decks")}
         >
           End Session

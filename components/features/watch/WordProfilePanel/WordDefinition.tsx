@@ -6,18 +6,28 @@ interface Props {
 }
 
 export default function WordDefinition({ isLoading, definition }: Props) {
+  if (isLoading) {
+    return (
+      <div className="border-l-2 border-primary pl-4">
+        <div className="text-sm text-primary-foreground animate-pulse">
+          Generating definition...
+        </div>
+      </div>
+    );
+  }
+
+  if (!definition) {
+    return;
+  }
+
   return (
-    <div>
-      <div className="text-xs text-secondary-text uppercase tracking-wider mb-1">
+    <div className="border-l-2 border-primary pl-4">
+      <div className="text-base text-primary-foreground uppercase tracking-wider mb-2">
         Definition
       </div>
-      {isLoading ? (
-        <div className="text-xs text-secondary-text animate-pulse">
-          Generating...
-        </div>
-      ) : definition ? (
-        <p className="text-sm text-primary-text leading-snug">{definition}</p>
-      ) : null}
+      <p className="text-sm text-muted-foreground leading-snug bg-card border-border border rounded-2xl p-4">
+        {definition}
+      </p>
     </div>
   );
 }

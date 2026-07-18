@@ -15,16 +15,16 @@ export default function SessionCompleteState({ studyDetails, stats }: Props) {
   return (
     <div className="max-w-2xl mx-auto px-6 py-24 flex flex-col items-center gap-4 text-center">
       <div className="text-4xl">🎉</div>
-      <h2 className="text-xl font-medium text-primary-text">All caught up!</h2>
-      <p className="text-sm text-secondary-text">
+      <h2 className="text-xl font-medium text-primary-foreground">All caught up!</h2>
+      <p className="text-sm text-primary-foreground">
         No cards due in {studyDetails.deckTitle}.
       </p>
       {studyDetails.nextReviewAt && (
-        <p className="text-xs text-secondary-text">
+        <p className="text-xs text-primary-foreground">
           Next review: {new Date(studyDetails.nextReviewAt).toLocaleString()}
         </p>
       )}
-      <p className="text-sm text-secondary-text">
+      <p className="text-sm text-primary-foreground">
         {stats.reviewedCount} cards reviewed
       </p>
       <div className="flex gap-6 text-sm">

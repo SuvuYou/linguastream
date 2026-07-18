@@ -24,7 +24,7 @@ export default function WordProfilePanel() {
 
   if (!activeWord) {
     return (
-      <div className="flex items-center justify-center h-full text-xs text-secondary-text px-4 text-center">
+      <div className="flex items-center justify-center h-full text-base text-primary-foreground px-4 text-center">
         Click a word in the subtitles to see its profile
       </div>
     );
@@ -38,18 +38,18 @@ export default function WordProfilePanel() {
 
   return (
     <div className="flex flex-col h-full overflow-y-auto">
-      <div className="px-4 py-3 border-b border-primary-border shrink-0">
+      <div className="px-6 py-4 border-b border-primary-border shrink-0">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-lg font-medium text-primary-text">
+          <span className="text-3xl font-medium text-primary-foreground">
             {activeWord.word}
           </span>
           {wordProfile.data && (
-            <Badge variant="outline" className="text-xs">
+            <Badge variant="outline" size="sm" className="text-sm">
               {wordProfile.data.part_of_speech}
             </Badge>
           )}
         </div>
-        <p className="text-xs text-secondary-text mt-1 leading-relaxed">
+        <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
           {activeWord.context}
         </p>
       </div>
@@ -61,7 +61,7 @@ export default function WordProfilePanel() {
         />
 
         {wordProfile.isLoading ? (
-          <div className="text-xs text-secondary-text animate-pulse">
+          <div className="text-sm text-primary-foreground animate-pulse pl-4 border-l-2 border-contrast">
             Loading profile...
           </div>
         ) : wordProfile.data ? (

@@ -40,10 +40,10 @@ export default function CardAccordionItem({ card }: Props) {
     <AccordionItem value={card.id} className="border-primary-border">
       <AccordionTrigger className="px-4 py-3 hover:bg-background-hover hover:no-underline">
         <div className="flex items-center gap-4 w-full text-left">
-          <span className="text-sm font-medium text-primary-text w-40 truncate">
+          <span className="text-sm font-medium text-primary-foreground w-40 truncate">
             {card.word}
           </span>
-          <span className="text-sm text-secondary-text flex-1 truncate">
+          <span className="text-sm text-primary-foreground flex-1 truncate">
             {card.word_translation}
           </span>
           <Badge variant="outline" className="text-xs shrink-0">
@@ -56,14 +56,14 @@ export default function CardAccordionItem({ card }: Props) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
           <div className="flex flex-col gap-4">
             <div>
-              <div className="text-xs text-secondary-text uppercase tracking-wider mb-1">
+              <div className="text-xs text-primary-foreground uppercase tracking-wider mb-1">
                 Translation
               </div>
-              <p className="text-sm text-primary-text font-medium">
+              <p className="text-sm text-primary-foreground font-medium">
                 {card.word_translation}
               </p>
               {card.contextual_definition && (
-                <p className="text-xs text-secondary-text mt-1">
+                <p className="text-xs text-primary-foreground mt-1">
                   {card.contextual_definition}
                 </p>
               )}
@@ -72,17 +72,17 @@ export default function CardAccordionItem({ card }: Props) {
             {card.word_profile &&
               Object.keys(card.word_profile.forms).length > 0 && (
                 <div>
-                  <div className="text-xs text-secondary-text uppercase tracking-wider mb-2">
+                  <div className="text-xs text-primary-foreground uppercase tracking-wider mb-2">
                     Forms
                   </div>
                   <div className="flex flex-col gap-1">
                     {Object.entries(card.word_profile.forms).map(
                       ([label, value]) => (
                         <div key={label} className="flex gap-2 text-xs">
-                          <span className="text-secondary-text w-24 shrink-0">
+                          <span className="text-primary-foreground w-24 shrink-0">
                             {label}
                           </span>
-                          <span className="text-primary-text">{value}</span>
+                          <span className="text-primary-foreground">{value}</span>
                         </div>
                       ),
                     )}
@@ -92,19 +92,19 @@ export default function CardAccordionItem({ card }: Props) {
           </div>
 
           <div className="flex flex-col gap-3">
-            <div className="text-xs text-secondary-text uppercase tracking-wider">
+            <div className="text-xs text-primary-foreground uppercase tracking-wider">
               Context
             </div>
             <div className="flex flex-col gap-1">
-              <p className="text-sm text-primary-text leading-relaxed">
+              <p className="text-sm text-primary-foreground leading-relaxed">
                 {card.context_text}
               </p>
               {card.context_translation && (
-                <p className="text-xs text-secondary-text italic">
+                <p className="text-xs text-primary-foreground italic">
                   {card.context_translation}
                 </p>
               )}
-              <span className="text-xs text-secondary-text tabular-nums">
+              <span className="text-xs text-primary-foreground tabular-nums">
                 {formatTime(card.start_ms)}
               </span>
             </div>
@@ -149,7 +149,7 @@ export default function CardAccordionItem({ card }: Props) {
             <div className="flex flex-col gap-4">
               {card.word_profile.lexical_family.length > 0 && (
                 <div>
-                  <div className="text-xs text-secondary-text uppercase tracking-wider mb-2">
+                  <div className="text-xs text-primary-foreground uppercase tracking-wider mb-2">
                     Lexical Family
                   </div>
                   <div className="flex flex-wrap gap-1">
@@ -164,12 +164,12 @@ export default function CardAccordionItem({ card }: Props) {
 
               {card.word_profile.collocations.length > 0 && (
                 <div>
-                  <div className="text-xs text-secondary-text uppercase tracking-wider mb-2">
+                  <div className="text-xs text-primary-foreground uppercase tracking-wider mb-2">
                     Collocations
                   </div>
                   <div className="flex flex-col gap-1">
                     {card.word_profile.collocations.map((c) => (
-                      <span key={c} className="text-xs text-primary-text">
+                      <span key={c} className="text-xs text-primary-foreground">
                         {c}
                       </span>
                     ))}
