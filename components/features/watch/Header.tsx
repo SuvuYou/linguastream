@@ -4,13 +4,11 @@ import { useAppStore } from "@/lib/initializations/store";
 import { Button } from "@/components/ui/button";
 import LanguageFilter from "@/components/features/library/LanguageFilter";
 import { ArrowLeft, CommandIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useWatchLanguages } from "@/hooks/useWatchLanguages";
 import { useWatchData } from "@/hooks/useWatchData";
+import Link from "next/link";
 
 export default function Header({ mediaContentId }: { mediaContentId: string }) {
-  const router = useRouter();
-
   const { setOverlayOpen } = useAppStore();
 
   const { data, isLoading, isError } = useWatchData(mediaContentId);
@@ -19,13 +17,10 @@ export default function Header({ mediaContentId }: { mediaContentId: string }) {
 
   return (
     <div className="flex items-center h-12 shrink-0">
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => router.back()}
-        aria-label="Go back"
-      >
-        <ArrowLeft className="size-4" />
+      <Button variant="ghost" size="sm" aria-label="Go back">
+        <Link href={"/dashboard"}>
+          <ArrowLeft className="size-4" />
+        </Link>
       </Button>
 
       {data?.title && (

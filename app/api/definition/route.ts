@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  const prompt = `You are a linguistics expert. Give a SHORT simple contextual definition of the ${lang} word "${word}"${
+  const prompt = `Give a SHORT simple contextual definition (as if taken from dictionary) of the ${lang} word "${word}"${
     context ? ` as used in this sentence: "${context}"` : ""
   }.
 Return ONLY a single plain text sentence definition. No extra text, no quotes, no markdown.`;
