@@ -7,12 +7,11 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Dispatch, SetStateAction } from "react";
 
 interface Props {
   pageCount: number;
   currentPage: number;
-  setPage: Dispatch<SetStateAction<number>>;
+  setPage: (newPage: number) => void;
 }
 
 export default function CardsPagination({
@@ -27,7 +26,7 @@ export default function CardsPagination({
           <PaginationContent>
             <PaginationItem>
               <PaginationPrevious
-                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                onClick={() => setPage(Math.max(0, currentPage - 1))}
                 aria-disabled={currentPage === 0}
                 className={
                   currentPage === 0
@@ -43,7 +42,9 @@ export default function CardsPagination({
             </PaginationItem>
             <PaginationItem>
               <PaginationNext
-                onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
+                onClick={() =>
+                  setPage(Math.min(pageCount - 1, currentPage + 1))
+                }
                 aria-disabled={currentPage >= pageCount - 1}
                 className={
                   currentPage >= pageCount - 1
