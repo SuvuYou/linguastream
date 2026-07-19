@@ -34,7 +34,7 @@ export default function SaveToDeck({
   allowSave,
 }: Props) {
   return (
-    <div className="border-t border-primary-border px-4 py-3 shrink-0">
+    <div className="border-t border-border px-4 py-3 shrink-0">
       {saver.error && (
         <p className="text-sm text-red-400 mb-2">{saver.error}</p>
       )}

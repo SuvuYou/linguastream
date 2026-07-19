@@ -22,8 +22,8 @@ export default function StudyCard({
   const streamData = useStreamUrl(card?.media_content_id ?? null);
 
   return (
-    <div className="border border-primary-border flex flex-col min-h-120">
-      <div className="flex flex-col items-center justify-center gap-3 py-12 px-8 flex-1 border-b border-primary-border">
+    <div className="border border-border flex flex-col min-h-120">
+      <div className="flex flex-col items-center justify-center gap-3 py-12 px-8 flex-1 border-b border-border">
         <span className="text-xs text-primary-foreground uppercase tracking-wider">
           {card.source_language} → {card.translation_language}
         </span>

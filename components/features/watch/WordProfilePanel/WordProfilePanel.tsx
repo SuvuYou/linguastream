@@ -38,7 +38,7 @@ export default function WordProfilePanel() {
 
   return (
     <div className="flex flex-col h-full overflow-y-auto">
-      <div className="px-6 py-4 border-b border-primary-border shrink-0">
+      <div className="px-6 py-4 border-b border-border shrink-0">
         <div className="flex items-center justify-between gap-2">
           <span className="text-3xl font-medium text-primary-foreground">
             {activeWord.word}

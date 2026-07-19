@@ -22,7 +22,7 @@ export default function CardsList({ cards, searchQuery }: Props) {
         <Accordion
           type="single"
           collapsible
-          className="border border-primary-border"
+          className="border border-border"
         >
           {cards.map((card) => (
             <CardAccordionItem key={card.id} card={card} />

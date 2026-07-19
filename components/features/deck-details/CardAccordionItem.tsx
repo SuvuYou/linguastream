@@ -37,7 +37,7 @@ export default function CardAccordionItem({ card }: Props) {
   const { setOverlayOpen } = useAppStore();
 
   return (
-    <AccordionItem value={card.id} className="border-primary-border">
+    <AccordionItem value={card.id} className="border-border">
       <AccordionTrigger className="px-4 py-3 hover:bg-background-hover hover:no-underline">
         <div className="flex items-center gap-4 w-full text-left">
           <span className="text-sm font-medium text-primary-foreground w-40 truncate">

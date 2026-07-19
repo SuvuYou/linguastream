@@ -77,7 +77,6 @@
 
 .dark {
   --highlight: oklch(0.6449 0.2024 288.1131);
-  /* --vibrant: oklch(0.5286 0.1489 303.9); */
   --vibrant: oklch(0.5286 0.1489 321.95);
 
   --contrast: oklch(0.7845 0.1325 181.912);
