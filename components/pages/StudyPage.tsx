@@ -10,6 +10,7 @@ import useStudySessionRating from "@/hooks/useStudySessionRating";
 import { STUDY_PAGE_PARAMS_SCHEMA } from "@/helpers/params-schema";
 import { useZodSearchParams } from "@/hooks/useZodSearchParams";
 import SessionCompleteState from "@/components/features/study/SessionCompleteState";
+import { Card } from "../ui/card";
 
 export default function StudyPage() {
   const { params } = useZodSearchParams(STUDY_PAGE_PARAMS_SCHEMA);
@@ -21,13 +22,17 @@ export default function StudyPage() {
 
   if (queue.isLoading) {
     return (
-      <div className="max-w-2xl mx-auto px-6 py-12 flex flex-col gap-6">
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-48 w-full" />
-        <Skeleton className="h-12 w-full" />
-      </div>
+      <section className="grid grid-rows-16 h-full w-full bg-background m-2 p-2 rounded-l-lg">
+        <Card className="relative max-w-5xl w-full row-span-3 row-start-2 row-end-15 mx-auto px-6 py-8 gap-6">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-48 w-full" />
+          <Skeleton className="h-12 w-full" />
+        </Card>
+      </section>
     );
   }
+
+  console.log(queue.studyDetails.isAllDone);
 
   if (queue.studyDetails.isAllDone) {
     return (
@@ -47,27 +52,33 @@ export default function StudyPage() {
       : 0;
 
   return (
-    <div className="max-w-2xl mx-auto px-6 py-8 flex flex-col gap-6">
-      <div className="flex items-center gap-3">
-        <Progress value={progress} className="flex-1 h-1.5" />
-        <span className="text-xs text-primary-foreground tabular-nums shrink-0">
-          {sessionRating.stats.reviewedCount} / {queue.studyDetails.totalDue}
-        </span>
-        <StudyCard
-          card={queue.currentCard}
-          handleRating={sessionRating.handleRating}
-          shouldShowBack={sessionRating.shouldShowBack}
-          setShouldShowBack={sessionRating.setShouldShowBack}
-        />
+    <section className="grid grid-rows-16 h-full w-full bg-background m-2 p-2 rounded-l-lg">
+      <Card className="relative max-w-5xl w-full row-span-3 row-start-2 row-end-15 mx-auto px-6 py-8 gap-6">
         <Button
-          variant="ghost"
-          size="sm"
-          className="text-xs text-primary-foreground"
+          variant="destructive"
+          size="xs"
+          className="h-5 px-5 py-4 text-xs absolute right-0 top-0 mt-6 mr-6 z-30"
           onClick={() => router.push("/dashboard/decks")}
         >
           End Session
         </Button>
-      </div>
-    </div>
+
+        <div className="w-full relative">
+          <span className="text-sm text-muted-foreground tabular-nums shrink-0 w-full flex justify-center pb-4">
+            Card {sessionRating.stats.reviewedCount} of{" "}
+            {queue.studyDetails.totalDue}
+          </span>
+          <Progress value={progress} className="flex-1 h-1.5" />
+        </div>
+        {queue.currentCard && (
+          <StudyCard
+            card={queue.currentCard}
+            handleRating={sessionRating.handleRating}
+            shouldShowBack={sessionRating.shouldShowBack}
+            setShouldShowBack={sessionRating.setShouldShowBack}
+          />
+        )}
+      </Card>
+    </section>
   );
 }

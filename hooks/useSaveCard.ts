@@ -8,7 +8,6 @@ export interface SaveCardParams {
   profileId: string;
   definition: string;
   deckId: string;
-  translationLanguage: string;
 }
 
 export function useSaveCard() {
@@ -24,7 +23,6 @@ export function useSaveCard() {
     profileId,
     definition,
     deckId,
-    translationLanguage,
   }: SaveCardParams) => {
     setError(null);
     setIsSaving(true);
@@ -39,7 +37,7 @@ export function useSaveCard() {
           deck_id: deckId,
           word: activeWord.word,
           source_language: activeWord.lang,
-          translation_language: translationLanguage,
+          translation_language: activeWord.translationLang,
           word_translation: wordTranslation,
           context_text: activeWord.context,
           context_translation: activeWord.contextTranslation,

@@ -1,10 +1,10 @@
 "use client";
 
-import { useStreamUrl } from "@/hooks/useStreamUrl";
 import type { StudyCard } from "@/types/study";
-import PlayerSmall from "../player/PlayerSmall";
 import { calculateNextReview, SMRating } from "@/lib/algorithms/sm2";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { SquareArrowOutUpRight } from "lucide-react";
 
 interface Props {
   card: StudyCard;
@@ -19,70 +19,81 @@ export default function StudyCard({
   handleRating,
   setShouldShowBack,
 }: Props) {
-  const streamData = useStreamUrl(card?.media_content_id ?? null);
-
   return (
-    <div className="border border-border flex flex-col min-h-120">
-      <div className="flex flex-col items-center justify-center gap-3 py-12 px-8 flex-1 border-b border-border">
-        <span className="text-xs text-primary-foreground uppercase tracking-wider">
+    <div className="w-full h-full flex flex-col">
+      <div className="flex flex-col items-center justify-between gap-3 pb-2 pt-2 px-8 flex-1 border-b border-border">
+        <span className="text-sm text-primary-foreground uppercase tracking-wider">
           {card.source_language} → {card.translation_language}
         </span>
 
-        <h1 className="text-5xl font-medium text-primary-foreground text-center">
-          {card.word}
-        </h1>
+        <div className="flex-1 flex flex-col justify-center gap-6">
+          <h1 className="text-6xl font-medium text-primary-foreground text-center">
+            {card.word}
+          </h1>
 
-        <p className="text-sm text-primary-foreground text-center max-w-sm leading-relaxed mt-2">
-          {card.context_text}
-        </p>
+          <p className="text-base text-muted-foreground text-center max-w-sm leading-relaxed mt-2">
+            {card.context_text}
+          </p>
+
+          {shouldShowBack && (
+            <Button asChild size="xs" variant="outline">
+              <Link
+                href={`/watch/${card.media_content_id}?t=${card.start_ms}`}
+                target="_blank"
+                onClick={(e) => e.stopPropagation()}
+                className="py-4"
+              >
+                <SquareArrowOutUpRight className="size-4" />
+              </Link>
+            </Button>
+          )}
+        </div>
       </div>
 
       {shouldShowBack ? (
-        <div className="flex flex-col gap-5 px-8 py-6">
+        <div className="flex flex-col gap-5 px-4 py-3">
           <div className="text-center">
-            <p className="text-2xl text-primary-foreground">
+            <p className="text-4xl text-primary-foreground pb-2 mb-2">
               {card.word_translation}
             </p>
             {card.contextual_definition && (
-              <p className="text-sm text-primary-foreground mt-1">
+              <p className="text-sm text-muted-foreground">
                 {card.contextual_definition}
               </p>
             )}
           </div>
 
           {card.context_translation && (
-            <p className="text-sm text-primary-foreground text-center italic">
+            <p className="text-sm text-primary/40 text-center italic">
               {card.context_translation}
             </p>
           )}
 
-          {streamData.data && (
-            <div className="h-40 w-full bg-black">
-              <PlayerSmall
-                streamUrl={streamData.data.streamUrl}
-                mediaItem={adaptCardToPlayableMedia(card)}
-              />
-            </div>
-          )}
-
           <div className="grid grid-cols-4 gap-2">
             {([0, 1, 2, 3] as SMRating[]).map((rating) => (
-              <button
+              <Button
                 key={rating}
                 onClick={() => handleRating(rating)}
-                className={`flex flex-col items-center py-3 border text-sm font-medium text-white transition-colors ${RATING_COLORS[rating]}`}
+                className={`h-auto rounded-[12px] flex flex-col items-center py-3 border text-sm font-medium text-white transition-colors ${RATING_COLORS[rating]}`}
               >
                 <span>{RATING_LABELS[rating]}</span>
-                <span className="text-xs opacity-70 mt-0.5">
+                <span className="text-sm opacity-70 mt-0.5">
                   {nextIntervalLabel(card, rating)}
                 </span>
-              </button>
+              </Button>
             ))}
           </div>
         </div>
       ) : (
-        <div className="flex items-center justify-center py-8">
-          <Button onClick={() => setShouldShowBack(true)}>Show Answer</Button>
+        <div className="flex items-center justify-center pt-8 pb-3">
+          <Button
+            variant={"outline"}
+            size={"lg"}
+            className="px-8 py-6"
+            onClick={() => setShouldShowBack(true)}
+          >
+            Show Answer
+          </Button>
         </div>
       )}
     </div>
@@ -115,14 +126,4 @@ function nextIntervalLabel(card: StudyCard, rating: SMRating): string {
     rating,
   );
   return intervalLabel(result.interval_days);
-}
-
-function adaptCardToPlayableMedia(card: StudyCard) {
-  return {
-    source_text: card.context_text,
-    translation_text: card.context_translation,
-    start_ms: card.start_ms,
-    end_ms: card.end_ms,
-    media_title: card.word,
-  };
 }

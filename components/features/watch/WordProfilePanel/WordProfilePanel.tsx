@@ -13,7 +13,7 @@ import { useDeckSelection } from "@/hooks/useDeckSelection";
 import { useWordDefinition } from "@/hooks/useWordDefinition";
 
 export default function WordProfilePanel() {
-  const { activeWord, preferredTranslationLanguage } = useAppStore();
+  const { activeWord } = useAppStore();
 
   const wordProfile = useWordProfile(activeWord);
   const wordDefinition = useWordDefinition(activeWord);
@@ -31,10 +31,7 @@ export default function WordProfilePanel() {
   }
 
   const allowSave =
-    preferredTranslationLanguage &&
-    wordProfile.data?.id &&
-    wordDefinition.data &&
-    selectedDeckId;
+    wordProfile.data?.id && wordDefinition.data && selectedDeckId;
 
   return (
     <div className="flex flex-col h-full overflow-y-auto">
@@ -88,7 +85,6 @@ export default function WordProfilePanel() {
             definition: wordDefinition.data?.definition,
             wordTranslation: wordDefinition.data?.translation,
             deckId: selectedDeckId,
-            translationLanguage: preferredTranslationLanguage,
           })
         }
         decks={decks}

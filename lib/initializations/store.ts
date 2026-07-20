@@ -27,6 +27,7 @@ const DEFAULT_SUBTITLE_SETTINGS: SubtitleSettings = {
 export interface ActiveWord {
   word: string;
   lang: string;
+  translationLang: string;
   subtitleLineId: string; // key: `${start_ms}__${mediaContentId}`
   context: string;
   contextTranslation: string;

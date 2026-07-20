@@ -65,6 +65,7 @@ export default function WatchPage({
     setActiveWord({
       word: clean,
       lang: languages.source.value!,
+      translationLang: languages.translation.value!,
       subtitleLineId: `${line.start_ms}__${mediaContentId}`,
       context: line.text,
       contextTranslation,
