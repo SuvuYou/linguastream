@@ -96,7 +96,6 @@ function ClickableSubtitleLine({
             <span
               key={i}
               onClick={(e) => {
-                console.log("sdfjnsjdfi");
                 e.stopPropagation();
                 handleSubtitleWordClick(clean);
               }}

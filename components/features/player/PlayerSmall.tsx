@@ -20,11 +20,13 @@ export interface PlayableMediaItem {
 interface PlayerSmallProps {
   streamUrl: string;
   mediaItem: PlayableMediaItem;
+  shouldShowSubtitles?: boolean;
 }
 
 export default function PlayerSmall({
   streamUrl,
   mediaItem,
+  shouldShowSubtitles = true,
 }: PlayerSmallProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const plyrRef = useRef<Plyr | null>(null);
@@ -120,14 +122,18 @@ export default function PlayerSmall({
           <source src={streamUrl} type="video/mp4" />
         </video>
       </div>
-      <div className="relative col-start-1 row-start-1 self-end z-10 pointer-events-none">
-        <SubtitleOverlay
-          currentTimeMs={currentTimeMs}
-          sourceLines={sourceLine ? [sourceLine] : []}
-          translationLines={translationLine ? [translationLine] : []}
-          settings={subtitleSettings}
-        />
-      </div>
+      {shouldShowSubtitles && (
+        <div className="relative col-start-1 row-start-1 self-end z-10 pointer-events-none">
+          <SubtitleOverlay
+            currentTimeMs={currentTimeMs}
+            sourceLines={sourceLine ? [sourceLine] : []}
+            translationLines={translationLine ? [translationLine] : []}
+            settings={subtitleSettings}
+            handleSubtitleWordClick={() => {}}
+          />
+        </div>
+      )}
+
       {hasEnded && (
         <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/50 backdrop-blur-[2px] transition-all animate-in fade-in duration-200">
           <Button

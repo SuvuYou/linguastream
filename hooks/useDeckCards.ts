@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 
-export interface CardWordProfile {
+interface CardWordProfile {
   id: string;
   part_of_speech: string;
   forms: Record<string, string>;

@@ -1,6 +1,5 @@
 "use client";
 
-import { type DeckDetailCard } from "@/hooks/useDeckDetail";
 import PlayerSmall, {
   PlayableMediaItem,
 } from "@/components/features/player/PlayerSmall";
@@ -11,14 +10,9 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useAppStore } from "@/lib/initializations/store";
 import { getLanguageLabel } from "@/helpers/language-helpers";
-
-function formatTime(ms: number) {
-  const s = Math.floor(ms / 1000);
-  const m = Math.floor(s / 60);
-  return `${m}:${(s % 60).toString().padStart(2, "0")}`;
-}
+import { DeckDetailCard } from "@/hooks/useDeckCards";
+import { SquareArrowOutUpRight } from "lucide-react";
 
 interface Props {
   card: DeckDetailCard;
@@ -34,55 +28,74 @@ const adaptCardStructureToPlayableItem = (
 });
 
 export default function CardAccordionItem({ card }: Props) {
-  const { setOverlayOpen } = useAppStore();
-
   return (
     <AccordionItem value={card.id} className="border-border">
-      <AccordionTrigger className="px-4 py-3 hover:bg-background-hover hover:no-underline">
+      <AccordionTrigger className="px-8 py-3 hover:bg-card hover:no-underline hover:cursor-pointer">
         <div className="flex items-center gap-4 w-full text-left">
-          <span className="text-sm font-medium text-primary-foreground w-40 truncate">
+          <span className="text-lg font-medium text-primary-foreground w-40 truncate">
             {card.word}
           </span>
-          <span className="text-sm text-primary-foreground flex-1 truncate">
+          <span className="text-base text-muted-foreground flex-1 truncate">
             {card.word_translation}
           </span>
-          <Badge variant="outline" className="text-xs shrink-0">
+          <Badge variant="outline" className="text-sm shrink-0 h-8 px-4 ">
             {getLanguageLabel(card.source_language)}
           </Badge>
         </div>
+        <Button
+          size="xs"
+          variant="outline"
+          className="text-sm flex-1 h-8 basis-18"
+          onClick={() =>
+            window.open(
+              `/watch/${card.media_content_id}?t=${card.start_ms}`,
+              "_blank",
+            )
+          }
+        >
+          <SquareArrowOutUpRight className="size-4" />
+        </Button>
       </AccordionTrigger>
 
       <AccordionContent className="px-4 pb-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_2fr] gap-6 pt-2 overflow-scroll">
           <div className="flex flex-col gap-4">
-            <div>
-              <div className="text-xs text-primary-foreground uppercase tracking-wider mb-1">
+            <div className="border-l-2 border-primary pl-4">
+              <div className="text-base text-primary-foreground uppercase tracking-wider mb-2">
                 Translation
               </div>
-              <p className="text-sm text-primary-foreground font-medium">
+              <p className="text-sm text-primary-foreground">
                 {card.word_translation}
               </p>
-              {card.contextual_definition && (
-                <p className="text-xs text-primary-foreground mt-1">
+            </div>
+
+            {card.contextual_definition && (
+              <div className="border-l-2 border-primary pl-4">
+                <div className="text-base text-primary-foreground uppercase tracking-wider mb-2">
+                  Definition
+                </div>
+                <p className="text-sm text-primary-foreground mt-2">
                   {card.contextual_definition}
                 </p>
-              )}
-            </div>
+              </div>
+            )}
 
             {card.word_profile &&
               Object.keys(card.word_profile.forms).length > 0 && (
-                <div>
-                  <div className="text-xs text-primary-foreground uppercase tracking-wider mb-2">
+                <div className="border-l-2 border-primary pl-4">
+                  <div className="text-base text-primary-foreground uppercase tracking-wider mb-2">
                     Forms
                   </div>
-                  <div className="flex flex-col gap-1">
+                  <div className="flex flex-col gap-2">
                     {Object.entries(card.word_profile.forms).map(
                       ([label, value]) => (
-                        <div key={label} className="flex gap-2 text-xs">
+                        <div key={label} className="flex gap-4 text-sm">
                           <span className="text-primary-foreground w-24 shrink-0">
                             {label}
                           </span>
-                          <span className="text-primary-foreground">{value}</span>
+                          <span className="text-primary-foreground">
+                            {value}
+                          </span>
                         </div>
                       ),
                     )}
@@ -91,70 +104,16 @@ export default function CardAccordionItem({ card }: Props) {
               )}
           </div>
 
-          <div className="flex flex-col gap-3">
-            <div className="text-xs text-primary-foreground uppercase tracking-wider">
-              Context
-            </div>
-            <div className="flex flex-col gap-1">
-              <p className="text-sm text-primary-foreground leading-relaxed">
-                {card.context_text}
-              </p>
-              {card.context_translation && (
-                <p className="text-xs text-primary-foreground italic">
-                  {card.context_translation}
-                </p>
-              )}
-              <span className="text-xs text-primary-foreground tabular-nums">
-                {formatTime(card.start_ms)}
-              </span>
-            </div>
-
-            {card.streamUrl && (
-              <div className="h-32 w-full bg-black">
-                <PlayerSmall
-                  streamUrl={card.streamUrl}
-                  mediaItem={adaptCardStructureToPlayableItem(card)}
-                />
-              </div>
-            )}
-
-            <div className="flex gap-2 mt-1">
-              <Button
-                size="sm"
-                variant="outline"
-                className="text-xs flex-1"
-                onClick={() =>
-                  window.open(
-                    `/watch/${card.media_content_id}?t=${card.start_ms}`,
-                    "_blank",
-                  )
-                }
-              >
-                Watch Clip
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="text-xs flex-1"
-                // onClick={() => onFindOtherCases(card.word)}
-                onClick={() => setOverlayOpen(true)}
-              >
-                Find Other Cases
-              </Button>
-            </div>
-          </div>
-
-          {/* col 3 — lexical family + collocations */}
           {card.word_profile && (
             <div className="flex flex-col gap-4">
               {card.word_profile.lexical_family.length > 0 && (
-                <div>
-                  <div className="text-xs text-primary-foreground uppercase tracking-wider mb-2">
+                <div className="border-l-2 border-secondary pl-4">
+                  <div className="text-base text-primary-foreground uppercase tracking-wider mb-2">
                     Lexical Family
                   </div>
-                  <div className="flex flex-wrap gap-1">
+                  <div className="flex flex-wrap gap-2">
                     {card.word_profile.lexical_family.map((w) => (
-                      <Badge key={w} variant="outline" className="text-xs">
+                      <Badge key={w} variant="outline" className="text-sm">
                         {w}
                       </Badge>
                     ))}
@@ -163,13 +122,16 @@ export default function CardAccordionItem({ card }: Props) {
               )}
 
               {card.word_profile.collocations.length > 0 && (
-                <div>
-                  <div className="text-xs text-primary-foreground uppercase tracking-wider mb-2">
+                <div className="border-l-2 border-secondary pl-4">
+                  <div className="text-base text-primary-foreground uppercase tracking-wider mb-2">
                     Collocations
                   </div>
-                  <div className="flex flex-col gap-1">
+                  <div className="flex flex-col gap-2">
                     {card.word_profile.collocations.map((c) => (
-                      <span key={c} className="text-xs text-primary-foreground">
+                      <span
+                        key={c}
+                        className="text-sm text-primary-foreground border-l-4 border-secondary pl-2"
+                      >
                         {c}
                       </span>
                     ))}
@@ -178,6 +140,36 @@ export default function CardAccordionItem({ card }: Props) {
               )}
             </div>
           )}
+
+          <div className="flex flex-col gap-3 ">
+            <div className="border-l-2 border-contrast pl-4">
+              <div className="text-base text-primary-foreground uppercase tracking-wider mb-2">
+                Context
+              </div>
+              <div className="flex flex-col gap-2">
+                <p className="text-sm text-primary-foreground mb-2!">
+                  {card.context_text}
+                </p>
+                {card.context_translation && (
+                  <p className="text-sm text-muted-foreground italic">
+                    {card.context_translation}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {card.streamUrl && (
+              <div className="border-l-2 border-contrast pl-4">
+                <div className="w-full bg-black aspect-video">
+                  <PlayerSmall
+                    streamUrl={card.streamUrl}
+                    mediaItem={adaptCardStructureToPlayableItem(card)}
+                    shouldShowSubtitles={false}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </AccordionContent>
     </AccordionItem>

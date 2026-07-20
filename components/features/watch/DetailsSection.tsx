@@ -5,18 +5,11 @@ import SubtitleSettingsPanel from "@/components/features/watch/SubtitleSettings"
 import WordProfilePanel from "@/components/features/watch/WordProfilePanel/WordProfilePanel";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
-import { useAppStore } from "@/lib/initializations/store";
 
 export default function DetailsSection() {
-  const { activeWord } = useAppStore();
-
   const [openedSection, setOpenedSection] = useState<
     "subtitles" | "word-profile" | undefined
   >();
-
-  // auto-open words tab when a word is clicked
-  // only if words tab isn't already open
-  const prevWord = useAppStore((s) => s.activeWord?.word);
 
   return (
     <div className="flex gap-2 flex-1 min-h-0 overflow-y-auto mt-2">

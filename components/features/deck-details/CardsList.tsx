@@ -2,7 +2,7 @@
 
 import CardAccordionItem from "@/components/features/deck-details/CardAccordionItem";
 import { Accordion } from "@/components/ui/accordion";
-import { DeckDetailCard } from "@/hooks/useDeckDetail";
+import { DeckDetailCard } from "@/hooks/useDeckCards";
 
 interface Props {
   cards: DeckDetailCard[];
@@ -19,11 +19,7 @@ export default function CardsList({ cards, searchQuery }: Props) {
             : "No cards in this deck yet."}
         </div>
       ) : (
-        <Accordion
-          type="single"
-          collapsible
-          className="border border-border"
-        >
+        <Accordion type="single" collapsible className="border border-border">
           {cards.map((card) => (
             <CardAccordionItem key={card.id} card={card} />
           ))}
