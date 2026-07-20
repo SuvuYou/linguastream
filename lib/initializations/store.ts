@@ -29,7 +29,7 @@ export interface ActiveWord {
   lang: string;
   subtitleLineId: string; // key: `${start_ms}__${mediaContentId}`
   context: string;
-  translationText: string;
+  contextTranslation: string;
   mediaContentId: string;
   startMs: number;
   endMs: number;

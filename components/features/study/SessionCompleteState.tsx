@@ -15,7 +15,9 @@ export default function SessionCompleteState({ studyDetails, stats }: Props) {
   return (
     <div className="max-w-2xl mx-auto px-6 py-24 flex flex-col items-center gap-4 text-center">
       <div className="text-4xl">🎉</div>
-      <h2 className="text-xl font-medium text-primary-foreground">All caught up!</h2>
+      <h2 className="text-xl font-medium text-primary-foreground">
+        All caught up!
+      </h2>
       <p className="text-sm text-primary-foreground">
         No cards due in {studyDetails.deckTitle}.
       </p>
@@ -33,7 +35,7 @@ export default function SessionCompleteState({ studyDetails, stats }: Props) {
         <span className="text-yellow-400">Good: {stats.ratingCounts[2]}</span>
         <span className="text-green-400">Easy: {stats.ratingCounts[3]}</span>
       </div>
-      <Button variant="outline" onClick={() => router.push("/decks")}>
+      <Button variant="outline" onClick={() => router.push("/dashboard/decks")}>
         Back to Decks
       </Button>
     </div>

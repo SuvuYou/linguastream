@@ -56,7 +56,7 @@ export default function DeckDetailPage({ deckId }: DeckDetailPageProps) {
         <div className="flex items-center justify-between pt-2">
           <div className="flex items-center gap-3">
             <Button
-              onClick={() => router.push("/decks")}
+              onClick={() => router.push("/dashboard/decks")}
               variant={"ghost"}
               size={"default"}
               className="text-xl! leading-6 h-auto p-0 text-primary-foreground hover:underline hover:bg-transparent! transition-colors"

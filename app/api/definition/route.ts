@@ -19,15 +19,31 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  const prompt = `Give a SHORT simple contextual definition (as if taken from dictionary) of the ${lang} word "${word}"${
+  const prompt = `Given the ${lang} word "${word}"${
     context ? ` as used in this sentence: "${context}"` : ""
-  }.
-Return ONLY a single plain text sentence definition. No extra text, no quotes, no markdown.`;
+  }
+
+    Return ONLY valid JSON:
+
+    {
+      "definition": "...",
+      "translation": "..."
+    }
+
+    Rules:
+    - "definition" is a short english dictionary-style definition for THIS context.
+    - "translation" is the closest English equivalent in THIS context.
+    - Prefer a single word for translation.
+    - If impossible, use the shortest natural phrase.`;
 
   try {
-    const definition = (await generateGeminiText(prompt)).trim();
+    const result = JSON.parse(
+      await generateGeminiText(prompt, {
+        responseMimeType: "application/json",
+      }),
+    );
 
-    return NextResponse.json({ definition });
+    return NextResponse.json(result);
   } catch (error) {
     return NextResponse.json(
       {

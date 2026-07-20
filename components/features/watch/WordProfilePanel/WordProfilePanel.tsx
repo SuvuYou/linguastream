@@ -56,6 +56,7 @@ export default function WordProfilePanel() {
 
       <div className="flex flex-col gap-4 px-4 py-4 flex-1">
         <WordDefinition
+          translation={wordDefinition.data?.translation ?? ""}
           definition={wordDefinition.data?.definition ?? ""}
           isLoading={wordDefinition.isLoading}
         />
@@ -85,6 +86,7 @@ export default function WordProfilePanel() {
             activeWord,
             profileId: wordProfile.data?.id ?? "",
             definition: wordDefinition.data?.definition,
+            wordTranslation: wordDefinition.data?.translation,
             deckId: selectedDeckId,
             translationLanguage: preferredTranslationLanguage,
           })

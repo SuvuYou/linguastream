@@ -15,7 +15,7 @@ async function fetchDefinition(word?: string, lang?: string, context?: string) {
 }
 
 export function useWordDefinition(word: ActiveWord | null) {
-  const query = useQuery<{ definition: string }>({
+  const query = useQuery<{ translation: string; definition: string }>({
     queryKey: ["word-definition", word?.word, word?.lang],
     queryFn: async () => fetchDefinition(word?.word, word?.lang, word?.context),
     enabled: !!word && !!word?.word && !!word?.lang && !!word?.context,

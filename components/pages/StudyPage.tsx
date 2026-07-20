@@ -63,7 +63,7 @@ export default function StudyPage() {
           variant="ghost"
           size="sm"
           className="text-xs text-primary-foreground"
-          onClick={() => router.push("/decks")}
+          onClick={() => router.push("/dashboard/decks")}
         >
           End Session
         </Button>

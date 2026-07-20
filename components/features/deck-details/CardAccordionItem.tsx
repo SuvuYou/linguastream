@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { getLanguageLabel } from "@/helpers/language-helpers";
 import { DeckDetailCard } from "@/hooks/useDeckCards";
 import { SquareArrowOutUpRight } from "lucide-react";
+import Link from "next/link";
 
 interface Props {
   card: DeckDetailCard;
@@ -42,45 +43,36 @@ export default function CardAccordionItem({ card }: Props) {
             {getLanguageLabel(card.source_language)}
           </Badge>
         </div>
-        <Button
-          size="xs"
-          variant="outline"
-          className="text-sm flex-1 h-8 basis-18"
-          onClick={() =>
-            window.open(
-              `/watch/${card.media_content_id}?t=${card.start_ms}`,
-              "_blank",
-            )
-          }
-        >
-          <SquareArrowOutUpRight className="size-4" />
-        </Button>
+        <div className="text-sm flex-1 h-8 basis-18">
+          <Button asChild size="xs" variant="outline">
+            <Link
+              href={`/watch/${card.media_content_id}?t=${card.start_ms}`}
+              target="_blank"
+              onClick={(e) => e.stopPropagation()}
+              className="w-full h-full"
+            >
+              <SquareArrowOutUpRight className="size-4" />
+            </Link>
+          </Button>
+        </div>
       </AccordionTrigger>
 
       <AccordionContent className="px-4 pb-4">
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_2fr] gap-6 pt-2 overflow-scroll">
+        <div className="grid grid-cols-1 md:grid-cols-[2fr_2fr_3fr] gap-6 pt-2 overflow-scroll">
           <div className="flex flex-col gap-4">
-            <div className="border-l-2 border-primary pl-4">
-              <div className="text-base text-primary-foreground uppercase tracking-wider mb-2">
-                Translation
-              </div>
-              <p className="text-sm text-primary-foreground">
-                {card.word_translation}
-              </p>
-            </div>
-
             {card.contextual_definition && (
               <div className="border-l-2 border-primary pl-4">
                 <div className="text-base text-primary-foreground uppercase tracking-wider mb-2">
                   Definition
                 </div>
-                <p className="text-sm text-primary-foreground mt-2">
+                <p className="text-sm text-primary-foreground leading-6 mt-2">
                   {card.contextual_definition}
                 </p>
               </div>
             )}
 
             {card.word_profile &&
+              card.word_profile.forms &&
               Object.keys(card.word_profile.forms).length > 0 && (
                 <div className="border-l-2 border-primary pl-4">
                   <div className="text-base text-primary-foreground uppercase tracking-wider mb-2">

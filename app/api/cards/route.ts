@@ -12,6 +12,7 @@ const BodySchema = z.object({
   word_translation: z.string().min(1),
   context_text: z.string().min(1),
   context_translation: z.string(),
+  contextual_definition: z.string().min(1),
   start_ms: z.number().int(),
   end_ms: z.number().int(),
   word_profile_id: z.string().uuid().optional(),

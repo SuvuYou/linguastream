@@ -51,7 +51,7 @@ export default function WatchPage({
   function handleSubtitleWordClick(
     clean: string,
     line: SubtitleLine,
-    translationText: string,
+    contextTranslation: string,
   ) {
     if (
       activeWord?.word === clean &&
@@ -67,7 +67,7 @@ export default function WatchPage({
       lang: languages.source.value!,
       subtitleLineId: `${line.start_ms}__${mediaContentId}`,
       context: line.text,
-      translationText,
+      contextTranslation,
       mediaContentId,
       startMs: line.start_ms,
       endMs: line.end_ms,

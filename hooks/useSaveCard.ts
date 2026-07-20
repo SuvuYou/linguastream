@@ -4,6 +4,7 @@ import { useState } from "react";
 
 export interface SaveCardParams {
   activeWord: ActiveWord;
+  wordTranslation: string;
   profileId: string;
   definition: string;
   deckId: string;
@@ -19,6 +20,7 @@ export function useSaveCard() {
 
   const save = async ({
     activeWord,
+    wordTranslation,
     profileId,
     definition,
     deckId,
@@ -38,9 +40,9 @@ export function useSaveCard() {
           word: activeWord.word,
           source_language: activeWord.lang,
           translation_language: translationLanguage,
-          word_translation: activeWord.translationText,
+          word_translation: wordTranslation,
           context_text: activeWord.context,
-          context_translation: activeWord.translationText,
+          context_translation: activeWord.contextTranslation,
           media_content_id: activeWord.mediaContentId,
           start_ms: activeWord.startMs,
           end_ms: activeWord.endMs,

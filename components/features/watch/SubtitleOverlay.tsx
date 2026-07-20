@@ -16,7 +16,7 @@ interface SubtitleOverlayProps {
   handleSubtitleWordClick: (
     clean: string,
     line: SubtitleLine,
-    translationText: string,
+    contextTranslation: string,
   ) => void;
 }
 
