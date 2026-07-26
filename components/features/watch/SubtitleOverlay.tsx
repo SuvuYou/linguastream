@@ -172,7 +172,10 @@ export default function SubtitleOverlay({
 
   if (!hasAnything)
     return (
-      <div className="absolute bottom-16 left-0 right-0 flex flex-col items-center gap-1 pointer-events-none z-10"></div>
+      <div
+        data-testid="empty-state"
+        className="absolute bottom-16 left-0 right-0 flex flex-col items-center gap-1 pointer-events-none z-10"
+      ></div>
     );
 
   return (
