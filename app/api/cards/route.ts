@@ -71,3 +71,50 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json(card);
 }
+
+const DeleteBodySchema = z.object({
+  cardIds: z.array(z.string().uuid()).min(1).max(500),
+});
+
+export async function DELETE(req: NextRequest) {
+  const user = await getCurrentUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const body = DeleteBodySchema.safeParse(await req.json());
+  if (!body.success) {
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  }
+
+  const ownedCards = await db.card.findMany({
+    where: { id: { in: body.data.cardIds }, user_id: user.id },
+    select: { id: true },
+  });
+  const ownedIds = ownedCards.map((c) => c.id);
+
+  if (ownedIds.length === 0) {
+    return NextResponse.json(
+      { error: "No matching cards found" },
+      { status: 404 },
+    );
+  }
+
+  await db.$transaction(async (tx) => {
+    const affectedSessions = await tx.studySessionCard.findMany({
+      where: { card_id: { in: ownedIds } },
+      select: { session_id: true },
+      distinct: ["session_id"],
+    });
+
+    if (affectedSessions.length > 0) {
+      await tx.studySession.deleteMany({
+        where: { id: { in: affectedSessions.map((s) => s.session_id) } },
+      });
+    }
+
+    await tx.card.deleteMany({ where: { id: { in: ownedIds } } });
+  });
+
+  return NextResponse.json({ deletedCount: ownedIds.length });
+}
