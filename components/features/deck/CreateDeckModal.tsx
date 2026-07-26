@@ -68,7 +68,7 @@ export default function CreateDeckModal({
   }
 
   return (
-    <Dialog open={isOpen}>
+    <Dialog open={isOpen} onOpenChange={closeModal}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>New Deck</DialogTitle>

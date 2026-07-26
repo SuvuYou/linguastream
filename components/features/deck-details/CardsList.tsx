@@ -7,9 +7,17 @@ import { DeckDetailCard } from "@/hooks/useDeckCards";
 interface Props {
   cards: DeckDetailCard[];
   searchQuery: string;
+  cardSelection: {
+    selected: Set<string>;
+    toggle: (id: string) => void;
+  };
 }
 
-export default function CardsList({ cards, searchQuery }: Props) {
+export default function CardsList({
+  cards,
+  searchQuery,
+  cardSelection,
+}: Props) {
   return (
     <>
       {cards.length === 0 ? (
@@ -19,12 +27,18 @@ export default function CardsList({ cards, searchQuery }: Props) {
             : "No cards in this deck yet."}
         </div>
       ) : (
-        <Accordion type="single" collapsible className="border border-border">
-          {cards.map((card) => (
-            <CardAccordionItem key={card.id} card={card} />
-          ))}
-        </Accordion>
-      )}{" "}
+        <>
+          <Accordion type="single" collapsible className="border border-border">
+            {cards.map((card) => (
+              <CardAccordionItem
+                key={card.id}
+                card={card}
+                cardSelection={cardSelection}
+              />
+            ))}
+          </Accordion>
+        </>
+      )}
     </>
   );
 }

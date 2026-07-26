@@ -6,7 +6,6 @@ import { useDeckDetail } from "@/hooks/useDeckDetail";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-
 import CardsPagination from "../features/deck-details/CardsPagination";
 import CardsList from "../features/deck-details/CardsList";
 import { BookOpen } from "lucide-react";
@@ -15,6 +14,7 @@ import SearchBar from "../features/deck-details/SearchBar";
 import { useZodSearchParams } from "@/hooks/useZodSearchParams";
 import { DECK_DETAILS_PARAMS_SCHEMA } from "@/helpers/params-schema";
 import { useDeckCards } from "@/hooks/useDeckCards";
+import { DeleteCardsAlert } from "../features/deck-details/DeleteCardsAlert";
 
 interface DeckDetailPageProps {
   deckId: string;
@@ -35,6 +35,22 @@ export default function DeckDetailPage({ deckId }: DeckDetailPageProps) {
     lang: activeLang === "All" ? undefined : activeLang,
     q: deckDetailsParams.params.q ?? undefined,
   });
+
+  const [selectedCards, setSelectedCards] = useState<Set<string>>(new Set());
+  const [confirmationDialogOpen, setConfirmationDialogOpen] = useState(false);
+
+  const toggleSelected = (id: string) =>
+    setSelectedCards((prev) => {
+      const next = new Set(prev);
+
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+
+      return next;
+    });
 
   if (deckDetails.isLoading) {
     return (
@@ -93,6 +109,17 @@ export default function DeckDetailPage({ deckId }: DeckDetailPageProps) {
         <div className="flex justify-between gap-8">
           <SearchBar />
 
+          <DeleteCardsAlert
+            deckId={deckId}
+            selected={selectedCards}
+            isOpen={confirmationDialogOpen}
+            setIsOpen={setConfirmationDialogOpen}
+            reset={() => {
+              setSelectedCards(new Set());
+              setConfirmationDialogOpen(false);
+            }}
+          />
+
           <SourceLanguageFilter
             source={{
               value: activeLang ?? "All",
@@ -100,6 +127,7 @@ export default function DeckDetailPage({ deckId }: DeckDetailPageProps) {
               onChange: (value) => {
                 setActiveLang(value);
                 deckDetailsParams.set({ page: 0 });
+                setSelectedCards(new Set());
               },
             }}
             isLoading={deckDetails.isLoading}
@@ -129,6 +157,10 @@ export default function DeckDetailPage({ deckId }: DeckDetailPageProps) {
             <CardsList
               cards={deckCards.data?.cards ?? []}
               searchQuery={deckDetailsParams.params.q ?? ""}
+              cardSelection={{
+                selected: selectedCards,
+                toggle: toggleSelected,
+              }}
             />
             <CardsPagination
               currentPage={deckDetailsParams.params.page}

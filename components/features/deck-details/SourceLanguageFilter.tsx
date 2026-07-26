@@ -68,7 +68,7 @@ export default function SourceLanguageFilter({
 
   return (
     <div className="flex items-center h-full">
-      <Field orientation="horizontal" className="px-1 w-auto">
+      <Field orientation="horizontal" className="px-1 w-auto h-full">
         <Select
           value={source.value}
           onValueChange={source.onChange}
@@ -77,7 +77,7 @@ export default function SourceLanguageFilter({
           <SelectTrigger
             id="source-language"
             size="default"
-            className="*:text-sm min-h-auto"
+            className="*:text-sm min-h-auto h-full"
           >
             <FieldLabel
               htmlFor="source-language"

@@ -14,9 +14,14 @@ import { getLanguageLabel } from "@/helpers/language-helpers";
 import { DeckDetailCard } from "@/hooks/useDeckCards";
 import { SquareArrowOutUpRight } from "lucide-react";
 import Link from "next/link";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface Props {
   card: DeckDetailCard;
+  cardSelection: {
+    selected: Set<string>;
+    toggle: (id: string) => void;
+  };
 }
 
 const adaptCardStructureToPlayableItem = (
@@ -28,11 +33,17 @@ const adaptCardStructureToPlayableItem = (
   translation_text: card.context_translation ?? "",
 });
 
-export default function CardAccordionItem({ card }: Props) {
+export default function CardAccordionItem({ card, cardSelection }: Props) {
   return (
     <AccordionItem value={card.id} className="border-border">
-      <AccordionTrigger className="px-8 py-3 hover:bg-card hover:no-underline hover:cursor-pointer">
+      <AccordionTrigger className="pr-8 pl-6 py-3 hover:bg-card hover:no-underline hover:cursor-pointer">
         <div className="flex items-center gap-4 w-full text-left">
+          <Checkbox
+            checked={cardSelection.selected.has(card.id)}
+            onCheckedChange={() => cardSelection.toggle(card.id)}
+            onClick={(e) => e.stopPropagation()}
+            className="mt-0.5 mr-2"
+          />
           <span className="text-lg font-medium text-primary-foreground w-40 truncate">
             {card.word}
           </span>

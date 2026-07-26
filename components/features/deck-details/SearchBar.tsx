@@ -39,7 +39,7 @@ export default function SearchBar() {
 
   return (
     <div className="flex flex-1 max-w-196 gap-3 items-center">
-      <InputGroup className="min-w-48 max-w-196">
+      <InputGroup className="min-w-48 max-w-196 h-11">
         <Search className="size-4 ml-4" />
         <InputGroupInput
           value={query}

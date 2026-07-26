@@ -56,6 +56,18 @@ export default function StudyPage() {
     );
   }
 
+  if (!queue.currentCard) {
+    return (
+      <section className="grid grid-rows-16 h-full w-full bg-background m-2 p-2 rounded-l-lg">
+        <Card className="relative max-w-5xl w-full row-span-3 row-start-2 row-end-15 mx-auto px-6 py-8 gap-6">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-48 w-full" />
+          <Skeleton className="h-12 w-full" />
+        </Card>
+      </section>
+    );
+  }
+
   const progress =
     queue.studyDetails.totalDue > 0
       ? Math.round(

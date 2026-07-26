@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Deck } from "@/hooks/useDecks";
 import { BookOpen, BookOpenCheck, TableOfContents } from "lucide-react";
 import { useAppStore } from "@/lib/initializations/store";
+import { DeleteDeckButton } from "./DeleteDeckButton";
 
 interface Props {
   deck: Deck;
@@ -80,7 +81,7 @@ export default function DeckCard({ deck }: Props) {
       group-hover:shadow-xl
     "
       >
-        <div className="flex items-start justify-between gap-2 h-8">
+        <div className="flex items-center justify-between gap-2 h-8">
           <h2 className="text-lg font-medium text-primary-foreground leading-tight">
             {deck.name}
           </h2>
@@ -89,6 +90,8 @@ export default function DeckCard({ deck }: Props) {
               Default
             </Badge>
           )}
+
+          <DeleteDeckButton deckId={deck.id} deckName={deck.name} />
         </div>
 
         <div className="flex items-center gap-4 text-sm text-primary-foreground">
