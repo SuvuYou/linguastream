@@ -2,10 +2,11 @@
 
 import { useQuery } from "@tanstack/react-query";
 
-export interface DeckCard {
-  id: string;
-  source_language: string;
-  next_review: string;
+export interface DeckStats {
+  total: number;
+  due: number;
+  learned: number;
+  progress: number;
 }
 
 export interface Deck {
@@ -13,19 +14,24 @@ export interface Deck {
   name: string;
   is_default: boolean;
   created_at: string;
-  cards: DeckCard[];
+  stats: DeckStats;
 }
 
-async function fetchDecks(): Promise<{ decks: Deck[] }> {
-  const res = await fetch("/api/decks");
+async function fetchDecks(
+  sourceLanguage: string | null,
+): Promise<{ decks: Deck[] }> {
+  const params = new URLSearchParams();
+  if (sourceLanguage) params.set("sourceLanguage", sourceLanguage);
+
+  const res = await fetch(`/api/decks?${params.toString()}`);
   if (!res.ok) throw new Error("Failed to fetch decks");
   return res.json();
 }
 
-export function useDecks() {
+export function useDecks(sourceLanguage: string | null) {
   return useQuery({
-    queryKey: ["decks"],
-    queryFn: fetchDecks,
+    queryKey: ["decks", sourceLanguage],
+    queryFn: () => fetchDecks(sourceLanguage),
     staleTime: 30_000,
   });
 }

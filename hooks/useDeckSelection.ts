@@ -1,8 +1,10 @@
 import { useMemo, useState } from "react";
 import { useDecks } from "./useDecks";
+import { useAppStore } from "@/lib/initializations/store";
 
 export function useDeckSelection() {
-  const { data: decksData } = useDecks();
+  const { preferredSourceLanguage } = useAppStore();
+  const { data: decksData } = useDecks(preferredSourceLanguage);
 
   const decks = useMemo(() => decksData?.decks ?? [], [decksData?.decks]);
 
