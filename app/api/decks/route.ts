@@ -1,46 +1,55 @@
-import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/firebase/session";
 import { db } from "@/lib/initializations/db";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const user = await getCurrentUser();
-  if (!user)
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const sourceLanguage =
+    req.nextUrl.searchParams.get("sourceLanguage") ?? undefined;
+  const now = new Date();
 
   const decks = await db.deck.findMany({
     where: { user_id: user.id },
-    select: {
-      id: true,
-      name: true,
-      is_default: true,
-      created_at: true,
-      cards: {
-        select: {
-          id: true,
-          source_language: true,
-          next_review: true,
-        },
-      },
-    },
-    orderBy: [{ is_default: "desc" }, { created_at: "asc" }],
+    select: { id: true, name: true, is_default: true, created_at: true },
+    orderBy: { created_at: "asc" },
   });
 
-  return NextResponse.json({ decks });
-}
+  const cardFilter = {
+    user_id: user.id,
+    ...(sourceLanguage ? { source_language: sourceLanguage } : {}),
+  };
 
-export async function POST(req: NextRequest) {
-  const user = await getCurrentUser();
-  if (!user)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const [totalByDeck, dueByDeck] = await Promise.all([
+    db.card.groupBy({
+      by: ["deck_id"],
+      where: cardFilter,
+      _count: { _all: true },
+    }),
+    db.card.groupBy({
+      by: ["deck_id"],
+      where: { ...cardFilter, next_review: { lte: now } },
+      _count: { _all: true },
+    }),
+  ]);
 
-  const { name } = await req.json();
-  if (!name?.trim()) {
-    return NextResponse.json({ error: "Name required" }, { status: 400 });
-  }
+  const totalMap = new Map(totalByDeck.map((r) => [r.deck_id, r._count._all]));
+  const dueMap = new Map(dueByDeck.map((r) => [r.deck_id, r._count._all]));
 
-  const deck = await db.deck.create({
-    data: { user_id: user.id, name: name.trim(), is_default: false },
+  const result = decks.map((deck) => {
+    const total = totalMap.get(deck.id) ?? 0;
+    const due = dueMap.get(deck.id) ?? 0;
+    const learned = total - due;
+    const progress = total > 0 ? Math.round((learned / total) * 100) : 0;
+
+    return {
+      ...deck,
+      stats: { total, due, learned, progress },
+    };
   });
 
-  return NextResponse.json(deck);
+  return NextResponse.json({ decks: result });
 }
