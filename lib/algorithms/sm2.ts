@@ -47,6 +47,7 @@ export function calculateNextReview(card: SMInput, rating: SMRating): SMOutput {
   ease_factor = Math.max(MIN_EASE, ease_factor);
 
   const next_review = new Date();
+  next_review.setHours(0, 0, 0, 0);
   next_review.setDate(next_review.getDate() + interval_days);
 
   return { repetitions, interval_days, ease_factor, next_review };

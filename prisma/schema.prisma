@@ -35,6 +35,7 @@ model User {
   media_content MediaContent[]
   decks         Deck[]
   cards         Card[]
+  study_sessions StudySession[]
 }
 
 model MediaContent {
@@ -92,6 +93,7 @@ model Deck {
 
   user  User   @relation(fields: [user_id], references: [id])
   cards Card[]
+  study_sessions StudySession[]
 }
 
 model WordProfile {
@@ -133,4 +135,49 @@ model Card {
   user         User         @relation(fields: [user_id], references: [id])
   deck         Deck         @relation(fields: [deck_id], references: [id])
   word_profile WordProfile? @relation(fields: [word_profile_id], references: [id])
+  study_session_cards StudySessionCard[]
+}
+
+model StudySession {
+  id         String   @id @default(uuid())
+
+  user_id    String
+  deck_id    String
+
+  total_cards Int
+  created_at DateTime @default(now())
+  expires_at DateTime
+  completed_at DateTime?
+
+  reviewed_cards Int @default(0)
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  deck Deck @relation(fields: [deck_id], references: [id], onDelete: Cascade)
+
+  cards StudySessionCard[]
+
+  @@index([user_id])
+  @@index([deck_id])
+  @@index([created_at])
+  @@index([expires_at])
+}
+
+model StudySessionCard {
+  id String @id @default(uuid())
+
+  session_id String
+  card_id    String
+
+  position Int
+
+  reviewed Boolean @default(false)
+
+  session StudySession @relation(fields: [session_id], references: [id], onDelete: Cascade)
+  card    Card         @relation(fields: [card_id], references: [id], onDelete: Cascade)
+
+  @@unique([session_id, position])
+  @@unique([session_id, card_id])
+
+  @@index([session_id, position])
+  @@index([card_id])
 }
