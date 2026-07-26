@@ -9,9 +9,11 @@ import CreateDeckModal, {
 import DecksGrid from "@/components/features/deck/DecksGrid";
 import LanguageFilter from "@/components/features/library/LanguageFilter";
 import { useLibraryLanguages } from "@/hooks/useLibraryLanguages";
+import { useAppStore } from "@/lib/initializations/store";
 
 export default function DecksPage() {
-  const { data, isLoading, isError } = useDecks();
+  const { preferredSourceLanguage } = useAppStore();
+  const { data, isLoading, isError } = useDecks(preferredSourceLanguage);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 

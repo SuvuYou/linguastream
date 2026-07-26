@@ -2,7 +2,6 @@
 
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import { useAppStore } from "@/lib/initializations/store";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Deck } from "@/hooks/useDecks";
@@ -14,20 +13,10 @@ interface Props {
 
 export default function DeckCard({ deck }: Props) {
   const router = useRouter();
-  const { preferredSourceLanguage } = useAppStore();
 
-  const now = new Date();
-
-  const filteredCards = preferredSourceLanguage
-    ? deck.cards.filter((c) => c.source_language === preferredSourceLanguage)
-    : deck.cards;
-
-  const total = filteredCards.length;
-  const due = filteredCards.filter(
-    (c) => new Date(c.next_review) <= now,
-  ).length;
-  const learned = total - due;
-  const progress = total > 0 ? Math.round((learned / total) * 100) : 0;
+  const total = deck.stats.total;
+  const due = deck.stats.due;
+  const progress = deck.stats.progress;
 
   return (
     <div className="group relative ">

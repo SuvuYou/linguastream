@@ -11,6 +11,7 @@ import { STUDY_PAGE_PARAMS_SCHEMA } from "@/helpers/params-schema";
 import { useZodSearchParams } from "@/hooks/useZodSearchParams";
 import SessionCompleteState from "@/components/features/study/SessionCompleteState";
 import { Card } from "../ui/card";
+import SessionEmptyState from "../features/study/SessionEmptyState";
 
 export default function StudyPage() {
   const { params } = useZodSearchParams(STUDY_PAGE_PARAMS_SCHEMA);
@@ -19,6 +20,10 @@ export default function StudyPage() {
 
   const queue = useStudyQueue(params.deckId);
   const sessionRating = useStudySessionRating(queue);
+
+  const isAllDone =
+    queue.studyDetails.totalDue > 0 &&
+    sessionRating.stats.reviewedCount >= queue.studyDetails.totalDue;
 
   if (queue.isLoading) {
     return (
@@ -32,9 +37,11 @@ export default function StudyPage() {
     );
   }
 
-  console.log(queue.studyDetails.isAllDone);
+  if (queue.studyDetails.totalDue === 0) {
+    return <SessionEmptyState studyDetails={queue.studyDetails} />;
+  }
 
-  if (queue.studyDetails.isAllDone) {
+  if (isAllDone) {
     return (
       <SessionCompleteState
         studyDetails={queue.studyDetails}
