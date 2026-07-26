@@ -143,6 +143,7 @@ model StudySession {
 
   user_id    String
   deck_id    String
+  source_language  String
 
   total_cards Int
   created_at DateTime @default(now())

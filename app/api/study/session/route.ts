@@ -5,6 +5,7 @@ import { z } from "zod";
 
 const BodySchema = z.object({
   deckId: z.string().uuid(),
+  sourceLanguage: z.string().optional(),
 });
 
 const SESSION_DURATION_MS = 1000 * 60 * 60 * 12;
@@ -22,7 +23,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 
-  const { deckId } = body.data;
+  const { deckId, sourceLanguage } = body.data;
 
   const deck = await db.deck.findUnique({
     where: {
@@ -53,6 +54,7 @@ export async function POST(req: NextRequest) {
     where: {
       user_id: user.id,
       deck_id: deckId,
+      source_language: sourceLanguage ?? null,
       completed_at: null,
       expires_at: {
         gt: now,
@@ -84,6 +86,7 @@ export async function POST(req: NextRequest) {
     where: {
       user_id: user.id,
       deck_id: deckId,
+      ...(sourceLanguage ? { source_language: sourceLanguage } : {}),
       next_review: {
         lte: now,
       },
@@ -108,6 +111,7 @@ export async function POST(req: NextRequest) {
       where: {
         user_id: user.id,
         deck_id: deckId,
+        ...(sourceLanguage ? { source_language: sourceLanguage } : {}),
       },
       orderBy: {
         next_review: "asc",
@@ -125,6 +129,7 @@ export async function POST(req: NextRequest) {
       data: {
         user_id: user.id,
         deck_id: deckId,
+        ...(sourceLanguage ? { source_language: sourceLanguage } : {}),
         expires_at: new Date(now.getTime() + SESSION_DURATION_MS),
         total_cards: dueCards.length,
       },

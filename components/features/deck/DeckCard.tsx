@@ -6,12 +6,15 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Deck } from "@/hooks/useDecks";
 import { BookOpen, BookOpenCheck, TableOfContents } from "lucide-react";
+import { useAppStore } from "@/lib/initializations/store";
 
 interface Props {
   deck: Deck;
 }
 
 export default function DeckCard({ deck }: Props) {
+  const { preferredSourceLanguage } = useAppStore();
+
   const router = useRouter();
 
   const total = deck.stats.total;
@@ -106,7 +109,11 @@ export default function DeckCard({ deck }: Props) {
             variant={"outline"}
             size={"lg"}
             disabled={due === 0}
-            onClick={() => router.push(`/dashboard/study?deckId=${deck.id}`)}
+            onClick={() =>
+              router.push(
+                `/dashboard/study?deckId=${deck.id}&src=${preferredSourceLanguage}`,
+              )
+            }
           >
             {due === 0 ? (
               <BookOpenCheck className="size-6" />

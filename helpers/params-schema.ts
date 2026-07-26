@@ -17,6 +17,7 @@ export const WATCH_PAGE_PARAMS_SCHEMA = z.object({
 
 export const STUDY_PAGE_PARAMS_SCHEMA = z.object({
   deckId: z.string().min(1),
+  src: LanguageCodeSchema.optional(),
 });
 
 export const PUBLIC_LIBRARY_PARAMS_SCHEMA = z.object({

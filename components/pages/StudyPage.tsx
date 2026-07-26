@@ -12,13 +12,19 @@ import { useZodSearchParams } from "@/hooks/useZodSearchParams";
 import SessionCompleteState from "@/components/features/study/SessionCompleteState";
 import { Card } from "../ui/card";
 import SessionEmptyState from "../features/study/SessionEmptyState";
+import { useAppStore } from "@/lib/initializations/store";
 
 export default function StudyPage() {
+  const { preferredSourceLanguage } = useAppStore();
+
   const { params } = useZodSearchParams(STUDY_PAGE_PARAMS_SCHEMA);
 
   const router = useRouter();
 
-  const queue = useStudyQueue(params.deckId);
+  const queue = useStudyQueue(
+    params.deckId,
+    (params.src as string) ?? preferredSourceLanguage,
+  );
   const sessionRating = useStudySessionRating(queue);
 
   const isAllDone =
