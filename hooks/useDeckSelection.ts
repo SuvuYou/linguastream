@@ -13,7 +13,7 @@ export function useDeckSelection() {
     [decks],
   );
 
-  const [selectedDeck, setSelectedDeckId] = useState("");
+  const [selectedDeck, setSelectedDeckId] = useState<string | null>(null);
 
   const selectedDeckId = selectedDeck ?? defaultDeck?.id;
 
