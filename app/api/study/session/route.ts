@@ -5,7 +5,7 @@ import { z } from "zod";
 
 const BodySchema = z.object({
   deckId: z.string().uuid(),
-  sourceLanguage: z.string().optional(),
+  sourceLanguage: z.string(),
 });
 
 const SESSION_DURATION_MS = 1000 * 60 * 60 * 12;
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
     where: {
       user_id: user.id,
       deck_id: deckId,
-      source_language: sourceLanguage ?? null,
+      source_language: sourceLanguage,
       completed_at: null,
       expires_at: {
         gt: now,
@@ -129,7 +129,7 @@ export async function POST(req: NextRequest) {
       data: {
         user_id: user.id,
         deck_id: deckId,
-        ...(sourceLanguage ? { source_language: sourceLanguage } : {}),
+        source_language: sourceLanguage,
         expires_at: new Date(now.getTime() + SESSION_DURATION_MS),
         total_cards: dueCards.length,
       },

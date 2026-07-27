@@ -20,14 +20,14 @@ interface CardsPage {
 
 async function createOrResumeSession(
   deckId: string,
-  sourceLanguage: string | null,
+  sourceLanguage: string,
 ): Promise<SessionResponse> {
   const res = await fetch("/api/study/session", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       deckId,
-      sourceLanguage: sourceLanguage ?? undefined,
+      sourceLanguage: sourceLanguage,
     }),
   });
   if (!res.ok) throw new Error("Failed to start study session");
@@ -52,10 +52,7 @@ async function fetchCardsPage(
 // proactively fetch the next page so the queue never stalls mid-session.
 const PREFETCH_THRESHOLD = 5;
 
-export default function useStudyQueue(
-  deckId: string,
-  sourceLanguage: string | null,
-) {
+export default function useStudyQueue(deckId: string, sourceLanguage: string) {
   // Cards the user has rated this render but that the server may not have
   // "caught up" on yet in our cached pages. Purely a local filter — the
   // GET route already excludes reviewed cards on every real fetch, this
