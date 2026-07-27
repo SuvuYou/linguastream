@@ -2,11 +2,6 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import CardsPagination from "@/components/features/deck-details/CardsPagination";
-import { beforeEach } from "node:test";
-
-beforeEach(() => {
-  vi.clearAllMocks();
-});
 
 describe("CardsPagination", () => {
   it("keeps page at 0 when previous is clicked on the first page", async () => {
