@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  LANGUAGES,
   SUBTITLE_ACQUISITION_METHODS,
   TRANSLATE_METHODS,
   TranslationMethod,
@@ -26,6 +25,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { getLanguageLabel } from "@/helpers/language-helpers";
 
 interface ContentConfigurationModalProps {
   item: MergedContentItem;
@@ -183,10 +183,7 @@ export default function ContentConfigurationModal({
                 </AlertTitle>
                 <AlertDescription>
                   {languageSelector.data.removedTranslationLangs
-                    .map(
-                      (l) =>
-                        LANGUAGES.find((lang) => lang.code === l)?.label ?? l,
-                    )
+                    .map((l) => getLanguageLabel(l))
                     .join(", ")}
                 </AlertDescription>
               </Alert>

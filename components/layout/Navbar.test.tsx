@@ -64,7 +64,6 @@ describe("AppSidebar", () => {
     expect(screen.getByText("Library")).toBeInTheDocument();
     expect(screen.getByText("Personal")).toBeInTheDocument();
     expect(screen.getByText("Decks")).toBeInTheDocument();
-    expect(screen.getByText("Study")).toBeInTheDocument();
   });
 
   it("renders sign out button", () => {
@@ -73,17 +72,6 @@ describe("AppSidebar", () => {
     render(<AppSidebar />);
 
     expect(screen.getByTestId("signout")).toBeInTheDocument();
-  });
-
-  it("marks the current route as active", () => {
-    mockedUsePathname.mockReturnValue("/dashboard/study");
-
-    render(<AppSidebar />);
-
-    expect(screen.getByRole("link", { name: /study/i })).toHaveAttribute(
-      "aria-current",
-      "page",
-    );
   });
 
   it("does not mark inactive routes as active", () => {

@@ -17,17 +17,67 @@ vi.mock("@/lib/initializations/db", () => ({
     user: {
       upsert: vi.fn(),
     },
+    deck: {
+      count: vi.fn(),
+      create: vi.fn(),
+    },
   },
 }));
 
 const mockedAdminAuth = vi.mocked(adminAuth);
 const mockedDb = vi.mocked(db);
 
+mockedDb.user.upsert.mockResolvedValue({
+  id: 1,
+  is_admin: false,
+});
+
+mockedDb.deck.count.mockResolvedValue(0);
+
+mockedDb.deck.create.mockResolvedValue({
+  id: 1,
+});
+
 beforeEach(() => {
   vi.clearAllMocks();
 });
 
 describe("POST api/auth/session", () => {
+  it("creates a default deck for a new user", async () => {
+    mockedAdminAuth.verifyIdToken.mockResolvedValue({
+      uid: "123",
+      email: "test@example.com",
+    } as DecodedIdToken);
+
+    mockedAdminAuth.createSessionCookie.mockResolvedValue("mock-session");
+
+    mockedDb.user.upsert.mockResolvedValue({
+      id: 1,
+      is_admin: false,
+    });
+
+    mockedDb.deck.count.mockResolvedValue(0);
+
+    const req = new Request("http://localhost", {
+      method: "POST",
+      body: JSON.stringify({ idToken: "fake-token" }),
+    });
+
+    await POST(req as NextRequest);
+
+    expect(mockedDb.deck.count).toHaveBeenCalledWith({
+      where: { user_id: 1 },
+    });
+
+    expect(mockedDb.deck.create).toHaveBeenCalledWith({
+      data: {
+        user_id: 1,
+        name: "Default",
+        is_default: true,
+      },
+    });
+  });
+
   it("creates session and upserts user", async () => {
     mockedAdminAuth.verifyIdToken.mockResolvedValue({
       uid: "123",
@@ -51,6 +101,10 @@ describe("POST api/auth/session", () => {
     expect(mockedDb.user.upsert).toHaveBeenCalledWith({
       where: { firebase_uid: "123" },
       update: { email: "test@example.com" },
+      select: {
+        id: true,
+        is_admin: true,
+      },
       create: {
         firebase_uid: "123",
         email: "test@example.com",

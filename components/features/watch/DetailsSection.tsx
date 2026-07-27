@@ -2,13 +2,13 @@
 
 import { BookA, SlidersHorizontal } from "lucide-react";
 import SubtitleSettingsPanel from "@/components/features/watch/SubtitleSettings";
-
+import WordProfilePanel from "@/components/features/watch/WordProfilePanel/WordProfilePanel";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
 
 export default function DetailsSection() {
   const [openedSection, setOpenedSection] = useState<
-    "subtitles" | "words" | undefined
+    "subtitles" | "word-profile" | undefined
   >();
 
   return (
@@ -20,32 +20,39 @@ export default function DetailsSection() {
           setOpenedSection((prevValue) =>
             prevValue === value
               ? undefined
-              : (value as "subtitles" | "words" | undefined),
+              : (value as "subtitles" | "word-profile" | undefined),
           )
         }
         className="h-full m-0"
       >
         <TabsList className="h-full! my-0">
           <TabsTrigger
-            value={"words"}
+            value="word-profile"
             className="flex-1 text-xs capitalize dark:data-active:bg-primary"
           >
             <BookA className="size-5" />
           </TabsTrigger>
           <TabsTrigger
-            value={"subtitles"}
+            value="subtitles"
             className="flex-1 text-xs capitalize dark:data-active:bg-primary"
           >
             <SlidersHorizontal className="size-5" />
           </TabsTrigger>
         </TabsList>
       </Tabs>
+
       {openedSection === "subtitles" && (
         <div
           id="subtitle-settings-panel"
           className="flex-1 min-h-0 overflow-y-auto"
         >
           <SubtitleSettingsPanel />
+        </div>
+      )}
+
+      {openedSection === "word-profile" && (
+        <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+          <WordProfilePanel />
         </div>
       )}
     </div>
