@@ -18,6 +18,11 @@ interface PlayerProps {
   translationLanguages: string[];
   activeTranslationLang: string | null;
   setCurrentTimeMs: (timeMs: number) => void;
+  handleSubtitleWordClick: (
+    clean: string,
+    line: SubtitleLine,
+    contextTranslation: string,
+  ) => void;
 }
 
 export default function Player({
@@ -28,6 +33,7 @@ export default function Player({
   translationLines,
   currentTimeMs,
   setCurrentTimeMs,
+  handleSubtitleWordClick,
 }: PlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const plyrRef = useRef<Plyr | null>(null);
@@ -101,16 +107,17 @@ export default function Player({
 
   return (
     <div className="relative w-full max-w-6xl">
-      <video ref={videoRef} title={title} playsInline>
-        <source src={streamUrl} type="video/mp4" />
-      </video>
-
       <SubtitleOverlay
         currentTimeMs={currentTimeMs}
         sourceLines={sourceLines}
         translationLines={translationLines}
         settings={subtitleSettings}
+        handleSubtitleWordClick={handleSubtitleWordClick}
       />
+
+      <video ref={videoRef} title={title} playsInline>
+        <source src={streamUrl} type="video/mp4" />
+      </video>
     </div>
   );
 }

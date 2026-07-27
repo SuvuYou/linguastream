@@ -1,3 +1,4 @@
+import type { WordProfile } from "@prisma/client";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -23,6 +24,18 @@ const DEFAULT_SUBTITLE_SETTINGS: SubtitleSettings = {
   fontOpacity: 1,
 };
 
+export interface ActiveWord {
+  word: string;
+  lang: string;
+  translationLang: string;
+  subtitleLineId: string; // key: `${start_ms}__${mediaContentId}`
+  context: string;
+  contextTranslation: string;
+  mediaContentId: string;
+  startMs: number;
+  endMs: number;
+}
+
 interface AppState {
   preferredSourceLanguage: string | null;
   setPreferredSourceLanguage: (language: string) => void;
@@ -35,6 +48,12 @@ interface AppState {
   overlayOpen: boolean;
   setOverlayOpen: (v: boolean) => void;
   toggleOverlay: () => void;
+  wordProfilesCache: Record<string, WordProfile>; // key: `${word}__${lang}`
+  wordDefinitionsCache: Record<string, string>; // key: `${word}__${subtitleLineId}`
+  setWordProfilesCache: (key: string, profile: WordProfile) => void;
+  setWordDefinitionsCache: (key: string, definition: string) => void;
+  activeWord: ActiveWord | null;
+  setActiveWord: (word: ActiveWord | null) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -43,6 +62,7 @@ export const useAppStore = create<AppState>()(
       return {
         preferredSourceLanguage: null,
         preferredTranslationLanguage: null,
+
         subtitleSettings: DEFAULT_SUBTITLE_SETTINGS,
 
         autoPlay: true,
@@ -65,15 +85,41 @@ export const useAppStore = create<AppState>()(
           set((state) => ({
             subtitleSettings: { ...state.subtitleSettings, ...settings },
           })),
+
+        activeWord: null,
+        setActiveWord: (word) => set({ activeWord: word }),
+
+        wordProfilesCache: {},
+        wordDefinitionsCache: {},
+
+        setWordProfilesCache: (key, profile) =>
+          set((state) => ({
+            wordProfilesCache: { ...state.wordProfilesCache, [key]: profile },
+          })),
+
+        setWordDefinitionsCache: (key, definishion) =>
+          set((state) => ({
+            wordDefinitionsCache: {
+              ...state.wordDefinitionsCache,
+              [key]: definishion,
+            },
+          })),
       };
     },
     {
       name: "linguastream-store",
-      // Add the partialize option here:
       partialize: (state) => {
-        const { overlayOpen: _, ...rest } = state;
+        const {
+          overlayOpen: _1,
+          wordProfilesCache: _2,
+          wordDefinitionsCache: _3,
+          activeWord: _4,
+          ...rest
+        } = state;
 
-        return rest;
+        return {
+          ...rest,
+        };
       },
     },
   ),

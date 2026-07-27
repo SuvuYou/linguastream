@@ -45,10 +45,11 @@ describe("SubtitleOverlay", () => {
         sourceLines={sourceLines}
         translationLines={translationLines}
         settings={baseSettings}
+        handleSubtitleWordClick={() => {}}
       />,
     );
 
-    expect(container).toBeEmptyDOMElement();
+    expect(screen.getByTestId("empty-state")).toBeInTheDocument();
   });
 
   it("renders source subtitle when active", () => {
@@ -58,6 +59,7 @@ describe("SubtitleOverlay", () => {
         sourceLines={sourceLines}
         translationLines={[]}
         settings={baseSettings}
+        handleSubtitleWordClick={() => {}}
       />,
     );
 
@@ -71,6 +73,7 @@ describe("SubtitleOverlay", () => {
         sourceLines={[]}
         translationLines={translationLines}
         settings={baseSettings}
+        handleSubtitleWordClick={() => {}}
       />,
     );
 
@@ -84,6 +87,7 @@ describe("SubtitleOverlay", () => {
         sourceLines={sourceLines}
         translationLines={translationLines}
         settings={baseSettings}
+        handleSubtitleWordClick={() => {}}
       />,
     );
 
@@ -101,6 +105,7 @@ describe("SubtitleOverlay", () => {
           ...baseSettings,
           showSource: false,
         }}
+        handleSubtitleWordClick={() => {}}
       />,
     );
 
@@ -118,6 +123,7 @@ describe("SubtitleOverlay", () => {
           ...baseSettings,
           showTranslation: false,
         }}
+        handleSubtitleWordClick={() => {}}
       />,
     );
 
@@ -132,6 +138,7 @@ describe("SubtitleOverlay", () => {
         sourceLines={sourceLines}
         translationLines={translationLines}
         settings={baseSettings}
+        handleSubtitleWordClick={() => {}}
       />,
     );
 
@@ -143,6 +150,7 @@ describe("SubtitleOverlay", () => {
         sourceLines={sourceLines}
         translationLines={translationLines}
         settings={baseSettings}
+        handleSubtitleWordClick={() => {}}
       />,
     );
 
@@ -150,7 +158,7 @@ describe("SubtitleOverlay", () => {
   });
 
   it("returns null when no matching subtitle exists", () => {
-    const { container } = render(
+    render(
       <SubtitleOverlay
         currentTimeMs={1500}
         sourceLines={sourceLines}
@@ -160,9 +168,10 @@ describe("SubtitleOverlay", () => {
           showSource: true,
           showTranslation: true,
         }}
+        handleSubtitleWordClick={() => {}}
       />,
     );
 
-    expect(container).toBeEmptyDOMElement();
+    expect(screen.getByTestId("empty-state")).toBeInTheDocument();
   });
 });

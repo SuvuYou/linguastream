@@ -138,8 +138,6 @@ export async function indexAllSubtitleLines() {
 
     if (!mediaContents.length) break;
 
-    console.log(mediaContents.length);
-
     const documents: SubtitleSearchDocument[] = [];
 
     for (const media of mediaContents) {

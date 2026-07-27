@@ -15,6 +15,11 @@ export const WATCH_PAGE_PARAMS_SCHEMA = z.object({
     .default(0),
 });
 
+export const STUDY_PAGE_PARAMS_SCHEMA = z.object({
+  deckId: z.string().min(1),
+  src: LanguageCodeSchema.optional(),
+});
+
 export const PUBLIC_LIBRARY_PARAMS_SCHEMA = z.object({
   q: z.string().optional(),
 
@@ -33,6 +38,19 @@ export const PUBLIC_LIBRARY_PARAMS_SCHEMA = z.object({
     .transform((v) => v === "true")
     .optional()
     .default(false),
+});
+
+export const DECK_DETAILS_PARAMS_SCHEMA = z.object({
+  q: z.string().optional(),
+
+  src: LanguageCodeSchema.optional(),
+
+  page: z
+    .string()
+    .transform((v) => Number(v))
+    .refine((n) => !isNaN(n) && n >= 0, { message: "Invalid page" })
+    .optional()
+    .default(0),
 });
 
 export const SEARCH_PARAMS_SCHEMA = z.object({

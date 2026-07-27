@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
 
     const decoded = await adminAuth.verifyIdToken(idToken);
 
-    await db.user.upsert({
+    const user = await db.user.upsert({
       where: { firebase_uid: decoded.uid },
       update: { email: decoded.email ?? "" },
       create: {
@@ -16,7 +16,20 @@ export async function POST(req: NextRequest) {
         email: decoded.email ?? "",
         native_language: "en",
       },
+      select: { id: true, is_admin: true },
     });
+
+    const deckCount = await db.deck.count({ where: { user_id: user.id } });
+
+    if (deckCount === 0) {
+      await db.deck.create({
+        data: {
+          user_id: user.id,
+          name: "Default",
+          is_default: true,
+        },
+      });
+    }
 
     const expiresIn = 60 * 60 * 24 * 14 * 1000;
     const sessionCookie = await adminAuth.createSessionCookie(idToken, {
@@ -24,6 +37,7 @@ export async function POST(req: NextRequest) {
     });
 
     const res = NextResponse.json({ ok: true });
+
     res.cookies.set("session", sessionCookie, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -35,7 +49,6 @@ export async function POST(req: NextRequest) {
     return res;
   } catch (err) {
     console.error(err);
-
     return NextResponse.json({ ok: false }, { status: 401 });
   }
 }
