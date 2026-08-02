@@ -66,13 +66,14 @@ export async function ingestSubtitles({
   mediaContentId: string;
   data: {
     sourceLang: string;
-    acquisitionMethod: "upload" | "whisperx";
+    acquisitionMethod: "upload" | "whisperx" | "youtube";
     sourceFile?: string;
     translateLangs: string[];
-    translateMethod?: "upload" | "deepl" | "libretranslate";
+    translateMethod?: "upload" | "deepl" | "libretranslate" | "youtube";
     translateFiles?: Record<string, string>;
     removeLangs?: string[];
     videoFilePath?: string;
+    youtubeVideoId?: string;
   };
 }) {
   if (data.translateMethod === "deepl" && !user.is_admin) {
