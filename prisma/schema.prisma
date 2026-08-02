@@ -21,6 +21,7 @@ enum JobStatus {
 enum AcquisitionMethod {
   upload
   whisperx
+  youtube
 }
 
 model User {
