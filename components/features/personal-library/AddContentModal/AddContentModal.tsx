@@ -49,8 +49,15 @@ export default function AddContentModal({
     queryClient.invalidateQueries({ queryKey: ["personal-library"] });
   }
 
+  const handleClose = () => {
+    setStep("choose");
+    setYtMeta(null);
+    setSuccessMediaId(null);
+    onClose();
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="max-w-md p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-0">
           <DialogTitle className="text-lg font-medium">
@@ -80,7 +87,7 @@ export default function AddContentModal({
               />
             )}
             {step === "success" && successMediaId && (
-              <SuccessStep mediaId={successMediaId} onClose={onClose} />
+              <SuccessStep mediaId={successMediaId} onClose={handleClose} />
             )}
           </div>
         </ScrollArea>

@@ -6,6 +6,8 @@ export const LanguageCodeSchema = z.enum(
   LANGUAGES.map((l) => l.code) as [LanguageCode, ...LanguageCode[]],
 );
 
+export const LibrarySourceTypeSchema = z.enum(["all", "yt", "upload"] as const);
+
 export const WATCH_PAGE_PARAMS_SCHEMA = z.object({
   t: z
     .string()
@@ -38,6 +40,33 @@ export const PUBLIC_LIBRARY_PARAMS_SCHEMA = z.object({
     .transform((v) => v === "true")
     .optional()
     .default(false),
+});
+
+export const PERSONAL_LIBRARY_PARAMS_SCHEMA = z.object({
+  q: z.string().optional(),
+
+  type: LibrarySourceTypeSchema.optional(),
+
+  src: LanguageCodeSchema.optional(),
+  trans: LanguageCodeSchema.optional(),
+
+  page: z
+    .string()
+    .transform((v) => Number(v))
+    .refine((n) => !isNaN(n) && n >= 0, { message: "Invalid page" })
+    .optional()
+    .default(0),
+});
+
+export const SEARCH_BAR_PARAMS_SCHEMA = z.object({
+  q: z.string().optional(),
+
+  page: z
+    .string()
+    .transform((v) => Number(v))
+    .refine((n) => !isNaN(n) && n >= 0, { message: "Invalid page" })
+    .optional()
+    .default(0),
 });
 
 export const DECK_DETAILS_PARAMS_SCHEMA = z.object({
