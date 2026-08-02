@@ -2,7 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useZodSearchParams } from "@/hooks/useZodSearchParams";
-import { DECK_DETAILS_PARAMS_SCHEMA } from "@/helpers/params-schema";
+import { SEARCH_BAR_PARAMS_SCHEMA } from "@/helpers/params-schema";
 import {
   InputGroup,
   InputGroupAddon,
@@ -13,12 +13,16 @@ import { Spinner } from "@/components/ui/spinner";
 import { Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export default function SearchBar() {
-  const deckDetailsParams = useZodSearchParams(DECK_DETAILS_PARAMS_SCHEMA);
+interface Props {
+  placeholder?: string;
+}
+
+export default function SearchBar({ placeholder }: Props) {
+  const params = useZodSearchParams(SEARCH_BAR_PARAMS_SCHEMA);
   const [isPending, startTransition] = useTransition();
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  const [query, setQuery] = useState(deckDetailsParams.params.q ?? "");
+  const [query, setQuery] = useState(params.params.q ?? "");
 
   const handleChange = (newQuery: string) => {
     setQuery(newQuery);
@@ -28,11 +32,11 @@ export default function SearchBar() {
     debounceRef.current = setTimeout(() => {
       startTransition(() => {
         if (newQuery) {
-          deckDetailsParams.set({ q: newQuery });
+          params.set({ q: newQuery });
         } else {
-          deckDetailsParams.remove("q");
+          params.remove("q");
         }
-        deckDetailsParams.set({ page: 0 });
+        params.set({ page: 0 });
       });
     }, 300);
   };
@@ -45,8 +49,8 @@ export default function SearchBar() {
           value={query}
           id="library-search"
           type="text"
-          placeholder="Search words in this deck..."
-          defaultValue={deckDetailsParams.params.q}
+          placeholder={placeholder}
+          defaultValue={params.params.q}
           onChange={(e) => handleChange(e.target.value)}
           aria-busy={isPending}
         />
@@ -57,7 +61,7 @@ export default function SearchBar() {
             </InputGroupText>
           </InputGroupAddon>
         )}
-        {!isPending && deckDetailsParams.params.q && (
+        {!isPending && params.params.q && (
           <InputGroupAddon align="inline-end">
             <InputGroupText>
               <Button variant={"ghost"} onClick={() => handleChange("")}>
