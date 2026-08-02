@@ -16,11 +16,12 @@ const LOG_DIR = path.join(process.cwd(), "ml", "logs");
 export interface IngestArgs {
   mediaId: string;
   sourceLang: string;
-  acquisitionMethod: "upload" | "whisperx";
+  acquisitionMethod: "upload" | "whisperx" | "youtube";
   sourceFile?: string; // path on disk — required if acquisitionMethod=upload
   videoFile?: string; // path on disk — required if acquisitionMethod=whisperx
+  youtubeVideoId?: string; // path on disk — required if acquisitionMethod=whisperx
   translateLangs?: string[];
-  translateMethod?: "libretranslate" | "deepl" | "upload";
+  translateMethod?: "libretranslate" | "deepl" | "upload" | "youtube";
   translateFiles?: Record<string, string>; // { de: "/path/to/de.srt" }
 }
 
@@ -55,6 +56,12 @@ export function spawnIngest(args: IngestArgs): { logFile: string } {
     if (!args.videoFile)
       throw new Error("videoFile required for whisperx method");
     argv.push("--video-file", args.videoFile);
+  }
+
+  if (args.acquisitionMethod === "youtube") {
+    if (!args.youtubeVideoId)
+      throw new Error("youtubeVideoId required for youtube method");
+    argv.push("--youtube-video-id", args.youtubeVideoId);
   }
 
   if (

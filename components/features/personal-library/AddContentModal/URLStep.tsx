@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { InputGroup, InputGroupInput } from "@/components/ui/input-group";
 
 interface YouTubeMetadata {
   title: string;
@@ -63,9 +64,8 @@ export function URLStep({
   }
 
   return (
-    <div className="flex flex-col gap-4 py-4">
-      {/* URL input */}
-      <div className="flex items-center gap-2 border border-primary-border px-3 py-2.5 focus-within:border-active-border transition-colors">
+    <div className="flex flex-col gap-4 pt-6">
+      <InputGroup className="min-w-48 max-w-196 flex items-center gap-2 border border-primary-border px-3 py-4 my-2">
         <svg
           viewBox="0 0 24 24"
           className="w-4 h-4 text-red-500 shrink-0"
@@ -73,18 +73,18 @@ export function URLStep({
         >
           <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
         </svg>
-        <input
-          type="text"
+        <InputGroupInput
           value={url}
+          id="yt-url"
+          type="text"
+          placeholder="https://www.youtube.com/watch?v=..."
           onChange={(e) => setUrl(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") handleFetchMetadata();
           }}
-          placeholder="https://www.youtube.com/watch?v=..."
-          className="flex-1 bg-transparent text-sm text-primary-text outline-none placeholder:text-secondary-text"
           autoFocus
         />
-      </div>
+      </InputGroup>
 
       {error && <p className="text-xs text-red-400">{error}</p>}
 

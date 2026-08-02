@@ -1,12 +1,16 @@
 import { z } from "zod";
-import { LANGUAGES } from "./const";
+import { LANGUAGES, UPLOAD_CONTENT_TYPE, YOUTUBE_CONTENT_TYPE } from "./const";
 import type { LanguageCode } from "./const";
 
 export const LanguageCodeSchema = z.enum(
   LANGUAGES.map((l) => l.code) as [LanguageCode, ...LanguageCode[]],
 );
 
-export const LibrarySourceTypeSchema = z.enum(["all", "yt", "upload"] as const);
+export const LibrarySourceTypeSchema = z.enum([
+  "all",
+  YOUTUBE_CONTENT_TYPE,
+  UPLOAD_CONTENT_TYPE,
+] as const);
 
 export const WATCH_PAGE_PARAMS_SCHEMA = z.object({
   t: z

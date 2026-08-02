@@ -94,7 +94,7 @@ export default function OverlayPlayer() {
                 <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-sm gap-2">
                   {selectedItem && streamData.isLoading ? (
                     <>
-                      <Spinner className="h-6 w-6 text-primary" />
+                      <Spinner className="h-6 w-6 text-primary-foreground" />
                       <span>Loading stream preview...</span>
                     </>
                   ) : (

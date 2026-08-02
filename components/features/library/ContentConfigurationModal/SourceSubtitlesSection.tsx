@@ -99,7 +99,7 @@ export function SourceSubtitlesSection({
         {isYouTube && (
           <TabsContent value={SUBTITLE_ACQUISITION_METHODS.YOUTUBE}>
             {youtubeSubtitlesLoading ? (
-              <div className="flex items-center gap-2 py-3 text-xs text-secondary-text">
+              <div className="flex items-center gap-2 py-3 text-xs text-primary-foreground">
                 <Spinner className="size-3" />
                 Checking available subtitles...
               </div>

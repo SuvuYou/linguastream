@@ -7,11 +7,13 @@ import { MergedContentItem } from "@/types";
 import { useState } from "react";
 
 interface Args {
-  item: MergedContentItem;
+  item: Pick<MergedContentItem, "source_language" | "subtitle_tracks">;
   onToggleTranslate: (langCode: string) => void;
 }
 
-const getDefaultSourceLanguage = (item: MergedContentItem) =>
+const getDefaultSourceLanguage = (
+  item: Pick<MergedContentItem, "source_language">,
+) =>
   item.source_language && item.source_language !== UNKNOWN_SOURCE_LANGUAGE
     ? item.source_language
     : AUTO_DETECT;

@@ -12,12 +12,19 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cva } from "class-variance-authority";
+
+const SearchBarVariants = cva("min-w-48 max-w-196", {
+  variants: { size: { md: "h-9", lg: "h-11" } },
+  defaultVariants: { size: "md" },
+});
 
 interface Props {
+  variant?: "md" | "lg";
   placeholder?: string;
 }
 
-export default function SearchBar({ placeholder }: Props) {
+export default function SearchBar({ variant = "md", placeholder }: Props) {
   const params = useZodSearchParams(SEARCH_BAR_PARAMS_SCHEMA);
   const [isPending, startTransition] = useTransition();
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
@@ -43,7 +50,7 @@ export default function SearchBar({ placeholder }: Props) {
 
   return (
     <div className="flex flex-1 max-w-196 gap-3 items-center">
-      <InputGroup className="min-w-48 max-w-196 h-11">
+      <InputGroup className={SearchBarVariants({ size: variant })}>
         <Search className="size-4 ml-4" />
         <InputGroupInput
           value={query}
