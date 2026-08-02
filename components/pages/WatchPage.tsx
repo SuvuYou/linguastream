@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Player from "@/components/features/player/Player";
+
 import SubtitleSidebar from "@/components/features/watch/SubtitleSidebar";
 import { useWatchData } from "@/hooks/useWatchData";
 import { SubtitleLine, useSubtitleTrack } from "@/hooks/useSubtitleTrack";
@@ -20,6 +21,8 @@ import {
 } from "@/components/ui/empty";
 import Header from "@/components/features/watch/Header";
 import { useAppStore } from "@/lib/initializations/store";
+import { YOUTUBE_CONTENT_TYPE } from "@/helpers/const";
+import YouTubePlayer from "@/components/features/player/YouTubePlayer";
 
 export default function WatchPage({
   mediaContentId,
@@ -58,7 +61,6 @@ export default function WatchPage({
       activeWord?.subtitleLineId === `${line.start_ms}__${mediaContentId}`
     ) {
       setActiveWord(null);
-
       return;
     }
 
@@ -93,24 +95,38 @@ export default function WatchPage({
       </Empty>
     );
 
+  const isYouTube = data.type === YOUTUBE_CONTENT_TYPE;
+
+  const sharedPlayerProps = {
+    initialTimeMs: params.t,
+    currentTimeMs,
+    sourceLines: sourceTracks.data ?? [],
+    translationLines: translationTracks.data ?? [],
+    translationLanguages: data.translationLanguages,
+    activeTranslationLang: languages.translation.value,
+    setCurrentTimeMs,
+    handleSubtitleWordClick,
+  };
+
   return (
     <SidebarProvider>
       <section className="w-full h-[calc(100vh-1rem)] bg-background m-2 ml-0 p-2 rounded-r-lg flex flex-col overflow-hidden">
         <Header mediaContentId={mediaContentId} />
         <div className="flex overflow-hidden">
           <div className="flex flex-col flex-2 min-w-0 bg-background items-center justify-start pt-1">
-            <Player
-              streamUrl={data.streamUrl}
-              title={data.title}
-              sourceLines={sourceTracks.data ?? []}
-              translationLines={translationTracks.data ?? []}
-              translationLanguages={data.translationLanguages}
-              activeTranslationLang={languages.translation.value}
-              initialTimeMs={params.t}
-              currentTimeMs={currentTimeMs}
-              setCurrentTimeMs={setCurrentTimeMs}
-              handleSubtitleWordClick={handleSubtitleWordClick}
-            />
+            {isYouTube && data.videoId ? (
+              <YouTubePlayer
+                videoId={data.videoId}
+                title={data.title}
+                {...sharedPlayerProps}
+              />
+            ) : (
+              <Player
+                streamUrl={data.streamUrl!}
+                title={data.title}
+                {...sharedPlayerProps}
+              />
+            )}
           </div>
         </div>
         <DetailsSection />
