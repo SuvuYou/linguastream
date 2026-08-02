@@ -87,7 +87,7 @@ export default function AddContentModal({
               />
             )}
             {step === "success" && successMediaId && (
-              <SuccessStep mediaId={successMediaId} onClose={handleClose} />
+              <SuccessStep onClose={handleClose} />
             )}
           </div>
         </ScrollArea>
