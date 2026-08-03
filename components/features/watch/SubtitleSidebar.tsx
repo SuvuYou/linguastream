@@ -17,12 +17,14 @@ interface SubtitleSidebarProps {
   currentTimeMs: number;
   sourceLines: SubtitleLine[];
   translationLines: SubtitleLine[];
+  isLoading: boolean;
 }
 
 export default function SubtitleSidebar({
   currentTimeMs,
   sourceLines,
   translationLines,
+  isLoading,
 }: SubtitleSidebarProps) {
   const { subtitleSettings } = useAppStore();
 
@@ -95,6 +97,7 @@ export default function SubtitleSidebar({
             filteredSubtitlePairs={filteredSubtitlePairs}
             shouldShowSourceLine={shouldShowSourceLine}
             shouldShowTranslationLine={shouldShowTranslationLine}
+            isLoading={isLoading}
           />
         </SidebarGroup>
       </SidebarContent>

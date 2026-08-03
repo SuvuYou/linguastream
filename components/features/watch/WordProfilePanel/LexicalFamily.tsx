@@ -1,9 +1,10 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
+import { LexicalFamilyItem } from "@/types";
 
 interface Props {
-  lexicalFamily: string[];
+  lexicalFamily: LexicalFamilyItem[];
 }
 
 export default function LexicalFamily({ lexicalFamily }: Props) {
@@ -15,9 +16,14 @@ export default function LexicalFamily({ lexicalFamily }: Props) {
             Lexical Family
           </div>
           <div className="flex flex-wrap gap-1">
-            {lexicalFamily.map((word) => (
-              <Badge key={word} variant="outline" size="sm" className="text-sm">
-                {word}
+            {lexicalFamily.map((item) => (
+              <Badge
+                key={item.word}
+                variant="outline"
+                size="sm"
+                className="text-sm"
+              >
+                {item.word} {"->"} {item.translation}
               </Badge>
             ))}
           </div>

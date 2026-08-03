@@ -55,6 +55,7 @@ export default function WatchPage({
     clean: string,
     line: SubtitleLine,
     contextTranslation: string,
+    contextLines: SubtitleLine[],
   ) {
     if (
       activeWord?.word === clean &&
@@ -69,7 +70,7 @@ export default function WatchPage({
       lang: languages.source.value!,
       translationLang: languages.translation.value!,
       subtitleLineId: `${line.start_ms}__${mediaContentId}`,
-      context: line.text,
+      context: contextLines.map((item) => item.text).join(" "),
       contextTranslation,
       mediaContentId,
       startMs: line.start_ms,
@@ -136,6 +137,7 @@ export default function WatchPage({
         currentTimeMs={currentTimeMs}
         sourceLines={sourceTracks.data ?? []}
         translationLines={translationTracks.data ?? []}
+        isLoading={sourceTracks.isLoading || translationTracks.isLoading}
       />
 
       <OverlayPlayer />

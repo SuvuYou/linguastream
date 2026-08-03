@@ -28,6 +28,7 @@ interface YouTubePlayerProps {
     clean: string,
     line: SubtitleLine,
     contextTranslation: string,
+    contextLines: SubtitleLine[],
   ) => void;
 }
 
@@ -70,7 +71,7 @@ export default function YouTubePlayer({
         videoId,
         playerVars: {
           autoplay: 0,
-          controls: 0,
+          controls: 1,
           rel: 0,
           modestbranding: 0,
           cc_load_policy: 0,

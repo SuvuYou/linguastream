@@ -17,6 +17,7 @@ interface SubtitleOverlayProps {
     clean: string,
     line: SubtitleLine,
     contextTranslation: string,
+    contextLines: SubtitleLine[],
   ) => void;
 }
 
@@ -33,7 +34,7 @@ function cleanWord(raw: string): string {
 function findActiveLine(
   lines: SubtitleLine[],
   currentTimeMs: number,
-): SubtitleLine | null {
+): [SubtitleLine | null, number] {
   // binary search for active line
   let lo = 0;
   let hi = lines.length - 1;
@@ -46,11 +47,11 @@ function findActiveLine(
     } else if (currentTimeMs > line.end_ms) {
       lo = mid + 1;
     } else {
-      return line;
+      return [line, mid];
     }
   }
 
-  return null;
+  return [null, 0];
 }
 
 function ClickableSubtitleLine({
@@ -156,12 +157,12 @@ export default function SubtitleOverlay({
 }: SubtitleOverlayProps) {
   const { activeWord } = useAppStore();
 
-  const activeSrc = useMemo(
+  const [activeSrc, activeSrcIndex] = useMemo(
     () => findActiveLine(sourceLines, currentTimeMs),
     [sourceLines, currentTimeMs],
   );
 
-  const activeTrans = useMemo(
+  const [activeTrans] = useMemo(
     () => findActiveLine(translationLines, currentTimeMs),
     [translationLines, currentTimeMs],
   );
@@ -188,7 +189,15 @@ export default function SubtitleOverlay({
           activeWord={activeWord}
           handleSubtitleWordClick={(word: string) =>
             activeTrans &&
-            handleSubtitleWordClick(word, activeSrc, activeTrans?.text)
+            handleSubtitleWordClick(word, activeSrc, activeTrans?.text, [
+              ...(activeSrcIndex - 1 >= 0
+                ? [sourceLines[activeSrcIndex - 1]]
+                : []),
+              sourceLines[activeSrcIndex],
+              ...(activeSrcIndex + 1 < sourceLines.length
+                ? [sourceLines[activeSrcIndex + 1]]
+                : []),
+            ])
           }
         />
       )}

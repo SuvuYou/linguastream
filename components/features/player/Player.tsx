@@ -22,6 +22,7 @@ interface PlayerProps {
     clean: string,
     line: SubtitleLine,
     contextTranslation: string,
+    contextLines: SubtitleLine[],
   ) => void;
 }
 

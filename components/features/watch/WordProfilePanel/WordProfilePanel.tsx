@@ -11,6 +11,7 @@ import WordForms from "./WordForms";
 import WordDefinition from "./WordDefinition";
 import { useDeckSelection } from "@/hooks/useDeckSelection";
 import { useWordDefinition } from "@/hooks/useWordDefinition";
+import { CollocationItem, LexicalFamilyItem } from "@/types";
 
 export default function WordProfilePanel() {
   const { activeWord } = useAppStore();
@@ -38,7 +39,8 @@ export default function WordProfilePanel() {
       <div className="px-6 py-4 border-b border-border shrink-0">
         <div className="flex items-center justify-between gap-2">
           <span className="text-3xl font-medium text-primary-foreground">
-            {activeWord.word}
+            {activeWord.word}{" "}
+            {wordProfile.data?.lemma ? `(${wordProfile.data?.lemma})` : ""}
           </span>
           {wordProfile.data && (
             <Badge variant="outline" size="sm" className="text-sm">
@@ -46,9 +48,11 @@ export default function WordProfilePanel() {
             </Badge>
           )}
         </div>
-        <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-          {activeWord.context}
-        </p>
+        {wordDefinition.data?.context_sentence ? (
+          <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+            {wordDefinition.data?.context_sentence}
+          </p>
+        ) : null}
       </div>
 
       <div className="flex flex-col gap-4 px-4 py-4 flex-1">
@@ -69,8 +73,17 @@ export default function WordProfilePanel() {
                 (wordProfile.data?.forms ?? {}) as Record<string, string>
               }
             />
-            <LexicalFamily lexicalFamily={wordProfile.data.lexical_family} />
-            <WordCollocations collocations={wordProfile.data.collocations} />
+            <LexicalFamily
+              lexicalFamily={
+                wordProfile.data
+                  .lexical_family as unknown as LexicalFamilyItem[]
+              }
+            />
+            <WordCollocations
+              collocations={
+                wordProfile.data.collocations as unknown as CollocationItem[]
+              }
+            />
           </>
         ) : null}
       </div>
@@ -81,6 +94,7 @@ export default function WordProfilePanel() {
           !!allowSave &&
           cardSaver.save({
             activeWord,
+            lemma: wordProfile.data?.lemma ?? "",
             profileId: wordProfile.data?.id ?? "",
             definition: wordDefinition.data?.definition,
             wordTranslation: wordDefinition.data?.translation,

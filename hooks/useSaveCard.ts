@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 export interface SaveCardParams {
+  lemma: string;
   activeWord: ActiveWord;
   wordTranslation: string;
   profileId: string;
@@ -18,6 +19,7 @@ export function useSaveCard() {
   const [error, setError] = useState<string | null>(null);
 
   const save = async ({
+    lemma,
     activeWord,
     wordTranslation,
     profileId,
@@ -36,6 +38,7 @@ export function useSaveCard() {
         body: JSON.stringify({
           deck_id: deckId,
           word: activeWord.word,
+          lemma: lemma,
           source_language: activeWord.lang,
           translation_language: activeWord.translationLang,
           word_translation: wordTranslation,
