@@ -39,8 +39,7 @@ export default function WordProfilePanel() {
       <div className="px-6 py-4 border-b border-border shrink-0">
         <div className="flex items-center justify-between gap-2">
           <span className="text-3xl font-medium text-primary-foreground">
-            {activeWord.word}{" "}
-            {wordProfile.data?.lemma ? `(${wordProfile.data?.lemma})` : ""}
+            {activeWord.word}
           </span>
           {wordProfile.data && (
             <Badge variant="outline" size="sm" className="text-sm">
@@ -48,6 +47,12 @@ export default function WordProfilePanel() {
             </Badge>
           )}
         </div>
+        {wordProfile.data?.lemma ? (
+          <span className="text-base text-primary-foreground">
+            {`${wordProfile.data?.lemma}`}
+          </span>
+        ) : null}
+
         {wordDefinition.data?.context_sentence ? (
           <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
             {wordDefinition.data?.context_sentence}

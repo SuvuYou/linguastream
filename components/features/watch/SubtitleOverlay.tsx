@@ -180,7 +180,7 @@ export default function SubtitleOverlay({
     );
 
   return (
-    <div className="absolute bottom-16 left-0 right-0 flex flex-col items-center gap-1 pointer-events-none z-10">
+    <div className="absolute bottom-20 left-0 right-0 flex flex-col items-center gap-1 pointer-events-none z-10">
       {settings.showSource && activeSrc && (
         <ClickableSubtitleLine
           text={activeSrc.text}
