@@ -7,6 +7,7 @@ import {
   useAppStore,
   type SubtitleSettings,
 } from "@/lib/initializations/store";
+import Events from "@/events";
 
 interface SubtitleOverlayProps {
   currentTimeMs: number;
@@ -69,25 +70,31 @@ function ClickableSubtitleLine({
 }) {
   const words = text.split(/(\s+)/);
   const bgStyle = {
-    backgroundColor: settings.backgroundColor,
+    backgroundColor: settings.sourceBackgroundColor,
     opacity: settings.backgroundOpacity,
   };
 
   return (
-    <div className="relative inline-block max-w-[90%] text-center">
+    <div className="relative inline-block max-w-[90%] text-center font-bold">
       <div className="absolute inset-0 rounded" style={bgStyle} />
       <span
         className="relative px-2 py-0.5 rounded"
         style={{
           fontSize,
-          color: settings.fontColor,
+          color: settings.sourceFontColor,
           opacity: settings.fontOpacity,
           lineHeight: 1.4,
           textShadow: "0 1px 3px rgba(0,0,0,0.8)",
         }}
       >
         {words.map((chunk, i) => {
-          if (/^\s+$/.test(chunk)) return <span key={i}>{chunk}</span>;
+          console.log(chunk);
+          if (/^\s+$/.test(chunk))
+            return (
+              <span className="inline-block w-1.75" key={i}>
+                {chunk}
+              </span>
+            );
           const clean = cleanWord(chunk);
           if (!clean) return <span key={i}>{chunk}</span>;
 
@@ -99,12 +106,31 @@ function ClickableSubtitleLine({
               onClick={(e) => {
                 e.stopPropagation();
                 handleSubtitleWordClick(clean);
+                Events.subtitles.triggerSelectWord(
+                  isActive ? "deselect" : "select",
+                );
+                e.currentTarget.animate(
+                  [
+                    { transform: "scale(1)" },
+                    { transform: "scale(1.05)" },
+                    { transform: "scale(1.15)" },
+                    { transform: "scale(1)" },
+                  ],
+                  {
+                    duration: 200,
+                    easing: "ease-out",
+                  },
+                );
               }}
-              className={`cursor-pointer transition-colors pointer-events-auto ${
-                isActive
-                  ? "text-active-border underline underline-offset-2"
-                  : "hover:text-active-border"
+              className={`inline-block cursor-pointer transition-all duration-250 pointer-events-auto ${
+                isActive ? "-translate-y-2" : "hover:-translate-y-2"
               }`}
+              style={
+                {
+                  "--highlight-color": settings.highlightFontColor,
+                  color: isActive ? "var(--highlight-color)" : undefined,
+                } as React.CSSProperties
+              }
             >
               {chunk}
             </span>
@@ -125,7 +151,7 @@ function SubtitleLine({
   settings: SubtitleSettings;
 }) {
   const bgStyle = {
-    backgroundColor: settings.backgroundColor,
+    backgroundColor: settings.translationBackgroundColor,
     opacity: settings.backgroundOpacity,
   };
 
@@ -136,7 +162,7 @@ function SubtitleLine({
         className="relative px-2 py-0.5 rounded"
         style={{
           fontSize,
-          color: settings.fontColor,
+          color: settings.translationFontColor,
           opacity: settings.fontOpacity,
           lineHeight: 1.4,
           textShadow: "0 1px 3px rgba(0,0,0,0.8)",

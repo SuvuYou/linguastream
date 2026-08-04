@@ -7,8 +7,11 @@ export interface SubtitleSettings {
   showTranslation: boolean;
   sourceFontSize: "small" | "medium" | "large";
   translationFontSize: "small" | "medium" | "large";
-  fontColor: string;
-  backgroundColor: string;
+  highlightFontColor: string;
+  sourceFontColor: string;
+  translationFontColor: string;
+  sourceBackgroundColor: string;
+  translationBackgroundColor: string;
   backgroundOpacity: number; // 0-1
   fontOpacity: number; // 0-1
 }
@@ -18,8 +21,11 @@ const DEFAULT_SUBTITLE_SETTINGS: SubtitleSettings = {
   showTranslation: true,
   sourceFontSize: "medium",
   translationFontSize: "small",
-  fontColor: "#ffffff",
-  backgroundColor: "#000000",
+  highlightFontColor: "#000000",
+  sourceFontColor: "#ffffff",
+  translationFontColor: "#ffffff",
+  sourceBackgroundColor: "#000000",
+  translationBackgroundColor: "#000000",
   backgroundOpacity: 0.6,
   fontOpacity: 1,
 };

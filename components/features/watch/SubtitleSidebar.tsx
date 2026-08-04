@@ -11,7 +11,8 @@ import { BookA, Captions, SlidersHorizontal } from "lucide-react";
 import SubtitleSettingsPanel from "@/components/features/watch/SubtitleSettings";
 import WordProfilePanel from "@/components/features/watch/WordProfilePanel/WordProfilePanel";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Events from "@/events";
 
 interface SubtitleSidebarProps {
   currentTimeMs: number;
@@ -33,12 +34,22 @@ export default function SubtitleSidebar(props: SubtitleSidebarProps) {
 
   const [openedSection, setOpenedSection] = useState<Sections>("subtitles");
 
+  useEffect(() => {
+    const onSelectWord = ({ state }: { state: "select" | "deselect" }) => {
+      if (state === "select") setOpenedSection("word-profile");
+    };
+
+    const unsubscribe = Events.subtitles.onSelectWord(onSelectWord);
+
+    return () => unsubscribe();
+  }, []);
+
   return (
     <Sidebar
       side="right"
       collapsible="none"
       className="h-screen"
-      style={{ "--sidebar-width": "32rem" } as React.CSSProperties}
+      style={{ "--sidebar-width": "24rem" } as React.CSSProperties}
     >
       <SidebarHeader>
         <Tabs

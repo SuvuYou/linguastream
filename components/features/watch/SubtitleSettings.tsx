@@ -16,7 +16,7 @@ export default function SubtitleSettingsPanel() {
   const { subtitleSettings, setSubtitleSettings } = useAppStore();
 
   return (
-    <Card className="h-auto overflow-scroll m-0.5 bg-background ring-0 pt-2">
+    <Card className="h-auto overflow-scroll m-0.5 ring-0 pt-2">
       <CardHeader className="px-4 pb-2">
         <CardTitle className="text-lg text-primary-foreground font-medium uppercase tracking-wider">
           Subtitle Settings
@@ -25,8 +25,8 @@ export default function SubtitleSettingsPanel() {
 
       <CardContent className="px-4 pb-4 flex flex-col gap-4">
         {/* Visibility toggles */}
-        <div className="flex gap-2">
-          <div className="flex flex-1 items-center gap-4">
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between gap-4">
             <Label
               htmlFor="toggle-source"
               className="text-sm text-primary-foreground font-normal cursor-pointer"
@@ -39,7 +39,7 @@ export default function SubtitleSettingsPanel() {
               onCheckedChange={(v) => setSubtitleSettings({ showSource: v })}
             />
           </div>
-          <div className="flex flex-1 items-center gap-4">
+          <div className="flex flex-1 items-center justify-between gap-4">
             <Label
               htmlFor="toggle-translation"
               className="text-sm text-primary-foreground font-normal cursor-pointer"
@@ -112,33 +112,78 @@ export default function SubtitleSettingsPanel() {
         <Separator />
 
         {/* Color pickers */}
-        <div className="flex gap-3">
-          <Field className="gap-2 flex-1">
-            <FieldLabel className="text-sm text-primary-foreground font-normal">
-              Font color
-            </FieldLabel>
-            <input
-              type="color"
-              value={subtitleSettings.fontColor}
-              onChange={(e) =>
-                setSubtitleSettings({ fontColor: e.target.value })
-              }
-              className="h-8 cursor-pointer"
-            />
-          </Field>
-          <Field className="gap-2 flex-1">
-            <FieldLabel className="text-sm text-primary-foreground font-normal">
-              Background color
-            </FieldLabel>
-            <input
-              type="color"
-              value={subtitleSettings.backgroundColor}
-              onChange={(e) =>
-                setSubtitleSettings({ backgroundColor: e.target.value })
-              }
-              className="h-8 cursor-pointer"
-            />
-          </Field>
+        <Field className="gap-2 flex-1">
+          <FieldLabel className="text-sm text-primary-foreground font-normal">
+            Highlight Font
+          </FieldLabel>
+          <input
+            type="color"
+            value={subtitleSettings.highlightFontColor}
+            onChange={(e) =>
+              setSubtitleSettings({ highlightFontColor: e.target.value })
+            }
+            className="h-8 cursor-pointer"
+          />
+        </Field>
+        <div className="flex gap-4">
+          <div className="flex-1">
+            <Field className="gap-2 flex-1 mb-4">
+              <FieldLabel className="text-sm text-primary-foreground font-normal">
+                Source Font
+              </FieldLabel>
+              <input
+                type="color"
+                value={subtitleSettings.sourceFontColor}
+                onChange={(e) =>
+                  setSubtitleSettings({ sourceFontColor: e.target.value })
+                }
+                className="h-8 cursor-pointer"
+              />
+            </Field>
+            <Field className="gap-2 flex-1">
+              <FieldLabel className="text-sm text-primary-foreground font-normal">
+                Source BG
+              </FieldLabel>
+              <input
+                type="color"
+                value={subtitleSettings.sourceBackgroundColor}
+                onChange={(e) =>
+                  setSubtitleSettings({ sourceBackgroundColor: e.target.value })
+                }
+                className="h-8 cursor-pointer"
+              />
+            </Field>
+          </div>
+          <div className="flex-1">
+            <Field className="gap-2 flex-1 mb-4">
+              <FieldLabel className="text-sm text-primary-foreground font-normal">
+                Translation Font
+              </FieldLabel>
+              <input
+                type="color"
+                value={subtitleSettings.translationFontColor}
+                onChange={(e) =>
+                  setSubtitleSettings({ translationFontColor: e.target.value })
+                }
+                className="h-8 cursor-pointer"
+              />
+            </Field>
+            <Field className="gap-2 flex-1">
+              <FieldLabel className="text-sm text-primary-foreground font-normal">
+                Translation BG
+              </FieldLabel>
+              <input
+                type="color"
+                value={subtitleSettings.translationBackgroundColor}
+                onChange={(e) =>
+                  setSubtitleSettings({
+                    translationBackgroundColor: e.target.value,
+                  })
+                }
+                className="h-8 cursor-pointer"
+              />
+            </Field>
+          </div>
         </div>
 
         <Separator />

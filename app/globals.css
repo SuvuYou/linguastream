@@ -45,3 +45,17 @@
     #0a0a0c 24px
   );
 }
+
+.subtitle-word {
+  transition: all 250ms;
+}
+
+.subtitle-word:hover {
+  color: var(--highlight-color);
+  transform: translateY(-0.5rem);
+}
+
+.subtitle-word.active {
+  color: var(--highlight-color);
+  transform: translateY(-0.5rem);
+}
