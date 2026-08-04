@@ -23,9 +23,9 @@ interface SubtitleOverlayProps {
 }
 
 const FONT_SIZE_MAP = {
-  small: "0.85rem",
-  medium: "1.1rem",
-  large: "1.4rem",
+  small: "1rem",
+  medium: "1.3rem",
+  large: "1.8rem",
 };
 
 function cleanWord(raw: string): string {
@@ -206,7 +206,7 @@ export default function SubtitleOverlay({
     );
 
   return (
-    <div className="absolute bottom-20 left-0 right-0 flex flex-col items-center gap-1 pointer-events-none z-10">
+    <div className="w-full flex flex-col items-center gap-1 pointer-events-none z-10 py-12">
       {settings.showSource && activeSrc && (
         <ClickableSubtitleLine
           text={activeSrc.text}

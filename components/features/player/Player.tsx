@@ -108,6 +108,10 @@ export default function Player({
 
   return (
     <div className="relative w-full max-w-6xl">
+      <video ref={videoRef} title={title} playsInline>
+        <source src={streamUrl} type="video/mp4" />
+      </video>
+
       <SubtitleOverlay
         currentTimeMs={currentTimeMs}
         sourceLines={sourceLines}
@@ -115,10 +119,6 @@ export default function Player({
         settings={subtitleSettings}
         handleSubtitleWordClick={handleSubtitleWordClick}
       />
-
-      <video ref={videoRef} title={title} playsInline>
-        <source src={streamUrl} type="video/mp4" />
-      </video>
     </div>
   );
 }

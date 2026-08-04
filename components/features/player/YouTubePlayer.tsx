@@ -114,7 +114,8 @@ export default function YouTubePlayer({
   );
 
   return (
-    <div className="flex items-center relative w-full h-full max-w-6xl pb-30">
+    <div className="flex flex-wrap items-center relative w-full h-full max-w-6xl pb-30">
+      <div ref={iframeContainerRef} className="w-full h-auto aspect-video" />
       <SubtitleOverlay
         currentTimeMs={currentTimeMs}
         sourceLines={sourceLines}
@@ -122,8 +123,6 @@ export default function YouTubePlayer({
         settings={subtitleSettings}
         handleSubtitleWordClick={handleSubtitleWordClick}
       />
-
-      <div ref={iframeContainerRef} className="w-full h-auto aspect-video" />
     </div>
   );
 }

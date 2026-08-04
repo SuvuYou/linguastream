@@ -58,7 +58,7 @@ export default React.memo(function SubtitleRow(props: Props) {
       id={`subtitle-row-${listOrderIndex}`}
       role="option"
       ref={isActive ? forwardActiveRef : undefined}
-      onClick={() => Events.player.triggerJumpTo(subtitlePair.start_ms)}
+      onClick={() => Events.player.triggerJumpTo(subtitlePair.start_ms + 10)}
       className={cn(
         "border-none overflow-hidden cursor-pointer transition-colors rounded-xl hover:bg-background",
         isActive && "bg-primary/5 hover:bg-primary/10",
