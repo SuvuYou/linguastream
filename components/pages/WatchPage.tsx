@@ -110,9 +110,9 @@ export default function WatchPage({
 
   return (
     <SidebarProvider>
-      <section className="w-full h-[calc(100vh-1rem)] bg-background m-2 ml-0 p-2 rounded-r-lg overflow-hidden">
+      <section className="w-full h-[calc(100vh-1rem)] flex flex-col bg-background m-2 ml-0 p-2 rounded-r-lg overflow-hidden">
         <Header mediaContentId={mediaContentId} />
-        <div className="flex overflow-hidden h-full">
+        <div className="flex overflow-hidden h-full flex-1">
           <div className="flex w-full min-w-0 bg-background items-center justify-start h-full">
             {isYouTube && data.videoId ? (
               <YouTubePlayer

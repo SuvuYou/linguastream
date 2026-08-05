@@ -206,34 +206,36 @@ export default function SubtitleOverlay({
     );
 
   return (
-    <div className="w-full flex flex-col items-center gap-1 pointer-events-none z-10 py-12">
-      {settings.showSource && activeSrc && (
-        <ClickableSubtitleLine
-          text={activeSrc.text}
-          fontSize={FONT_SIZE_MAP[settings.sourceFontSize]}
-          settings={settings}
-          activeWord={activeWord}
-          handleSubtitleWordClick={(word: string) =>
-            activeTrans &&
-            handleSubtitleWordClick(word, activeSrc, activeTrans?.text, [
-              ...(activeSrcIndex - 1 >= 0
-                ? [sourceLines[activeSrcIndex - 1]]
-                : []),
-              sourceLines[activeSrcIndex],
-              ...(activeSrcIndex + 1 < sourceLines.length
-                ? [sourceLines[activeSrcIndex + 1]]
-                : []),
-            ])
-          }
-        />
-      )}
-      {settings.showTranslation && activeTrans && (
-        <SubtitleLine
-          text={activeTrans.text}
-          fontSize={FONT_SIZE_MAP[settings.translationFontSize]}
-          settings={settings}
-        />
-      )}
+    <div className="w-full flex-1 flex items-center gap-1 pointer-events-none z-10 pt-4">
+      <div className="w-full flex flex-col items-center">
+        {settings.showSource && activeSrc && (
+          <ClickableSubtitleLine
+            text={activeSrc.text}
+            fontSize={FONT_SIZE_MAP[settings.sourceFontSize]}
+            settings={settings}
+            activeWord={activeWord}
+            handleSubtitleWordClick={(word: string) =>
+              activeTrans &&
+              handleSubtitleWordClick(word, activeSrc, activeTrans?.text, [
+                ...(activeSrcIndex - 1 >= 0
+                  ? [sourceLines[activeSrcIndex - 1]]
+                  : []),
+                sourceLines[activeSrcIndex],
+                ...(activeSrcIndex + 1 < sourceLines.length
+                  ? [sourceLines[activeSrcIndex + 1]]
+                  : []),
+              ])
+            }
+          />
+        )}
+        {settings.showTranslation && activeTrans && (
+          <SubtitleLine
+            text={activeTrans.text}
+            fontSize={FONT_SIZE_MAP[settings.translationFontSize]}
+            settings={settings}
+          />
+        )}
+      </div>
     </div>
   );
 }

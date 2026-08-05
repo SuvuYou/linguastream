@@ -8,7 +8,7 @@ import {
   UPLOAD_CONTENT_TYPE,
 } from "@/helpers/const";
 import { useJobPolling } from "@/hooks/useJobPolling";
-import { DeleteCardButton } from "./DeleteCardButton";
+import { DeleteMediaButton } from "./DeleteMediaButton";
 import { Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { RefObject } from "react";
@@ -134,7 +134,7 @@ function CardFrame({
           {item.type === YOUTUBE_CONTENT_TYPE ? "YT" : "Upload"}
         </Badge>
       </div>
-      <DeleteCardButton mediaId={item.id} title={item.title} />
+      <DeleteMediaButton mediaId={item.id} title={item.title} />
     </Card>
   );
 }

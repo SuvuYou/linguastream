@@ -107,7 +107,7 @@ export default function Player({
   );
 
   return (
-    <div className="relative w-full max-w-6xl">
+    <div className="flex flex-col relative w-full max-w-6xl h-full mt-4">
       <video ref={videoRef} title={title} playsInline>
         <source src={streamUrl} type="video/mp4" />
       </video>

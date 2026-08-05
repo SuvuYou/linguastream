@@ -52,6 +52,7 @@ async function fetchWiktionary(word: string, lang: string) {
 async function fetchGeminiProfile(
   word: string,
   lang: string,
+  context: string | null,
   wiktionaryData: {
     part_of_speech: string | null;
     forms: Record<string, string>;
@@ -60,10 +61,12 @@ async function fetchGeminiProfile(
   const alreadyHave = wiktionaryData
     ? `We already know: POS=${wiktionaryData.part_of_speech}, forms=${JSON.stringify(
         wiktionaryData.forms,
-      )}.`
+      )}. (as fetched from wiktionary data, so may lack context)`
     : "";
 
-  const prompt = `You are a linguistics expert. For the ${lang} word "${word}":
+  const prompt = `You are a linguistics expert. For the ${lang} word "${word}"${
+    context ? ` as used in this sentence: "${context}"` : ""
+  }:
 ${alreadyHave}
 ${LANGUAGE_SPECIFIC_RULES[lang] ? LANGUAGE_SPECIFIC_RULES[lang] : ""}
 
@@ -90,6 +93,7 @@ export async function GET(req: NextRequest) {
 
   const word = req.nextUrl.searchParams.get("word");
   const lang = req.nextUrl.searchParams.get("lang");
+  const context = req.nextUrl.searchParams.get("context");
 
   if (!word || !lang) {
     return NextResponse.json(
@@ -115,7 +119,7 @@ export async function GET(req: NextRequest) {
   };
 
   try {
-    geminiData = await fetchGeminiProfile(word, lang, wiktionaryData);
+    geminiData = await fetchGeminiProfile(word, lang, context, wiktionaryData);
   } catch (error) {
     return NextResponse.json(
       {

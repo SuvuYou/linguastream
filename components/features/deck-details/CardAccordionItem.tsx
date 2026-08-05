@@ -15,6 +15,7 @@ import { DeckDetailCard } from "@/hooks/useDeckCards";
 import { SquareArrowOutUpRight } from "lucide-react";
 import Link from "next/link";
 import { Checkbox } from "@/components/ui/checkbox";
+import YouTubePlayerSmall from "../player/YouTubePlayerSmall";
 
 interface Props {
   card: DeckDetailCard;
@@ -171,7 +172,16 @@ export default function CardAccordionItem({ card, cardSelection }: Props) {
                   <PlayerSmall
                     streamUrl={card.streamUrl}
                     mediaItem={adaptCardStructureToPlayableItem(card)}
-                    shouldShowSubtitles={false}
+                  />
+                </div>
+              </div>
+            )}
+            {card.videoId && (
+              <div className="border-l-2 border-contrast pl-4">
+                <div className="w-full bg-black aspect-video">
+                  <YouTubePlayerSmall
+                    videoId={card.videoId}
+                    mediaItem={adaptCardStructureToPlayableItem(card)}
                   />
                 </div>
               </div>

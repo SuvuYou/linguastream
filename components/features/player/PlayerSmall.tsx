@@ -2,9 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import "plyr/dist/plyr.css";
-import SubtitleOverlay from "@/components/features/watch/SubtitleOverlay";
 import { useAppStore } from "@/lib/initializations/store";
-import type { SubtitleLine } from "@/hooks/useSubtitleTrack";
 import { useAnimationTick } from "@/hooks/useAnimationTick";
 import { Button } from "@/components/ui/button";
 import { RotateCcw } from "lucide-react";
@@ -20,23 +18,20 @@ export interface PlayableMediaItem {
 interface PlayerSmallProps {
   streamUrl: string;
   mediaItem: PlayableMediaItem;
-  shouldShowSubtitles?: boolean;
 }
 
 export default function PlayerSmall({
   streamUrl,
   mediaItem,
-  shouldShowSubtitles = true,
 }: PlayerSmallProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const plyrRef = useRef<Plyr | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const hasSeenEndRef = useRef(false);
 
-  const [currentTimeMs, setCurrentTimeMs] = useState(mediaItem.start_ms);
   const [hasEnded, setHasEnded] = useState(false);
 
-  const { autoPlay, subtitleSettings } = useAppStore();
+  const { autoPlay } = useAppStore();
 
   const handleReplay = useCallback(() => {
     const video = videoRef.current;
@@ -98,7 +93,6 @@ export default function PlayerSmall({
       if (!video) return;
 
       const ms = Math.floor(video.currentTime * 1000);
-      setCurrentTimeMs(ms);
 
       if (ms >= mediaItem.end_ms && !hasSeenEndRef.current) {
         hasSeenEndRef.current = true;
@@ -108,9 +102,6 @@ export default function PlayerSmall({
     },
     { autoStart: true },
   );
-
-  const sourceLine = generateSubtitleLine(mediaItem, "sub");
-  const translationLine = generateSubtitleLine(mediaItem, "trans");
 
   return (
     <div
@@ -122,18 +113,6 @@ export default function PlayerSmall({
           <source src={streamUrl} type="video/mp4" />
         </video>
       </div>
-      {shouldShowSubtitles && (
-        <div className="relative col-start-1 row-start-1 self-end z-10 pointer-events-none">
-          <SubtitleOverlay
-            currentTimeMs={currentTimeMs}
-            sourceLines={sourceLine ? [sourceLine] : []}
-            translationLines={translationLine ? [translationLine] : []}
-            settings={subtitleSettings}
-            handleSubtitleWordClick={() => {}}
-          />
-        </div>
-      )}
-
       {hasEnded && (
         <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/50 backdrop-blur-[2px] transition-all animate-in fade-in duration-200">
           <Button
@@ -149,20 +128,4 @@ export default function PlayerSmall({
       )}
     </div>
   );
-}
-
-function generateSubtitleLine(
-  mediaItem: PlayableMediaItem,
-  type: "sub" | "trans",
-): SubtitleLine | null {
-  if (!mediaItem) {
-    return null;
-  }
-
-  return {
-    index: 0,
-    text: type === "sub" ? mediaItem.source_text : mediaItem.translation_text,
-    start_ms: mediaItem.start_ms,
-    end_ms: mediaItem.end_ms,
-  };
 }

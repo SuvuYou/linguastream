@@ -114,8 +114,11 @@ export default function YouTubePlayer({
   );
 
   return (
-    <div className="flex flex-wrap items-center relative w-full h-full max-w-6xl pb-30">
-      <div ref={iframeContainerRef} className="w-full h-auto aspect-video" />
+    <div className="flex flex-wrap items-start relative w-full h-full max-w-6xl">
+      <div
+        ref={iframeContainerRef}
+        className="w-full h-auto aspect-video mt-4"
+      />
       <SubtitleOverlay
         currentTimeMs={currentTimeMs}
         sourceLines={sourceLines}

@@ -16,7 +16,7 @@ import { Trash2 } from "lucide-react";
 import { MouseEventHandler } from "react";
 import { useDeletePersonalMedia } from "@/hooks/useDeletePersonalMedia";
 
-export function DeleteCardButton({
+export function DeleteMediaButton({
   mediaId,
   title,
 }: {
@@ -54,9 +54,11 @@ export function DeleteCardButton({
           <AlertDialogAction
             className="bg-destructive text-white hover:bg-destructive/90"
             onClick={handleDeletion}
-            disabled={deleteCard.isPending}
+            disabled={deleteCard.isPending || deleteCard.isSuccess}
           >
-            {deleteCard.isPending ? "Deleting..." : "Delete"}
+            {deleteCard.isPending || deleteCard.isSuccess
+              ? "Deleting..."
+              : "Delete"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

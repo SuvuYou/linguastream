@@ -29,6 +29,7 @@ export interface DeckDetailCard {
   ease_factor: number;
   repetitions: number;
   streamUrl: string | null;
+  videoId: string | null;
   word_profile: CardWordProfile | null;
 }
 
