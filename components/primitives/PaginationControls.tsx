@@ -102,19 +102,7 @@ export default function PaginationControls({
                     break;
                 }
               }}
-              className="
-                h-8
-                w-14
-                border-0
-                bg-transparent
-                p-0
-                text-center
-                shadow-none
-                focus-visible:ring-0
-                [appearance:textfield]
-                [&::-webkit-inner-spin-button]:appearance-none
-                [&::-webkit-outer-spin-button]:appearance-none
-              "
+              className="h-8 w-14 border-0 bg-transparent p-0 text-center shadow-none focus-visible:ring-0 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             />
 
             <span className="text-sm text-muted-foreground">

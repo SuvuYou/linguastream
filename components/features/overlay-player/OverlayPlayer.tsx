@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/empty";
 import { useOverlayLanguages } from "@/hooks/useOverlayLanguages";
 import YouTubePlayerSmall from "../player/YouTubePlayerSmall";
+import PaginationControls from "@/components/primitives/PaginationControls";
 
 export default function OverlayPlayer() {
   const { overlayOpen, setOverlayOpen } = useAppStore();
@@ -29,10 +30,13 @@ export default function OverlayPlayer() {
   );
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [page, setPage] = useState(0);
 
   const languages = useOverlayLanguages();
 
   const searchResult = useSearch({
+    page,
+    limit: 30,
     query: searchQuery,
     sourceLanguage: languages.source.value ?? "",
     translationLanguage: languages.translation.value ?? "",
@@ -44,11 +48,10 @@ export default function OverlayPlayer() {
     !!selectedItem?.media_content_id && !selectedItem.youtube_video_id,
   );
 
-  console.log(selectedItem);
-
   const OnSearchChange = useCallback((query: string) => {
     setSelected(null);
     setSearchQuery(query);
+    setPage(0);
   }, []);
 
   const isPlayerVisible =
@@ -130,13 +133,24 @@ export default function OverlayPlayer() {
                 </div>
               )}
             </div>
-            <SearchResults
-              searchQuery={searchQuery}
-              searchResults={searchResult}
-              selectedItem={selectedItem}
-              onSelect={setSelected}
-            />
+            <div className="flex-1 min-w-0 overflow-hidden">
+              <SearchResults
+                searchQuery={searchQuery}
+                searchResults={searchResult}
+                selectedItem={selectedItem}
+                onSelect={setSelected}
+              />
+            </div>
           </div>
+          {(searchResult.data?.totalPages ?? 0) > 1 ? (
+            <div className="pt-4">
+              <PaginationControls
+                page={page}
+                onPageChange={setPage}
+                pageCount={searchResult.data?.totalPages ?? 0}
+              />
+            </div>
+          ) : null}
         </SheetContent>
       </Sheet>
     </>

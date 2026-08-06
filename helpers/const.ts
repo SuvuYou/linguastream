@@ -13,7 +13,7 @@ export const JELLYFIN_CONTENT_TYPE = "jellyfin";
 export const YOUTUBE_CONTENT_TYPE = "youtube";
 export const UPLOAD_CONTENT_TYPE = "upload";
 
-export const PAGE_SIZE = 3;
+export const PAGE_SIZE = 20;
 
 export const JOB_STATUS = {
   PENDING: "pending",
