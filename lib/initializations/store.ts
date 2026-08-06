@@ -44,9 +44,9 @@ export interface ActiveWord {
 
 interface AppState {
   preferredSourceLanguage: string | null;
-  setPreferredSourceLanguage: (language: string) => void;
+  setPreferredSourceLanguage: (language: string | null) => void;
   preferredTranslationLanguage: string | null;
-  setPreferredTranslationLanguage: (language: string) => void;
+  setPreferredTranslationLanguage: (language: string | null) => void;
   subtitleSettings: SubtitleSettings;
   setSubtitleSettings: (settings: Partial<SubtitleSettings>) => void;
   autoPlay: boolean;

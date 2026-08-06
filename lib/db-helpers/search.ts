@@ -25,6 +25,7 @@ export interface SubtitleSearchDocument {
   media_content_id: string;
   media_title: string;
   jellyfin_id: string;
+  youtube_video_id: string;
 
   // access
   is_global: boolean;
@@ -84,6 +85,8 @@ function findMatchingTranslationText(
 
 export async function indexAllSubtitleLines() {
   const index = meili.index(SUBTITLE_INDEX);
+  await index.delete();
+  await meili.createIndex(SUBTITLE_INDEX, { primaryKey: "id" });
 
   await index.updateSettings({
     searchableAttributes: ["source_text"],
@@ -112,6 +115,7 @@ export async function indexAllSubtitleLines() {
         id: true,
         title: true,
         jellyfin_id: true,
+        youtube_video_id: true,
         type: true,
         user_id: true,
         source_language: true,
@@ -173,6 +177,7 @@ export async function indexAllSubtitleLines() {
             media_content_id: media.id,
             media_title: media.title,
             jellyfin_id: media.jellyfin_id ?? "",
+            youtube_video_id: media.youtube_video_id ?? "",
 
             is_global: media.type === JELLYFIN_CONTENT_TYPE,
             owner_user_id: media.user_id,

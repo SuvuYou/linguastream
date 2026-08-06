@@ -19,6 +19,8 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { useOverlayLanguages } from "@/hooks/useOverlayLanguages";
+import YouTubePlayerSmall from "../player/YouTubePlayerSmall";
 
 export default function OverlayPlayer() {
   const { overlayOpen, setOverlayOpen } = useAppStore();
@@ -28,22 +30,29 @@ export default function OverlayPlayer() {
 
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { preferredSourceLanguage, preferredTranslationLanguage } =
-    useAppStore();
+  const languages = useOverlayLanguages();
 
   const searchResult = useSearch({
     query: searchQuery,
-    sourceLanguage: preferredSourceLanguage ?? "",
-    translationLanguage: preferredTranslationLanguage ?? "",
-    enabled: !!preferredSourceLanguage && !!preferredTranslationLanguage,
+    sourceLanguage: languages.source.value ?? "",
+    translationLanguage: languages.translation.value ?? "",
+    enabled: !!languages.source.value && !!languages.translation.value,
   });
 
-  const streamData = useStreamUrl(selectedItem?.media_content_id ?? null);
+  const streamData = useStreamUrl(
+    selectedItem?.media_content_id ?? null,
+    !!selectedItem?.media_content_id && !selectedItem.youtube_video_id,
+  );
+
+  console.log(selectedItem);
 
   const OnSearchChange = useCallback((query: string) => {
     setSelected(null);
     setSearchQuery(query);
   }, []);
+
+  const isPlayerVisible =
+    selectedItem && (streamData.data || selectedItem.youtube_video_id);
 
   return (
     <>
@@ -59,6 +68,10 @@ export default function OverlayPlayer() {
           </SheetTitle>
 
           <Header
+            source={languages.source}
+            translation={languages.translation}
+            isLoading={languages.isLoading || languages.isFetching}
+            isError={languages.isError}
             isOverlayOpen={overlayOpen}
             isSearchLoading={searchResult.isLoading}
             onSearchQueryChange={OnSearchChange}
@@ -66,15 +79,22 @@ export default function OverlayPlayer() {
           <div className="flex flex-1 gap-4 min-h-0">
             <div
               className={`${
-                selectedItem && streamData.data ? "flex-3" : "flex-0 border-0"
+                isPlayerVisible ? "flex-3" : "flex-0 border-0"
               } transition-all min-w-0 bg-background border rounded-lg relative overflow-hidden`}
             >
-              {selectedItem && streamData.data ? (
+              {isPlayerVisible ? (
                 <>
-                  <PlayerSmall
-                    streamUrl={streamData.data.streamUrl}
-                    mediaItem={selectedItem}
-                  />
+                  {selectedItem.youtube_video_id ? (
+                    <YouTubePlayerSmall
+                      videoId={selectedItem.youtube_video_id}
+                      mediaItem={selectedItem}
+                    />
+                  ) : (
+                    <PlayerSmall
+                      streamUrl={streamData.data!.streamUrl}
+                      mediaItem={selectedItem}
+                    />
+                  )}
                   <Button
                     asChild
                     variant="secondary"
