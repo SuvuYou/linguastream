@@ -88,7 +88,6 @@ function ClickableSubtitleLine({
         }}
       >
         {words.map((chunk, i) => {
-          console.log(chunk);
           if (/^\s+$/.test(chunk))
             return (
               <span className="inline-block w-1.75" key={i}>

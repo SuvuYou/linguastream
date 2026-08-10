@@ -12,6 +12,8 @@ import WordDefinition from "./WordDefinition";
 import { useDeckSelection } from "@/hooks/useDeckSelection";
 import { useWordDefinition } from "@/hooks/useWordDefinition";
 import { CollocationItem, LexicalFamilyItem } from "@/types";
+import { useEffect } from "react";
+import Events from "@/events";
 
 export default function WordProfilePanel() {
   const { activeWord } = useAppStore();
@@ -22,6 +24,16 @@ export default function WordProfilePanel() {
   const { decks, selectedDeckId, setSelectedDeckId } = useDeckSelection();
 
   const cardSaver = useSaveCard();
+
+  useEffect(() => {
+    const onSelectWord = ({ state }: { state: "select" | "deselect" }) => {
+      if (state === "select") cardSaver.reset();
+    };
+
+    const unsubscribe = Events.subtitles.onSelectWord(onSelectWord);
+
+    return () => unsubscribe();
+  }, [cardSaver]);
 
   if (!activeWord) {
     return (
