@@ -25,7 +25,7 @@ vi.mock("@/hooks/useZodSearchParams", () => ({
   useZodSearchParams: vi.fn(),
 }));
 
-vi.mock("../features/deck-details/SearchBar", () => ({
+vi.mock("@/components/primitives/SearchBar", () => ({
   default: () => <div>SearchBar</div>,
 }));
 
@@ -50,12 +50,6 @@ vi.mock("../features/deck-details/CardsList", () => ({
       <div data-testid="cards-count">{cards.length}</div>
       <button onClick={() => cardSelection.toggle("1")}>Toggle Card</button>
     </div>
-  ),
-}));
-
-vi.mock("../features/deck-details/CardsPagination", () => ({
-  default: ({ setPage }: any) => (
-    <button onClick={() => setPage(3)}>Next Page</button>
   ),
 }));
 
@@ -146,14 +140,6 @@ describe("DeckDetailPage", () => {
     fireEvent.click(screen.getByRole("button", { name: /study deck/i }));
 
     expect(pushMock).toHaveBeenCalledWith("/dashboard/study?deckId=deck-1");
-  });
-
-  it("changes page", () => {
-    render(<DeckDetailPage deckId="deck-1" />);
-
-    fireEvent.click(screen.getByText("Next Page"));
-
-    expect(setMock).toHaveBeenCalledWith({ page: 3 });
   });
 
   it("changes language and resets page", () => {

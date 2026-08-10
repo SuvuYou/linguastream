@@ -54,7 +54,8 @@ export default function SearchBar({ variant = "md", placeholder }: Props) {
         <Search className="size-4 ml-4" />
         <InputGroupInput
           value={query}
-          id="library-search"
+          id="search-bar"
+          data-testid="search-bar"
           type="text"
           placeholder={placeholder}
           defaultValue={params.params.q}

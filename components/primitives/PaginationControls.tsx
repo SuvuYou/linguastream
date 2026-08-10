@@ -62,9 +62,13 @@ export default function PaginationControls({
   };
 
   const commit = () => {
-    const parsed = Number(value);
+    const trimmed = value.trim();
 
-    if (Number.isNaN(parsed)) {
+    if (!trimmed) return;
+
+    const parsed = Number(trimmed);
+
+    if (!Number.isInteger(parsed) || parsed < 1 || parsed > pageCount) {
       return;
     }
 
