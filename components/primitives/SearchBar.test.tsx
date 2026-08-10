@@ -1,119 +1,194 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
-import { useZodSearchParams } from "@/hooks/useZodSearchParams";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import SearchBar from "./SearchBar";
+import { useZodSearchParams } from "@/hooks/useZodSearchParams";
 
-vi.mock("@/hooks/useZodSearchParams");
+vi.mock("@/hooks/useZodSearchParams", () => ({
+  useZodSearchParams: vi.fn(),
+}));
 
 const mockedUseZodSearchParams = vi.mocked(useZodSearchParams);
 
-beforeEach(() => {
-  vi.useFakeTimers();
-});
+const set = vi.fn();
+const remove = vi.fn();
 
-afterEach(() => {
-  vi.useRealTimers();
+function mockParams(q?: string) {
+  mockedUseZodSearchParams.mockReturnValue({
+    params: q ? { q } : {},
+    set,
+    remove,
+  } as ReturnType<typeof useZodSearchParams>);
+}
+
+beforeEach(() => {
   vi.clearAllMocks();
+  mockParams();
 });
 
 describe("SearchBar", () => {
-  it("renders with initial query", () => {
-    mockedUseZodSearchParams.mockReturnValue({
-      params: { q: "test" },
-      set: vi.fn(),
-      remove: vi.fn(),
-    } as any);
-
+  it("renders the search input", () => {
     render(<SearchBar />);
 
-    expect(screen.getByDisplayValue("test")).toBeInTheDocument();
+    expect(screen.getByTestId("search-bar")).toBeInTheDocument();
   });
 
-  it("renders empty input when there is no query", () => {
-    mockedUseZodSearchParams.mockReturnValue({
-      params: {},
-      set: vi.fn(),
-      remove: vi.fn(),
-    } as any);
-
-    render(<SearchBar />);
+  it("renders the provided placeholder", () => {
+    render(<SearchBar placeholder="Search library..." />);
 
     expect(
-      screen.getByPlaceholderText(/search words in this deck/i),
-    ).toHaveValue("");
+      screen.getByPlaceholderText("Search library..."),
+    ).toBeInTheDocument();
   });
 
-  it("updates query param after debounce and resets page", () => {
-    const setMock = vi.fn();
-
-    mockedUseZodSearchParams.mockReturnValue({
-      params: {},
-      set: setMock,
-      remove: vi.fn(),
-    } as any);
+  it("uses the query from URL params as the initial value", () => {
+    mockParams("existing query");
 
     render(<SearchBar />);
 
-    const input = screen.getByPlaceholderText(/search words in this deck/i);
-
-    fireEvent.change(input, { target: { value: "hello" } });
-
-    expect(setMock).not.toHaveBeenCalled();
-
-    vi.advanceTimersByTime(300);
-
-    expect(setMock).toHaveBeenNthCalledWith(1, { q: "hello" });
-    expect(setMock).toHaveBeenNthCalledWith(2, { page: 0 });
+    expect(screen.getByTestId("search-bar")).toHaveValue("existing query");
   });
 
-  it("debounces multiple changes", () => {
-    const setMock = vi.fn();
+  it("starts with an empty query when no URL query exists", () => {
+    render(<SearchBar />);
 
-    mockedUseZodSearchParams.mockReturnValue({
-      params: {},
-      set: setMock,
-      remove: vi.fn(),
-    } as any);
+    expect(screen.getByTestId("search-bar")).toHaveValue("");
+  });
+
+  it("updates the input immediately", async () => {
+    const user = userEvent.setup();
 
     render(<SearchBar />);
 
-    const input = screen.getByPlaceholderText(/search words in this deck/i);
+    const input = screen.getByTestId("search-bar");
 
-    fireEvent.change(input, { target: { value: "hello" } });
+    await user.type(input, "hello");
 
-    vi.advanceTimersByTime(100);
-
-    fireEvent.change(input, { target: { value: "hello2" } });
-
-    vi.advanceTimersByTime(299);
-
-    expect(setMock).not.toHaveBeenCalled();
-
-    vi.advanceTimersByTime(1);
-
-    expect(setMock).toHaveBeenNthCalledWith(1, { q: "hello2" });
-    expect(setMock).toHaveBeenNthCalledWith(2, { page: 0 });
+    expect(input).toHaveValue("hello");
   });
 
-  it("removes query param when input is cleared", () => {
-    const setMock = vi.fn();
-    const removeMock = vi.fn();
-
-    mockedUseZodSearchParams.mockReturnValue({
-      params: { q: "test" },
-      set: setMock,
-      remove: removeMock,
-    } as any);
+  it("sets the query after 300ms", async () => {
+    const user = userEvent.setup();
 
     render(<SearchBar />);
 
-    const input = screen.getByDisplayValue("test");
+    const input = screen.getByTestId("search-bar");
 
-    fireEvent.change(input, { target: { value: "" } });
+    await user.type(input, "hello");
 
-    vi.advanceTimersByTime(300);
+    await waitFor(() => {
+      expect(set).toHaveBeenCalledWith({
+        q: "hello",
+      });
+    });
 
-    expect(removeMock).toHaveBeenCalledWith("q");
-    expect(setMock).toHaveBeenCalledWith({ page: 0 });
+    expect(set).toHaveBeenCalledWith({
+      page: 0,
+    });
+  });
+
+  it("removes the query when the input is cleared", async () => {
+    const user = userEvent.setup();
+
+    mockParams("hello");
+
+    render(<SearchBar />);
+
+    const input = screen.getByTestId("search-bar");
+
+    await user.clear(input);
+
+    await waitFor(() => {
+      expect(remove).toHaveBeenCalledWith("q");
+    });
+
+    expect(set).toHaveBeenCalledWith({
+      page: 0,
+    });
+  });
+
+  it("resets the page when the search changes", async () => {
+    const user = userEvent.setup();
+
+    render(<SearchBar />);
+
+    const input = screen.getByTestId("search-bar");
+
+    await user.type(input, "test");
+
+    await waitFor(() => {
+      expect(set).toHaveBeenCalledWith({
+        page: 0,
+      });
+    });
+  });
+
+  it("debounces rapid changes", async () => {
+    const user = userEvent.setup();
+
+    render(<SearchBar />);
+
+    const input = screen.getByTestId("search-bar");
+
+    await user.type(input, "a");
+
+    await new Promise((resolve) => setTimeout(resolve, 200));
+
+    await user.type(input, "b");
+
+    await waitFor(() => {
+      expect(set).toHaveBeenCalledWith({
+        q: "ab",
+      });
+    });
+
+    expect(set.mock.calls.filter(([value]) => value?.q === "ab")).toHaveLength(
+      1,
+    );
+
+    expect(set).toHaveBeenCalledWith({
+      page: 0,
+    });
+  });
+
+  it("shows the clear button when a query exists", () => {
+    mockParams("hello");
+
+    render(<SearchBar />);
+
+    expect(screen.getByRole("button")).toBeInTheDocument();
+  });
+
+  it("clears the query when the clear button is clicked", async () => {
+    const user = userEvent.setup();
+
+    mockParams("hello");
+
+    render(<SearchBar />);
+
+    const button = screen.getByRole("button");
+
+    await user.click(button);
+
+    expect(screen.getByTestId("search-bar")).toHaveValue("");
+
+    await waitFor(() => {
+      expect(remove).toHaveBeenCalledWith("q");
+    });
+
+    expect(set).toHaveBeenCalledWith({
+      page: 0,
+    });
+  });
+
+  it("does not show the clear button while pending", () => {
+    mockParams("hello");
+
+    render(<SearchBar />);
+
+    expect(screen.getByTestId("search-bar")).not.toHaveAttribute(
+      "aria-busy",
+      "true",
+    );
   });
 });

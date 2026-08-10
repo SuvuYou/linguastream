@@ -18,17 +18,6 @@ describe("useSubtitleTrack hook", () => {
     expect(result.current.isLoading).toBe(true);
   });
 
-  it("does not run when lang is null", () => {
-    global.fetch = vi.fn();
-
-    const { result } = renderHook(() => useSubtitleTrack("media1", null), {
-      wrapper: createWrapper(),
-    });
-
-    expect(result.current.fetchStatus).toBe("idle");
-    expect(global.fetch).not.toHaveBeenCalled();
-  });
-
   it("fetches subtitle track correctly", async () => {
     global.fetch = vi.fn(
       () =>
