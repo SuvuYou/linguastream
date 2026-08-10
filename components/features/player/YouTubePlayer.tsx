@@ -67,9 +67,15 @@ export default function YouTubePlayer({
 
   useEffect(() => {
     async function init() {
+      const container = iframeContainerRef.current;
+
+      if (!container) {
+        return;
+      }
+
       await loadYouTubeAPI();
 
-      playerRef.current = new window.YT.Player(iframeContainerRef.current, {
+      playerRef.current = new window.YT.Player(container, {
         videoId,
         playerVars: {
           autoplay: 0,
