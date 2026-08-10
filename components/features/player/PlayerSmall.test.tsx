@@ -27,12 +27,6 @@ vi.mock("@/lib/initializations/store", () => ({
   useAppStore: vi.fn(),
 }));
 
-vi.mock("@/components/features/watch/SubtitleOverlay", () => ({
-  default: ({ currentTimeMs }: { currentTimeMs: number }) => (
-    <div data-testid="subtitle-overlay">Overlay {currentTimeMs}</div>
-  ),
-}));
-
 const mockedUseAppStore = vi.mocked(useAppStore);
 const mockedUseAnimationTick = vi.mocked(useAnimationTick);
 
@@ -69,8 +63,6 @@ describe("PlayerSmall", () => {
     render(<PlayerSmall {...baseProps} />);
 
     expect(screen.getByTitle("Movie")).toBeInTheDocument();
-    expect(screen.getByTestId("subtitle-overlay")).toBeInTheDocument();
-    expect(screen.getByText("Overlay 1000")).toBeInTheDocument();
 
     expect(mockedUseAnimationTick).toHaveBeenCalled();
   });

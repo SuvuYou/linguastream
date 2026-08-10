@@ -143,7 +143,7 @@ export default function YouTubePlayer({
         <Button
           onClick={() => seekBy(-2)}
           variant={"secondary"}
-          className="absolute left-4 top-1/2 z-20 -translate-y-1/2 bg-secondary/60 active:not-aria-[haspopup]:-translate-y-1/2 active:not-aria-[haspopup]:bg-secondary"
+          className="absolute left-4 top-1/2 z-20 -translate-y-1/2 bg-secondary/60 active:not-aria-[haspopup]:-translate-y-1/2 "
           aria-label="Rewind 2 seconds"
         >
           −2s
