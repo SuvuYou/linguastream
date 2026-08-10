@@ -2,14 +2,14 @@
 
 import UnregisteredCheckbox from "@/components/features/admin/UnregisteredCheckbox";
 import LanguageFilter from "@/components/features/library/LanguageFilter";
-import SearchBar from "@/components/features/library/SearchBar";
 import LibraryGrid from "@/components/features/library/LibraryGrid";
 import ReindexCard from "@/components/features/admin/ReindexCard";
 import { useUser } from "@/hooks/useUser";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import SyncCard from "../features/admin/SyncCard";
+import SyncCard from "@/components/features/admin/SyncCard";
 import { useLibraryLanguages } from "@/hooks/useLibraryLanguages";
+import SearchBar from "@/components/primitives/SearchBar";
 
 export default function LibraryPage() {
   const userData = useUser();
@@ -21,7 +21,7 @@ export default function LibraryPage() {
   return (
     <section className="flex h-full w-full flex-col bg-background m-2 p-2 rounded-l-lg">
       <div className="flex items-center min-h-10 px-4 pb-4 pt-2 gap-4">
-        <SearchBar />
+        <SearchBar placeholder="Search the library..." />
         <LanguageFilter
           source={languages.source}
           translation={languages.translation}

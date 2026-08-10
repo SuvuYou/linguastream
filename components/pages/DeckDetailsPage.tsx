@@ -6,15 +6,15 @@ import { useDeckDetail } from "@/hooks/useDeckDetail";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import CardsPagination from "../features/deck-details/CardsPagination";
-import CardsList from "../features/deck-details/CardsList";
+import CardsList from "@/components/features/deck-details/CardsList";
 import { BookOpen } from "lucide-react";
-import SourceLanguageFilter from "../features/deck-details/SourceLanguageFilter";
-import SearchBar from "../features/deck-details/SearchBar";
+import SourceLanguageFilter from "@/components/features/deck-details/SourceLanguageFilter";
 import { useZodSearchParams } from "@/hooks/useZodSearchParams";
 import { DECK_DETAILS_PARAMS_SCHEMA } from "@/helpers/params-schema";
 import { useDeckCards } from "@/hooks/useDeckCards";
-import { DeleteCardsAlert } from "../features/deck-details/DeleteCardsAlert";
+import { DeleteCardsAlert } from "@/components/features/deck-details/DeleteCardsAlert";
+import SearchBar from "@/components/primitives/SearchBar";
+import PaginationControls from "../primitives/PaginationControls";
 
 interface DeckDetailPageProps {
   deckId: string;
@@ -107,7 +107,7 @@ export default function DeckDetailPage({ deckId }: DeckDetailPageProps) {
         </div>
 
         <div className="flex justify-between gap-8">
-          <SearchBar />
+          <SearchBar placeholder="Search words in this deck..." />
 
           <DeleteCardsAlert
             deckId={deckId}
@@ -162,11 +162,17 @@ export default function DeckDetailPage({ deckId }: DeckDetailPageProps) {
                 toggle: toggleSelected,
               }}
             />
-            <CardsPagination
-              currentPage={deckDetailsParams.params.page}
-              setPage={(newPage) => deckDetailsParams.set({ page: newPage })}
-              pageCount={deckCards.data?.pageCount ?? 0}
-            />
+            {(deckCards.data?.pageCount ?? 0) > 1 && (
+              <div className="pt-4">
+                <PaginationControls
+                  page={deckDetailsParams.params.page}
+                  pageCount={deckCards.data?.pageCount ?? 0}
+                  onPageChange={(newPage) =>
+                    deckDetailsParams.set({ page: newPage })
+                  }
+                />
+              </div>
+            )}
           </>
         )}
       </div>

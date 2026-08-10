@@ -8,6 +8,15 @@ const WIKTIONARY_LANG_MAP: Record<string, string> = {
   en: "en",
 };
 
+const LANGUAGE_SPECIFIC_RULES: Record<string, string> = {
+  de: ` 
+    Rules for lemma:
+      - Verbs: infinitive.
+      - Adjectives: positive/base form (e.g. "größeren" → "groß").
+      - Nouns, include the definite article.
+  `,
+};
+
 async function fetchWiktionary(word: string, lang: string) {
   const wikiLang = WIKTIONARY_LANG_MAP[lang] ?? "en";
   const url = `https://${wikiLang}.wiktionary.org/api/rest_v1/page/definition/${encodeURIComponent(word)}`;
@@ -43,6 +52,7 @@ async function fetchWiktionary(word: string, lang: string) {
 async function fetchGeminiProfile(
   word: string,
   lang: string,
+  context: string | null,
   wiktionaryData: {
     part_of_speech: string | null;
     forms: Record<string, string>;
@@ -51,17 +61,22 @@ async function fetchGeminiProfile(
   const alreadyHave = wiktionaryData
     ? `We already know: POS=${wiktionaryData.part_of_speech}, forms=${JSON.stringify(
         wiktionaryData.forms,
-      )}.`
+      )}. (as fetched from wiktionary data, so may lack context)`
     : "";
 
-  const prompt = `You are a linguistics expert. For the ${lang} word "${word}":
+  const prompt = `You are a linguistics expert. For the ${lang} word "${word}"${
+    context ? ` as used in this sentence: "${context}"` : ""
+  }:
 ${alreadyHave}
+${LANGUAGE_SPECIFIC_RULES[lang] ? LANGUAGE_SPECIFIC_RULES[lang] : ""}
+
 Return ONLY valid JSON (no markdown, no extra text):
 {
+  "lemma": string,
   "part_of_speech": "string or null if already known",
   "forms": {} or null if already known,
-  "lexical_family": ["3-6 related words"],
-  "collocations": ["3-5 common phrases using this word"]
+  "lexical_family": [{"word": string, "translation": string}, ...("3-6 related words")],
+  "collocations": [{"phrase": string, "translation": string}, ...("3-5 common phrases using this word")],
 }`;
 
   const text = await generateGeminiText(prompt, {
@@ -78,6 +93,7 @@ export async function GET(req: NextRequest) {
 
   const word = req.nextUrl.searchParams.get("word");
   const lang = req.nextUrl.searchParams.get("lang");
+  const context = req.nextUrl.searchParams.get("context");
 
   if (!word || !lang) {
     return NextResponse.json(
@@ -95,14 +111,15 @@ export async function GET(req: NextRequest) {
   const wiktionaryData = await fetchWiktionary(word, lang);
 
   let geminiData: {
+    lemma: string;
     part_of_speech: string | null;
     forms: Record<string, string> | null;
-    lexical_family: string[];
-    collocations: string[];
+    lexical_family: { word: string; translation: string }[];
+    collocations: { phrase: string; translation: string }[];
   };
 
   try {
-    geminiData = await fetchGeminiProfile(word, lang, wiktionaryData);
+    geminiData = await fetchGeminiProfile(word, lang, context, wiktionaryData);
   } catch (error) {
     return NextResponse.json(
       {
@@ -122,6 +139,7 @@ export async function GET(req: NextRequest) {
   const profile = await db.wordProfile.create({
     data: {
       word,
+      lemma: geminiData.lemma,
       source_language: lang,
       part_of_speech,
       forms,

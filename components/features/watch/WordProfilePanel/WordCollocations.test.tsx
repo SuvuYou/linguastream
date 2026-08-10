@@ -1,39 +1,73 @@
-import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
 import WordCollocations from "./WordCollocations";
+import type { CollocationItem } from "@/types";
 
 describe("WordCollocations", () => {
-  it("does not render when there are no collocations", () => {
-    render(<WordCollocations collocations={[]} />);
+  it("renders nothing when there are no collocations", () => {
+    const { container } = render(<WordCollocations collocations={[]} />);
 
-    expect(screen.queryByText(/collocations/i)).not.toBeInTheDocument();
+    expect(container.firstChild).toBeNull();
   });
 
-  it("renders heading and all collocations", () => {
-    render(
-      <WordCollocations
-        collocations={["make a decision", "take a break", "strong coffee"]}
-      />,
-    );
-
-    expect(screen.getByText("Collocations")).toBeInTheDocument();
-
-    expect(screen.getByText("make a decision")).toBeInTheDocument();
-    expect(screen.getByText("take a break")).toBeInTheDocument();
-    expect(screen.getByText("strong coffee")).toBeInTheDocument();
-  });
-
-  it("renders the correct number of collocations", () => {
-    const collocations = ["make a decision", "take a break", "strong coffee"];
+  it("renders the collocations heading", () => {
+    const collocations: CollocationItem[] = [
+      {
+        phrase: "make a decision",
+        translation: "eine Entscheidung treffen",
+      },
+    ];
 
     render(<WordCollocations collocations={collocations} />);
 
-    expect(screen.getByText("make a decision")).toBeInTheDocument();
-    expect(screen.getByText("take a break")).toBeInTheDocument();
-    expect(screen.getByText("strong coffee")).toBeInTheDocument();
+    expect(
+      screen.getByText("Collocations", { exact: true }),
+    ).toBeInTheDocument();
+  });
+
+  it("renders a collocation with its translation", () => {
+    const collocations: CollocationItem[] = [
+      {
+        phrase: "make a decision",
+        translation: "eine Entscheidung treffen",
+      },
+    ];
+
+    render(<WordCollocations collocations={collocations} />);
 
     expect(
-      screen.getAllByText(/make a decision|take a break|strong coffee/),
-    ).toHaveLength(collocations.length);
+      screen.getByText("make a decision -> eine Entscheidung treffen"),
+    ).toBeInTheDocument();
+  });
+
+  it("renders all collocations", () => {
+    const collocations: CollocationItem[] = [
+      {
+        phrase: "make a decision",
+        translation: "eine Entscheidung treffen",
+      },
+      {
+        phrase: "take a break",
+        translation: "eine Pause machen",
+      },
+      {
+        phrase: "strong coffee",
+        translation: "starker Kaffee",
+      },
+    ];
+
+    render(<WordCollocations collocations={collocations} />);
+
+    expect(
+      screen.getByText("make a decision -> eine Entscheidung treffen"),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByText("take a break -> eine Pause machen"),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByText("strong coffee -> starker Kaffee"),
+    ).toBeInTheDocument();
   });
 });

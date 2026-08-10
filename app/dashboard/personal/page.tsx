@@ -1,3 +1,9 @@
-export default function PersonalLibrary() {
-  return <div>Personal Library</div>;
+import PersonalLibraryPage from "@/components/pages/PersonalLibraryPage";
+
+export default async function PersonalLibrary() {
+  return (
+    <>
+      <PersonalLibraryPage />
+    </>
+  );
 }

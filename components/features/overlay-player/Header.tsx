@@ -2,27 +2,35 @@
 
 import { useRef, useState, useEffect, startTransition } from "react";
 import { useAppStore } from "@/lib/initializations/store";
-import LanguageFilter from "@/components/features/library/LanguageFilter";
-import { useOverlayLanguages } from "@/hooks/useOverlayLanguages";
+import LanguageFilter, {
+  LanguageFilterProps,
+} from "@/components/features/library/LanguageFilter";
 import { Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
 interface HeaderProps {
+  source: Pick<LanguageFilterProps, "source">["source"];
+  translation: Pick<LanguageFilterProps, "translation">["translation"];
+  isLoading: boolean;
+  isError: boolean;
   isOverlayOpen: boolean;
   isSearchLoading: boolean;
   onSearchQueryChange: (query: string) => void;
 }
 
 export default function Header({
+  source,
+  translation,
+  isLoading,
+  isError,
   isOverlayOpen,
   isSearchLoading,
   onSearchQueryChange,
 }: HeaderProps) {
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const languages = useOverlayLanguages();
 
   const [visualQuery, setVisualQuery] = useState("");
 
@@ -65,10 +73,10 @@ export default function Header({
 
       <div className="flex items-center gap-4 shrink-0">
         <LanguageFilter
-          source={languages.source}
-          translation={languages.translation}
-          isLoading={languages.isLoading || languages.isFetching}
-          isError={languages.isError}
+          source={source}
+          translation={translation}
+          isLoading={isLoading}
+          isError={isError}
         />
         <div className="flex items-center gap-2 mr-12">
           <Label

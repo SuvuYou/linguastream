@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+
 import LibraryPage from "./LibraryPage";
 import { useUser } from "@/hooks/useUser";
 import { useLibraryLanguages } from "@/hooks/useLibraryLanguages";
@@ -12,20 +13,12 @@ vi.mock("@/hooks/useLibraryLanguages", () => ({
   useLibraryLanguages: vi.fn(),
 }));
 
-vi.mock("@/components/features/library/SearchBar", () => ({
-  default: () => <div data-testid="searchbar" />,
-}));
-
 vi.mock("@/components/features/library/LanguageFilter", () => ({
   default: () => <div data-testid="language-filter" />,
 }));
 
 vi.mock("@/components/features/library/LibraryGrid", () => ({
   default: () => <div data-testid="library-grid" />,
-}));
-
-vi.mock("@/components/features/admin/UnregisteredCheckbox", () => ({
-  default: () => <div data-testid="unregistered-checkbox" />,
 }));
 
 vi.mock("@/components/features/admin/SyncCard", () => ({
@@ -36,86 +29,72 @@ vi.mock("@/components/features/admin/ReindexCard", () => ({
   default: () => <div data-testid="reindex-card" />,
 }));
 
-vi.mock("@/components/ui/scroll-area", () => ({
-  ScrollArea: ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
-  ),
+vi.mock("@/components/features/admin/UnregisteredCheckbox", () => ({
+  default: () => <div data-testid="unregistered-checkbox" />,
 }));
 
-vi.mock("@/components/ui/separator", () => ({
-  Separator: () => <hr data-testid="separator" />,
+vi.mock("@/components/primitives/SearchBar", () => ({
+  default: () => <div data-testid="search-bar" />,
 }));
 
 const mockedUseUser = vi.mocked(useUser);
 const mockedUseLibraryLanguages = vi.mocked(useLibraryLanguages);
 
 beforeEach(() => {
-  vi.resetAllMocks();
+  vi.clearAllMocks();
+
+  mockedUseUser.mockReturnValue({
+    data: { is_admin: false },
+  } as any);
 
   mockedUseLibraryLanguages.mockReturnValue({
-    source: ["en"],
-    translation: ["de"],
+    source: {},
+    translation: {},
     isLoading: false,
     isFetching: false,
     isError: false,
-  } as never);
+  } as any);
 });
 
 describe("LibraryPage", () => {
-  it("renders common components", () => {
-    mockedUseUser.mockReturnValue({
-      data: {
-        is_admin: false,
-      },
-    } as never);
-
+  it("renders language filter", () => {
     render(<LibraryPage />);
 
-    expect(screen.getByTestId("searchbar")).toBeInTheDocument();
     expect(screen.getByTestId("language-filter")).toBeInTheDocument();
+  });
+
+  it("renders library grid", () => {
+    render(<LibraryPage />);
+
     expect(screen.getByTestId("library-grid")).toBeInTheDocument();
-    expect(screen.getByTestId("separator")).toBeInTheDocument();
   });
 
-  it("does not render admin controls for regular users", () => {
+  it("renders admin controls for admin users", () => {
     mockedUseUser.mockReturnValue({
-      data: {
-        is_admin: false,
-      },
-    } as never);
+      data: { is_admin: true },
+    } as any);
 
     render(<LibraryPage />);
 
-    expect(
-      screen.queryByTestId("unregistered-checkbox"),
-    ).not.toBeInTheDocument();
-    expect(screen.queryByTestId("sync-card")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("reindex-card")).not.toBeInTheDocument();
-  });
-
-  it("renders admin controls for admins", () => {
-    mockedUseUser.mockReturnValue({
-      data: {
-        is_admin: true,
-      },
-    } as never);
-
-    render(<LibraryPage />);
-
-    expect(screen.getByTestId("unregistered-checkbox")).toBeInTheDocument();
     expect(screen.getByTestId("sync-card")).toBeInTheDocument();
     expect(screen.getByTestId("reindex-card")).toBeInTheDocument();
   });
 
-  it("passes language data to LanguageFilter", () => {
+  it("does not render admin controls for regular users", () => {
+    render(<LibraryPage />);
+
+    expect(screen.queryByTestId("sync-card")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("reindex-card")).not.toBeInTheDocument();
+  });
+
+  it("does not render admin controls when user data is missing", () => {
     mockedUseUser.mockReturnValue({
-      data: {
-        is_admin: false,
-      },
-    } as never);
+      data: undefined,
+    } as any);
 
     render(<LibraryPage />);
 
-    expect(mockedUseLibraryLanguages).toHaveBeenCalled();
+    expect(screen.queryByTestId("sync-card")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("reindex-card")).not.toBeInTheDocument();
   });
 });

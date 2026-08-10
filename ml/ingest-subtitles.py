@@ -9,6 +9,7 @@ Usage:
     --acquisition-method <upload|whisperx> \
     [--source-file /path/to/file.srt]       # if acquisition-method=upload
     [--video-file /path/to/video.mp4]       # if acquisition-method=whisperx
+    [--youtube-video-id       <uuid>]       # if acquisition-method=youtube
     [--translate-langs de,fr,...]           # comma separated, omit for source only
     [--translate-method libretranslate|deepl|upload]
     [--translate-files de:/path/to/de.srt,...] # if translate-method=upload
@@ -25,6 +26,11 @@ import requests
 import psycopg2
 from datetime import datetime, timezone
 from dotenv import load_dotenv
+import subprocess
+import glob
+
+YTDLP_PATH = "/opt/homebrew/bin/yt-dlp"
+
 
 # ── env ────────────────────────────────────────────────────────────────────────
 
@@ -361,6 +367,74 @@ def translate_deepl(lines: list[dict], source_lang: str, target_lang: str) -> li
 
     return translated
 
+# ── YT ───────────────────────────────────────────────────────────────────────
+
+def download_youtube_subtitles(video_id: str, language: str, output_dir: str) -> str | None:
+    """
+    Download YouTube subtitles for a specific language.
+    Returns path to the downloaded VTT file, or None if not available.
+    """
+    url = f"https://www.youtube.com/watch?v={video_id}"
+    output_template = f"{output_dir}/{video_id}"
+
+    cmd = [
+        YTDLP_PATH,
+        "--write-sub",
+        "--write-auto-sub",
+        "--skip-download",
+        "--sub-lang", language,
+        "--sub-format", "vtt",
+        "-o", output_template,
+        url,
+    ]
+
+    try:
+        subprocess.run(cmd, check=True, capture_output=True, timeout=60)
+    except subprocess.CalledProcessError as e:
+        log(f"yt-dlp error: {e.stderr.decode()}")
+        return None
+    except subprocess.TimeoutExpired:
+        log("yt-dlp timed out")
+        return None
+
+    # find the downloaded file — yt-dlp names it like videoId.en.vtt
+    matches = glob.glob(f"{output_dir}/{video_id}.{language}*.vtt")
+    if not matches:
+        log(f"No VTT file found for language {language}")
+        return None
+
+    return matches[0]
+
+
+def download_youtube_audio(video_id: str, output_dir: str) -> str | None:
+    """
+    Download audio only for WhisperX transcription.
+    Returns path to the downloaded audio file.
+    """
+    url = f"https://www.youtube.com/watch?v={video_id}"
+    output_template = f"{output_dir}/{video_id}_audio"
+
+    cmd = [
+        YTDLP_PATH,
+        "--extract-audio",
+        "--audio-format", "mp3",
+        "--audio-quality", "0",
+        "-o", output_template,
+        url,
+    ]
+
+    try:
+        subprocess.run(cmd, check=True, capture_output=True, timeout=300)
+    except subprocess.CalledProcessError as e:
+        log(f"yt-dlp audio download error: {e.stderr.decode()}")
+        return None
+    except subprocess.TimeoutExpired:
+        log("yt-dlp audio download timed out")
+        return None
+
+    matches = glob.glob(f"{output_dir}/{video_id}_audio.*")
+    return matches[0] if matches else None
+
 # ── main ───────────────────────────────────────────────────────────────────────
 
 def main():
@@ -396,13 +470,34 @@ def main():
             log(f"Parsing source subtitle file: {args.source_file}")
             source_lines = parse_subtitle_file(args.source_file)
             log(f"Parsed {len(source_lines)} source lines")
-            detected_lang = detect_language(source_lines, fallback=args.source_lang)
-
+            detected_lang = detect_language(source_lines, fallback=args.source_lang)    
+        elif args.acquisition_method == "whisperx" and args.youtube_video_id:
+            log(f"Downloading audio from YouTube video {args.youtube_video_id}...")
+            import tempfile
+            tmp_dir = tempfile.mkdtemp()
+            audio_path = download_youtube_audio(args.youtube_video_id, tmp_dir)
+            if not audio_path:
+                raise RuntimeError("Failed to download YouTube audio")
+            log(f"Audio downloaded to {audio_path}, starting WhisperX...")
+            source_lines, detected_lang = transcribe_with_whisperx(audio_path)
         elif args.acquisition_method == "whisperx":
             if not args.video_file:
                 raise ValueError("--video-file required when acquisition-method=whisperx")
             log("Starting WhisperX transcription...")
             source_lines, detected_lang = transcribe_with_whisperx(args.video_file, args.media_id)
+        elif args.acquisition_method == "youtube":
+            if not args.youtube_video_id:
+                raise ValueError("--youtube-video-id required for youtube method")
+            log(f"Downloading YouTube subtitles for {args.youtube_video_id} ({args.source_lang})...")
+            import tempfile, os
+            tmp_dir = tempfile.mkdtemp()
+            caption_path = download_youtube_subtitles(args.youtube_video_id, args.source_lang, tmp_dir)
+            if not caption_path:
+                raise RuntimeError(f"No subtitles available for language: {args.source_lang}")
+            source_lines = parse_subtitle_file(caption_path)
+            detected_lang = args.source_lang
+            log(f"Downloaded {len(source_lines)} caption lines")
+        
 
         set_job_status(args.media_id, "running", 80)
         log(f"Source subtitles ready — {len(source_lines)} lines, language: {detected_lang}")
@@ -452,6 +547,16 @@ def main():
 
                 elif args.translate_method == "deepl":
                     translated_lines = translate_deepl(source_lines, args.source_lang, target_lang)
+
+                elif args.translate_method == "youtube":
+                    log(f"Downloading YouTube subtitles for translation: {target_lang}...")
+                    caption_path = download_youtube_subtitles(
+                        args.youtube_video_id, target_lang, tmp_dir
+                    )
+                    if not caption_path:
+                        log(f"No YouTube subtitles for {target_lang}, skipping")
+                        continue
+                    translated_lines = parse_subtitle_file(caption_path)
 
                 log(f"Writing {target_lang} track to DB...")
                 with get_conn() as conn:

@@ -107,7 +107,7 @@ export default function SearchResults({
     );
   }
 
-  if (searchResults.isLoading) {
+  if (searchResults.isLoading || searchResults.isFetching) {
     return (
       <Empty className="flex-1 h-full justify-center">
         <EmptyHeader>
@@ -137,7 +137,7 @@ export default function SearchResults({
   return (
     <div
       ref={containerRef}
-      className="flex-1 min-w-0 overflow-y-auto flex flex-col gap-1 outline-none focus:ring-1 focus:ring-primary/20"
+      className={`${(searchResults.data?.totalPages ?? 0) > 1 ? "h-[calc(100dvh-168px)]" : "h-full"} overflow-y-scroll flex flex-col gap-1 outline-none focus:ring-1 focus:ring-primary/20`}
       role="listbox"
       aria-label="Search results"
       aria-activedescendant={

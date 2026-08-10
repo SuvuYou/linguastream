@@ -15,6 +15,7 @@ import { DeckDetailCard } from "@/hooks/useDeckCards";
 import { SquareArrowOutUpRight } from "lucide-react";
 import Link from "next/link";
 import { Checkbox } from "@/components/ui/checkbox";
+import YouTubePlayerSmall from "../player/YouTubePlayerSmall";
 
 interface Props {
   card: DeckDetailCard;
@@ -45,7 +46,7 @@ export default function CardAccordionItem({ card, cardSelection }: Props) {
             className="mt-0.5 mr-2"
           />
           <span className="text-lg font-medium text-primary-foreground w-40 truncate">
-            {card.word}
+            {card.lemma}
           </span>
           <span className="text-base text-muted-foreground flex-1 truncate">
             {card.word_translation}
@@ -81,7 +82,6 @@ export default function CardAccordionItem({ card, cardSelection }: Props) {
                 </p>
               </div>
             )}
-
             {card.word_profile &&
               card.word_profile.forms &&
               Object.keys(card.word_profile.forms).length > 0 && (
@@ -115,9 +115,14 @@ export default function CardAccordionItem({ card, cardSelection }: Props) {
                     Lexical Family
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {card.word_profile.lexical_family.map((w) => (
-                      <Badge key={w} variant="outline" className="text-sm">
-                        {w}
+                    {card.word_profile.lexical_family.map((item) => (
+                      <Badge
+                        key={item.word}
+                        variant="outline"
+                        size="sm"
+                        className="text-sm"
+                      >
+                        {item.word} {"->"} {item.translation}
                       </Badge>
                     ))}
                   </div>
@@ -130,12 +135,12 @@ export default function CardAccordionItem({ card, cardSelection }: Props) {
                     Collocations
                   </div>
                   <div className="flex flex-col gap-2">
-                    {card.word_profile.collocations.map((c) => (
+                    {card.word_profile.collocations.map((item) => (
                       <span
-                        key={c}
-                        className="text-sm text-primary-foreground border-l-4 border-secondary pl-2"
+                        key={item.phrase}
+                        className="text-sm text-primary-foreground pl-2 border-l-6 border-secondary"
                       >
-                        {c}
+                        {item.phrase} {"->"} {item.translation}
                       </span>
                     ))}
                   </div>
@@ -151,7 +156,7 @@ export default function CardAccordionItem({ card, cardSelection }: Props) {
               </div>
               <div className="flex flex-col gap-2">
                 <p className="text-sm text-primary-foreground mb-2!">
-                  {card.context_text}
+                  {highlightWord(card.context_text, card.word)}
                 </p>
                 {card.context_translation && (
                   <p className="text-sm text-muted-foreground italic">
@@ -167,7 +172,16 @@ export default function CardAccordionItem({ card, cardSelection }: Props) {
                   <PlayerSmall
                     streamUrl={card.streamUrl}
                     mediaItem={adaptCardStructureToPlayableItem(card)}
-                    shouldShowSubtitles={false}
+                  />
+                </div>
+              </div>
+            )}
+            {card.videoId && (
+              <div className="border-l-2 border-contrast pl-4">
+                <div className="w-full bg-black aspect-video">
+                  <YouTubePlayerSmall
+                    videoId={card.videoId}
+                    mediaItem={adaptCardStructureToPlayableItem(card)}
                   />
                 </div>
               </div>
@@ -176,5 +190,25 @@ export default function CardAccordionItem({ card, cardSelection }: Props) {
         </div>
       </AccordionContent>
     </AccordionItem>
+  );
+}
+
+function highlightWord(text: string, word: string) {
+  if (!word) return text;
+
+  const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const regex = new RegExp(`(${escaped})`, "gi");
+
+  return text.split(regex).map((part, index) =>
+    regex.test(part) ? (
+      <mark
+        key={index}
+        className="bg-vibrant/75 text-primary-foreground rounded px-1"
+      >
+        {part}
+      </mark>
+    ) : (
+      part
+    ),
   );
 }

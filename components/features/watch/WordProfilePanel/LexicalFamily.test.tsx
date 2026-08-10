@@ -1,34 +1,65 @@
-import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
 import LexicalFamily from "./LexicalFamily";
+import type { LexicalFamilyItem } from "@/types";
 
 describe("LexicalFamily", () => {
-  it("does not render when lexical family is empty", () => {
-    render(<LexicalFamily lexicalFamily={[]} />);
+  it("renders nothing when there are no lexical family items", () => {
+    const { container } = render(<LexicalFamily lexicalFamily={[]} />);
 
-    expect(screen.queryByText(/lexical family/i)).not.toBeInTheDocument();
+    expect(container.firstChild).toBeNull();
   });
 
-  it("renders heading and all lexical family words", () => {
-    render(
-      <LexicalFamily lexicalFamily={["run", "runner", "running", "ran"]} />,
-    );
+  it("renders the lexical family heading", () => {
+    const lexicalFamily: LexicalFamilyItem[] = [
+      {
+        word: "decide",
+        translation: "entscheiden",
+      },
+    ];
 
-    expect(screen.getByText("Lexical Family")).toBeInTheDocument();
+    render(<LexicalFamily lexicalFamily={lexicalFamily} />);
 
-    expect(screen.getByText("run")).toBeInTheDocument();
-    expect(screen.getByText("runner")).toBeInTheDocument();
-    expect(screen.getByText("running")).toBeInTheDocument();
-    expect(screen.getByText("ran")).toBeInTheDocument();
+    expect(
+      screen.getByText("Lexical Family", { exact: true }),
+    ).toBeInTheDocument();
   });
 
-  it("renders the correct number of badges", () => {
-    const words = ["run", "runner", "running"];
+  it("renders a lexical family item with its translation", () => {
+    const lexicalFamily: LexicalFamilyItem[] = [
+      {
+        word: "decide",
+        translation: "entscheiden",
+      },
+    ];
 
-    render(<LexicalFamily lexicalFamily={words} />);
+    render(<LexicalFamily lexicalFamily={lexicalFamily} />);
 
-    expect(screen.getAllByText(/run|runner|running/)).toHaveLength(
-      words.length,
-    );
+    expect(screen.getByText("decide -> entscheiden")).toBeInTheDocument();
+  });
+
+  it("renders all lexical family items", () => {
+    const lexicalFamily: LexicalFamilyItem[] = [
+      {
+        word: "decide",
+        translation: "entscheiden",
+      },
+      {
+        word: "decision",
+        translation: "Entscheidung",
+      },
+      {
+        word: "decisive",
+        translation: "entscheidend",
+      },
+    ];
+
+    render(<LexicalFamily lexicalFamily={lexicalFamily} />);
+
+    expect(screen.getByText("decide -> entscheiden")).toBeInTheDocument();
+
+    expect(screen.getByText("decision -> Entscheidung")).toBeInTheDocument();
+
+    expect(screen.getByText("decisive -> entscheidend")).toBeInTheDocument();
   });
 });

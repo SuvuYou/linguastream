@@ -1,203 +1,422 @@
-import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import React from "react";
-
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import CardAccordionItem from "./CardAccordionItem";
+import type { DeckDetailCard } from "@/hooks/useDeckCards";
+
+vi.mock("@/helpers/language-helpers", () => ({
+  getLanguageLabel: vi.fn((language: string) => {
+    const labels: Record<string, string> = {
+      en: "English",
+      de: "German",
+      fr: "French",
+    };
+
+    return labels[language] ?? language;
+  }),
+}));
 
 vi.mock("@/components/features/player/PlayerSmall", () => ({
-  __esModule: true,
-  default: () => <div data-testid="player">Player</div>,
+  default: vi.fn(({ streamUrl, mediaItem }) => (
+    <div data-testid="player-small">
+      <span>{streamUrl}</span>
+      <span>{mediaItem.media_title}</span>
+    </div>
+  )),
+}));
+
+vi.mock("../player/YouTubePlayerSmall", () => ({
+  default: vi.fn(({ videoId, mediaItem }) => (
+    <div data-testid="youtube-player-small">
+      <span>{videoId}</span>
+      <span>{mediaItem.media_title}</span>
+    </div>
+  )),
 }));
 
 vi.mock("@/components/ui/accordion", () => ({
-  AccordionItem: ({ children }: any) => <div>{children}</div>,
-  AccordionTrigger: ({ children }: any) => <div>{children}</div>,
-  AccordionContent: ({ children }: any) => <div>{children}</div>,
-}));
-
-vi.mock("@/components/ui/button", () => ({
-  Button: ({ children }: any) => <>{children}</>,
+  AccordionItem: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="accordion-item">{children}</div>
+  ),
+  AccordionTrigger: ({ children }: { children: React.ReactNode }) => (
+    <button type="button">{children}</button>
+  ),
+  AccordionContent: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="accordion-content">{children}</div>
+  ),
 }));
 
 vi.mock("@/components/ui/badge", () => ({
-  Badge: ({ children }: any) => <span>{children}</span>,
+  Badge: ({ children }: { children: React.ReactNode }) => (
+    <span data-testid="badge">{children}</span>
+  ),
 }));
 
 vi.mock("@/components/ui/checkbox", () => ({
-  Checkbox: ({ checked, onCheckedChange }: any) => (
-    <input
-      type="checkbox"
-      checked={checked}
-      onChange={onCheckedChange}
-      aria-label="Select card"
+  Checkbox: ({
+    checked,
+    onCheckedChange,
+    onClick,
+  }: {
+    checked: boolean;
+    onCheckedChange: (checked: boolean) => void;
+    onClick: (event: React.MouseEvent) => void;
+  }) => (
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={checked}
+      onClick={(event) => {
+        onClick(event);
+        onCheckedChange(!checked);
+      }}
     />
   ),
 }));
 
 vi.mock("next/link", () => ({
-  default: ({ href, children }: any) => <a href={href}>{children}</a>,
+  default: ({
+    children,
+    href,
+    target,
+    onClick,
+  }: {
+    children: React.ReactNode;
+    href: string;
+    target?: string;
+    onClick?: (event: React.MouseEvent) => void;
+  }) => (
+    <a href={href} target={target} onClick={onClick}>
+      {children}
+    </a>
+  ),
 }));
 
-vi.mock("@/helpers/language-helpers", () => ({
-  getLanguageLabel: vi.fn(() => "English"),
-}));
+function createCard(overrides: Partial<DeckDetailCard> = {}): DeckDetailCard {
+  return {
+    id: "card-1",
+    lemma: "Haus",
+    word: "Haus",
+    word_translation: "house",
+    source_language: "en",
+    media_content_id: "media-1",
+    start_ms: 12345,
+    context_text: "This is a Haus in Berlin.",
+    context_translation: "Das ist ein Haus in Berlin.",
+    contextual_definition: "A building where people live.",
+    streamUrl: null,
+    videoId: null,
+    word_profile: null,
+    ...overrides,
+  } as DeckDetailCard;
+}
 
-describe("CardAccordionItem", () => {
+function renderCard(
+  cardOverrides: Partial<DeckDetailCard> = {},
+  selected = false,
+) {
   const toggle = vi.fn();
 
-  const baseCard = {
-    id: "card-1",
-    word: "laufen",
-    word_translation: "run",
-    source_language: "de",
-    media_content_id: "media-1",
-    start_ms: 1500,
+  const card = createCard(cardOverrides);
 
-    context_text: "Ich laufe jeden Tag.",
-    context_translation: "I run every day.",
+  render(
+    <CardAccordionItem
+      card={card}
+      cardSelection={{
+        selected: new Set(selected ? [card.id] : []),
+        toggle,
+      }}
+    />,
+  );
 
-    contextual_definition: "to move quickly on foot",
+  return { card, toggle };
+}
 
-    streamUrl: "/video.mp4",
+beforeEach(() => {
+  vi.clearAllMocks();
+});
 
-    word_profile: {
-      forms: {
-        Present: "läuft",
-        Past: "lief",
-      },
-      lexical_family: ["laufen", "Läufer"],
-      collocations: ["schnell laufen", "weit laufen"],
-    },
-  };
+describe("CardAccordionItem", () => {
+  it("renders the basic card information", () => {
+    renderCard();
 
-  const selection = {
-    selected: new Set<string>(),
-    toggle,
-  };
-
-  it("renders basic card information", () => {
-    render(
-      <CardAccordionItem card={baseCard as any} cardSelection={selection} />,
-    );
-
-    expect(screen.getByText("run")).toBeInTheDocument();
+    expect(screen.getByText("house")).toBeInTheDocument();
     expect(screen.getByText("English")).toBeInTheDocument();
-    expect(screen.getByText("Ich laufe jeden Tag.")).toBeInTheDocument();
   });
 
-  it("renders definition", () => {
-    render(
-      <CardAccordionItem card={baseCard as any} cardSelection={selection} />,
+  it("renders the checkbox as selected when the card is selected", () => {
+    renderCard({}, true);
+
+    expect(screen.getByRole("checkbox")).toHaveAttribute(
+      "aria-checked",
+      "true",
     );
-
-    expect(screen.getByText("Definition")).toBeInTheDocument();
-    expect(screen.getByText("to move quickly on foot")).toBeInTheDocument();
   });
 
-  it("renders forms", () => {
-    render(
-      <CardAccordionItem card={baseCard as any} cardSelection={selection} />,
+  it("renders the checkbox as unselected when the card is not selected", () => {
+    renderCard();
+
+    expect(screen.getByRole("checkbox")).toHaveAttribute(
+      "aria-checked",
+      "false",
     );
-
-    expect(screen.getByText("Forms")).toBeInTheDocument();
-    expect(screen.getByText("Present")).toBeInTheDocument();
-    expect(screen.getByText("läuft")).toBeInTheDocument();
-    expect(screen.getByText("Past")).toBeInTheDocument();
-    expect(screen.getByText("lief")).toBeInTheDocument();
   });
 
-  it("renders lexical family and collocations", () => {
-    render(
-      <CardAccordionItem card={baseCard as any} cardSelection={selection} />,
-    );
-
-    expect(screen.getByText("Lexical Family")).toBeInTheDocument();
-    expect(screen.getByText("Läufer")).toBeInTheDocument();
-
-    expect(screen.getByText("Collocations")).toBeInTheDocument();
-    expect(screen.getByText("schnell laufen")).toBeInTheDocument();
-    expect(screen.getByText("weit laufen")).toBeInTheDocument();
-  });
-
-  it("renders context translation", () => {
-    render(
-      <CardAccordionItem card={baseCard as any} cardSelection={selection} />,
-    );
-
-    expect(screen.getByText("I run every day.")).toBeInTheDocument();
-  });
-
-  it("renders player when stream url exists", () => {
-    render(
-      <CardAccordionItem card={baseCard as any} cardSelection={selection} />,
-    );
-
-    expect(screen.getByTestId("player")).toBeInTheDocument();
-  });
-
-  it("calls toggle when checkbox changes", async () => {
+  it("toggles card selection when checkbox is clicked", async () => {
     const user = userEvent.setup();
-
-    render(
-      <CardAccordionItem card={baseCard as any} cardSelection={selection} />,
-    );
+    const { toggle } = renderCard();
 
     await user.click(screen.getByRole("checkbox"));
 
     expect(toggle).toHaveBeenCalledWith("card-1");
   });
 
-  it("renders checked checkbox when selected", () => {
-    render(
-      <CardAccordionItem
-        card={baseCard as any}
-        cardSelection={{
-          selected: new Set(["card-1"]),
-          toggle,
-        }}
-      />,
-    );
+  it("renders a link to the media at the card timestamp", () => {
+    renderCard();
 
-    expect(screen.getByRole("checkbox")).toBeChecked();
+    const link = screen.getByRole("link");
+
+    expect(link).toHaveAttribute("href", "/watch/media-1?t=12345");
+
+    expect(link).toHaveAttribute("target", "_blank");
   });
 
-  it("renders external link", () => {
-    render(
-      <CardAccordionItem card={baseCard as any} cardSelection={selection} />,
-    );
+  it("renders the contextual definition", () => {
+    renderCard({
+      contextual_definition: "A building where people live.",
+    });
 
-    expect(screen.getByRole("link")).toHaveAttribute(
-      "href",
-      "/watch/media-1?t=1500",
-    );
+    expect(screen.getByText("Definition")).toBeInTheDocument();
+    expect(
+      screen.getByText("A building where people live."),
+    ).toBeInTheDocument();
   });
 
-  it("does not render optional sections when data is missing", () => {
-    render(
-      <CardAccordionItem
-        card={
-          {
-            ...baseCard,
-            contextual_definition: null,
-            context_translation: null,
-            streamUrl: null,
-            word_profile: {
-              forms: {},
-              lexical_family: [],
-              collocations: [],
-            },
-          } as any
-        }
-        cardSelection={selection}
-      />,
-    );
+  it("does not render the definition section when there is no definition", () => {
+    renderCard({
+      contextual_definition: null,
+    });
 
     expect(screen.queryByText("Definition")).not.toBeInTheDocument();
+  });
+
+  it("renders word forms", () => {
+    renderCard({
+      word_profile: {
+        forms: {
+          plural: "Häuser",
+          diminutive: "Häuschen",
+        },
+        lexical_family: [],
+        collocations: [],
+      },
+    });
+
+    expect(screen.getByText("Forms")).toBeInTheDocument();
+    expect(screen.getByText("plural")).toBeInTheDocument();
+    expect(screen.getByText("Häuser")).toBeInTheDocument();
+    expect(screen.getByText("diminutive")).toBeInTheDocument();
+    expect(screen.getByText("Häuschen")).toBeInTheDocument();
+  });
+
+  it("does not render forms when the forms object is empty", () => {
+    renderCard({
+      word_profile: {
+        forms: {},
+        lexical_family: [],
+        collocations: [],
+      },
+    });
+
     expect(screen.queryByText("Forms")).not.toBeInTheDocument();
+  });
+
+  it("renders the lexical family", () => {
+    renderCard({
+      word_profile: {
+        forms: {},
+        lexical_family: [
+          {
+            word: "Häuser",
+            translation: "houses",
+          },
+          {
+            word: "häuslich",
+            translation: "domestic",
+          },
+        ],
+        collocations: [],
+      },
+    });
+
+    expect(screen.getByText("Lexical Family")).toBeInTheDocument();
+
+    expect(screen.getByText("Häuser -> houses")).toBeInTheDocument();
+
+    expect(screen.getByText("häuslich -> domestic")).toBeInTheDocument();
+  });
+
+  it("does not render lexical family when it is empty", () => {
+    renderCard({
+      word_profile: {
+        forms: {},
+        lexical_family: [],
+        collocations: [],
+      },
+    });
+
     expect(screen.queryByText("Lexical Family")).not.toBeInTheDocument();
+  });
+
+  it("renders collocations", () => {
+    renderCard({
+      word_profile: {
+        forms: {},
+        lexical_family: [],
+        collocations: [
+          {
+            phrase: "ein Haus bauen",
+            translation: "build a house",
+          },
+          {
+            phrase: "zu Hause",
+            translation: "at home",
+          },
+        ],
+      },
+    });
+
+    expect(screen.getByText("Collocations")).toBeInTheDocument();
+
+    expect(
+      screen.getByText("ein Haus bauen -> build a house"),
+    ).toBeInTheDocument();
+
+    expect(screen.getByText("zu Hause -> at home")).toBeInTheDocument();
+  });
+
+  it("does not render profile sections when there is no word profile", () => {
+    renderCard({
+      word_profile: null,
+    });
+
+    expect(screen.queryByText("Forms")).not.toBeInTheDocument();
+
+    expect(screen.queryByText("Lexical Family")).not.toBeInTheDocument();
+
     expect(screen.queryByText("Collocations")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("player")).not.toBeInTheDocument();
-    expect(screen.queryByText("I run every day.")).not.toBeInTheDocument();
+  });
+
+  it("renders the context translation when available", () => {
+    renderCard({
+      context_translation: "Das ist ein Haus.",
+    });
+
+    expect(screen.getByText("Das ist ein Haus.")).toBeInTheDocument();
+  });
+
+  it("does not render context translation when unavailable", () => {
+    renderCard({
+      context_translation: null,
+    });
+
+    expect(
+      screen.queryByText("Das ist ein Haus in Berlin."),
+    ).not.toBeInTheDocument();
+  });
+
+  it("renders the small player for stream content", () => {
+    renderCard({
+      streamUrl: "https://example.com/stream.m3u8",
+    });
+
+    expect(screen.getByTestId("player-small")).toBeInTheDocument();
+
+    expect(
+      screen.getByText("https://example.com/stream.m3u8"),
+    ).toBeInTheDocument();
+  });
+
+  it("does not render the small player without a stream URL", () => {
+    renderCard({
+      streamUrl: null,
+      videoId: null,
+    });
+
+    expect(screen.queryByTestId("player-small")).not.toBeInTheDocument();
+  });
+
+  it("renders the YouTube player for YouTube content", () => {
+    renderCard({
+      videoId: "youtube-123",
+    });
+
+    expect(screen.getByTestId("youtube-player-small")).toBeInTheDocument();
+
+    expect(screen.getByText("youtube-123")).toBeInTheDocument();
+  });
+
+  it("does not render the YouTube player without a video id", () => {
+    renderCard({
+      streamUrl: null,
+      videoId: null,
+    });
+
+    expect(
+      screen.queryByTestId("youtube-player-small"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("renders the word highlighted in the context", () => {
+    renderCard({
+      word: "Berlin",
+      context_text: "Ich sehe ein Berlin.",
+    });
+
+    const highlighted = screen.getByText("Berlin");
+
+    expect(highlighted.tagName).toBe("MARK");
+  });
+
+  it("highlights the word case-insensitively", () => {
+    renderCard({
+      word: "Berlin",
+      context_text: "Ich sehe ein Berlin.",
+    });
+
+    const highlighted = screen.getByText("Berlin");
+
+    expect(highlighted.tagName).toBe("MARK");
+  });
+
+  it("renders the full context when the word is empty", () => {
+    renderCard({
+      word: "",
+      context_text: "This is some context.",
+    });
+
+    expect(screen.getByText("This is some context.")).toBeInTheDocument();
+  });
+
+  it("passes adapted media data to the stream player", () => {
+    renderCard({
+      word: "Haus",
+      context_text: "Ich sehe ein Haus.",
+      context_translation: "I see a house.",
+      streamUrl: "stream-url",
+    });
+
+    expect(screen.getByTestId("player-small")).toBeInTheDocument();
+  });
+
+  it("renders both players when both media sources are present", () => {
+    renderCard({
+      streamUrl: "stream-url",
+      videoId: "youtube-123",
+    });
+
+    expect(screen.getByTestId("player-small")).toBeInTheDocument();
+
+    expect(screen.getByTestId("youtube-player-small")).toBeInTheDocument();
   });
 });

@@ -4,6 +4,28 @@ import OverlayPlayer from "./OverlayPlayer";
 import { useSearch } from "@/hooks/useSearch";
 import { useStreamUrl } from "@/hooks/useStreamUrl";
 import { useAppStore } from "@/lib/initializations/store";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useOverlayLanguages } from "@/hooks/useOverlayLanguages";
+
+function renderOverlayPlayer() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <OverlayPlayer />
+    </QueryClientProvider>,
+  );
+}
+
+vi.mock("@/hooks/useOverlayLanguages", () => ({
+  useOverlayLanguages: vi.fn(),
+}));
 
 vi.mock("@/hooks/useSearch", () => ({
   useSearch: vi.fn(),
@@ -110,6 +132,7 @@ vi.mock("@/components/ui/empty", () => ({
 const mockedUseSearch = vi.mocked(useSearch);
 const mockedUseStreamUrl = vi.mocked(useStreamUrl);
 const mockedUseAppStore = vi.mocked(useAppStore);
+const mockedUseOverlayLanguages = vi.mocked(useOverlayLanguages);
 
 const setOverlayOpen = vi.fn();
 
@@ -135,11 +158,25 @@ beforeEach(() => {
     data: null,
     isLoading: false,
   } as never);
+
+  mockedUseOverlayLanguages.mockReturnValue({
+    source: {
+      value: "en",
+      available: ["en"],
+    },
+    translation: {
+      value: "de",
+      available: ["de"],
+    },
+    isLoading: false,
+    isFetching: false,
+    isError: false,
+  });
 });
 
 describe("OverlayPlayer", () => {
   it("renders provider, header and results", () => {
-    render(<OverlayPlayer />);
+    renderOverlayPlayer();
 
     expect(screen.getByTestId("search-overlay-provider")).toBeInTheDocument();
     expect(screen.getByText("Header")).toBeInTheDocument();
@@ -147,7 +184,7 @@ describe("OverlayPlayer", () => {
   });
 
   it("updates search query from header", () => {
-    render(<OverlayPlayer />);
+    renderOverlayPlayer();
 
     fireEvent.click(screen.getByText("Search"));
 
@@ -155,7 +192,7 @@ describe("OverlayPlayer", () => {
   });
 
   it("shows empty preview initially", () => {
-    render(<OverlayPlayer />);
+    renderOverlayPlayer();
 
     expect(screen.getByText(/No preview active/i)).toBeInTheDocument();
     expect(screen.getByText(/Select a result to preview/i)).toBeInTheDocument();
@@ -167,7 +204,7 @@ describe("OverlayPlayer", () => {
       isLoading: true,
     } as never);
 
-    render(<OverlayPlayer />);
+    renderOverlayPlayer();
 
     fireEvent.click(screen.getByText("Select Result"));
 
@@ -182,7 +219,7 @@ describe("OverlayPlayer", () => {
       isLoading: false,
     } as never);
 
-    render(<OverlayPlayer />);
+    renderOverlayPlayer();
 
     fireEvent.click(screen.getByText("Select Result"));
 
@@ -194,7 +231,7 @@ describe("OverlayPlayer", () => {
   });
 
   it("passes overlay state changes to the store", () => {
-    render(<OverlayPlayer />);
+    renderOverlayPlayer();
 
     expect(setOverlayOpen).not.toHaveBeenCalled();
   });

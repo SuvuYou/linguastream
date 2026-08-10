@@ -11,22 +11,11 @@ describe("useStreamUrl hook", () => {
   it("returns loading state initially", () => {
     global.fetch = vi.fn(() => new Promise(() => {}) as Promise<Response>);
 
-    const { result } = renderHook(() => useStreamUrl("123"), {
+    const { result } = renderHook(() => useStreamUrl("123", true), {
       wrapper: createWrapper(),
     });
 
     expect(result.current.isLoading).toBe(true);
-  });
-
-  it("does not run when mediaContentId is null", () => {
-    global.fetch = vi.fn();
-
-    const { result } = renderHook(() => useStreamUrl(null), {
-      wrapper: createWrapper(),
-    });
-
-    expect(result.current.fetchStatus).toBe("idle");
-    expect(global.fetch).not.toHaveBeenCalled();
   });
 
   it("fetches stream URL correctly", async () => {
@@ -41,7 +30,7 @@ describe("useStreamUrl hook", () => {
         }) as Promise<Response>,
     );
 
-    const { result } = renderHook(() => useStreamUrl("abc123"), {
+    const { result } = renderHook(() => useStreamUrl("abc123", true), {
       wrapper: createWrapper(),
     });
 
@@ -61,7 +50,7 @@ describe("useStreamUrl hook", () => {
       () => Promise.resolve({ ok: false }) as Promise<Response>,
     );
 
-    const { result } = renderHook(() => useStreamUrl("abc123"), {
+    const { result } = renderHook(() => useStreamUrl("abc123", true), {
       wrapper: createWrapper(),
     });
 

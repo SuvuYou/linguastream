@@ -84,7 +84,7 @@ describe("useDeckCards hook", () => {
           context_text: "Hello world",
           context_translation: "Hallo Welt",
           contextual_definition: null,
-          media_content_id: "media-1",
+          media_content_id: "mediaId",
           start_ms: 0,
           end_ms: 1000,
           next_review: "2026-01-01",

@@ -4,6 +4,7 @@ import {
   SUBTITLE_ACQUISITION_METHODS,
   TRANSLATE_METHODS,
   TranslationMethod,
+  JELLYFIN_CONTENT_TYPE,
 } from "@/helpers/const";
 import { useFileUpload } from "@/hooks/useFileUpload";
 import { useLanguageSelectors } from "@/hooks/useLanguageSelectors";
@@ -144,6 +145,7 @@ export default function ContentConfigurationModal({
             />
 
             <SourceSubtitlesSection
+              contentType={JELLYFIN_CONTENT_TYPE}
               isExisting={languageSelector.checks.isSourceLanguageExisting}
               acquisitionMethod={acquisitionMethod}
               onChangeMethod={setAcquisitionMethod}
@@ -154,6 +156,7 @@ export default function ContentConfigurationModal({
             />
 
             <TranslationSubtitlesSection
+              contentType={JELLYFIN_CONTENT_TYPE}
               acquisitionMethod={acquisitionMethod}
               effectiveTranslateMethod={effectiveTranslateMethod}
               translateMethod={translateMethod}

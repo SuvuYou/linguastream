@@ -9,6 +9,7 @@ const BodySchema = z.object({
   source_language: z.string().min(2),
   translation_language: z.string().min(2),
   word: z.string().min(1),
+  lemma: z.string().min(1),
   word_translation: z.string().min(1),
   context_text: z.string().min(1),
   context_translation: z.string(),
