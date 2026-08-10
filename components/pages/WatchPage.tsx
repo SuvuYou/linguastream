@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Player from "@/components/features/player/Player";
+
 import SubtitleSidebar from "@/components/features/watch/SubtitleSidebar";
 import { useWatchData } from "@/hooks/useWatchData";
 import { SubtitleLine, useSubtitleTrack } from "@/hooks/useSubtitleTrack";
@@ -11,7 +12,6 @@ import { WATCH_PAGE_PARAMS_SCHEMA } from "@/helpers/params-schema";
 import { Spinner } from "@/components/ui/spinner";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { useWatchLanguages } from "@/hooks/useWatchLanguages";
-import DetailsSection from "@/components/features/watch/DetailsSection";
 import {
   Empty,
   EmptyHeader,
@@ -20,6 +20,8 @@ import {
 } from "@/components/ui/empty";
 import Header from "@/components/features/watch/Header";
 import { useAppStore } from "@/lib/initializations/store";
+import { YOUTUBE_CONTENT_TYPE } from "@/helpers/const";
+import YouTubePlayer from "@/components/features/player/YouTubePlayer";
 
 export default function WatchPage({
   mediaContentId,
@@ -52,13 +54,13 @@ export default function WatchPage({
     clean: string,
     line: SubtitleLine,
     contextTranslation: string,
+    contextLines: SubtitleLine[],
   ) {
     if (
       activeWord?.word === clean &&
       activeWord?.subtitleLineId === `${line.start_ms}__${mediaContentId}`
     ) {
       setActiveWord(null);
-
       return;
     }
 
@@ -67,7 +69,7 @@ export default function WatchPage({
       lang: languages.source.value!,
       translationLang: languages.translation.value!,
       subtitleLineId: `${line.start_ms}__${mediaContentId}`,
-      context: line.text,
+      context: contextLines.map((item) => item.text).join(" "),
       contextTranslation,
       mediaContentId,
       startMs: line.start_ms,
@@ -93,33 +95,47 @@ export default function WatchPage({
       </Empty>
     );
 
+  const isYouTube = data.type === YOUTUBE_CONTENT_TYPE;
+
+  const sharedPlayerProps = {
+    initialTimeMs: params.t,
+    currentTimeMs,
+    sourceLines: sourceTracks.data ?? [],
+    translationLines: translationTracks.data ?? [],
+    translationLanguages: data.translationLanguages,
+    activeTranslationLang: languages.translation.value,
+    setCurrentTimeMs,
+    handleSubtitleWordClick,
+  };
+
   return (
     <SidebarProvider>
-      <section className="w-full h-[calc(100vh-1rem)] bg-background m-2 ml-0 p-2 rounded-r-lg flex flex-col overflow-hidden">
+      <section className="w-full h-[calc(100vh-1rem)] flex flex-col bg-background m-2 ml-0 p-2 rounded-r-lg overflow-hidden">
         <Header mediaContentId={mediaContentId} />
-        <div className="flex overflow-hidden">
-          <div className="flex flex-col flex-2 min-w-0 bg-background items-center justify-start pt-1">
-            <Player
-              streamUrl={data.streamUrl}
-              title={data.title}
-              sourceLines={sourceTracks.data ?? []}
-              translationLines={translationTracks.data ?? []}
-              translationLanguages={data.translationLanguages}
-              activeTranslationLang={languages.translation.value}
-              initialTimeMs={params.t}
-              currentTimeMs={currentTimeMs}
-              setCurrentTimeMs={setCurrentTimeMs}
-              handleSubtitleWordClick={handleSubtitleWordClick}
-            />
+        <div className="flex overflow-hidden h-full flex-1">
+          <div className="flex w-full min-w-0 bg-background items-center justify-start h-full">
+            {isYouTube && data.videoId ? (
+              <YouTubePlayer
+                videoId={data.videoId}
+                title={data.title}
+                {...sharedPlayerProps}
+              />
+            ) : (
+              <Player
+                streamUrl={data.streamUrl!}
+                title={data.title}
+                {...sharedPlayerProps}
+              />
+            )}
           </div>
         </div>
-        <DetailsSection />
       </section>
 
       <SubtitleSidebar
         currentTimeMs={currentTimeMs}
         sourceLines={sourceTracks.data ?? []}
         translationLines={translationTracks.data ?? []}
+        isLoading={sourceTracks.isLoading || translationTracks.isLoading}
       />
 
       <OverlayPlayer />

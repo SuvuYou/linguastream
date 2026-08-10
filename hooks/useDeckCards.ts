@@ -1,18 +1,20 @@
 "use client";
 
+import { CollocationItem, LexicalFamilyItem } from "@/types";
 import { useQuery } from "@tanstack/react-query";
 
 interface CardWordProfile {
   id: string;
   part_of_speech: string;
   forms: Record<string, string>;
-  lexical_family: string[];
-  collocations: string[];
+  lexical_family: LexicalFamilyItem[];
+  collocations: CollocationItem[];
 }
 
 export interface DeckDetailCard {
   id: string;
   word: string;
+  lemma: string;
   source_language: string;
   translation_language: string;
   word_translation: string;
@@ -27,6 +29,7 @@ export interface DeckDetailCard {
   ease_factor: number;
   repetitions: number;
   streamUrl: string | null;
+  videoId: string | null;
   word_profile: CardWordProfile | null;
 }
 

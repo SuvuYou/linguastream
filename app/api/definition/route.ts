@@ -23,14 +23,24 @@ export async function GET(req: NextRequest) {
     context ? ` as used in this sentence: "${context}"` : ""
   }
 
+    The provided context comes from YouTube subtitles.
+    It may:
+    - lack punctuation,
+    - start or end in the middle of a sentence.
+
+    Find the complete sentence that contains the target word.
+
     Return ONLY valid JSON:
 
     {
       "definition": "...",
-      "translation": "..."
+      "translation": "...",
+      "context_sentence": "..."
     }
 
     Rules:
+    - DO NOT change, replace, translate, or add any words to "context_sentence".
+    - You may ONLY remove unrelated surrounding text and add punctuation/capitalization if necessary.
     - "definition" is a short english dictionary-style definition for THIS context.
     - "translation" is the closest English equivalent in THIS context.
     - Prefer a single word for translation.

@@ -1,7 +1,9 @@
 "use client";
 
+import { CollocationItem } from "@/types";
+
 interface Props {
-  collocations: string[];
+  collocations: CollocationItem[];
 }
 
 export default function WordCollocations({ collocations }: Props) {
@@ -13,12 +15,12 @@ export default function WordCollocations({ collocations }: Props) {
             Collocations
           </div>
           <div className="flex flex-col gap-2 pl-2">
-            {collocations.map((collocation) => (
+            {collocations.map((item) => (
               <span
-                key={collocation}
+                key={item.phrase}
                 className="text-sm text-primary-foreground pl-2 border-l-6 border-secondary"
               >
-                {collocation}
+                {item.phrase} {"->"} {item.translation}
               </span>
             ))}
           </div>

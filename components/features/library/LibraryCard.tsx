@@ -39,7 +39,6 @@ export default function LibraryCard({
 
   const isError = jobState.status === JOB_STATUS.ERROR;
 
-  // — Unavailable state —
   if (!item.jellyfinItem) {
     return (
       <Card className="rounded-none border-r border-b border-t-0 border-l-0 border-border shadow-none">
@@ -55,7 +54,6 @@ export default function LibraryCard({
     );
   }
 
-  // — Processing / error state —
   if (hasActiveJob || isProcessing || isError) {
     return (
       <Card
@@ -111,7 +109,6 @@ export default function LibraryCard({
     );
   }
 
-  // — Normal state —
   return (
     <Card className="relative transition-all duration-400 p-0 group rounded-bl-xs hover:rounded-none hover:bg-background hover:cursor-pointer">
       <Link href={`/watch/${item.id}`}>

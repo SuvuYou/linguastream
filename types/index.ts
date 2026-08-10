@@ -23,3 +23,13 @@ export interface JellyfinMediaSource {
   Container: string;
   Size: number;
 }
+
+export interface LexicalFamilyItem {
+  word: string;
+  translation: string;
+}
+
+export interface CollocationItem {
+  phrase: string;
+  translation: string;
+}

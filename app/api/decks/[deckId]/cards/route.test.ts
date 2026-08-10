@@ -75,7 +75,7 @@ describe("GET /api/decks/[deckId]/cards", () => {
     vi.mocked(db.card.findMany).mockResolvedValue([
       {
         id: "card-1",
-        media_content_id: "media-1",
+        media_content_id: "mediaId",
         word: "hello",
         word_profile: null,
       },
@@ -85,7 +85,7 @@ describe("GET /api/decks/[deckId]/cards", () => {
 
     vi.mocked(db.mediaContent.findMany).mockResolvedValue([
       {
-        id: "media-1",
+        id: "mediaId",
         jellyfin_id: "jf-1",
       },
     ] as never);
@@ -105,9 +105,10 @@ describe("GET /api/decks/[deckId]/cards", () => {
       cards: [
         {
           id: "card-1",
-          media_content_id: "media-1",
+          media_content_id: "mediaId",
           word: "hello",
           word_profile: null,
+          videoId: null,
           streamUrl: "https://example.com/stream",
         },
       ],
@@ -128,7 +129,7 @@ describe("GET /api/decks/[deckId]/cards", () => {
     vi.mocked(db.card.findMany).mockResolvedValue([
       {
         id: "card-1",
-        media_content_id: "media-1",
+        media_content_id: "mediaId",
         word_profile: null,
       },
     ] as never);
@@ -137,7 +138,7 @@ describe("GET /api/decks/[deckId]/cards", () => {
 
     vi.mocked(db.mediaContent.findMany).mockResolvedValue([
       {
-        id: "media-1",
+        id: "mediaId",
         jellyfin_id: null,
       },
     ] as never);

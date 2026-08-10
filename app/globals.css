@@ -35,3 +35,27 @@
   --plyr-range-fill-background: var(--secondary);
   --plyr-menu-background: var(--secondary);
 }
+
+.bg-under-construction {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(239, 68, 68, 0.3) 0px,
+    rgba(239, 68, 68, 0.3) 12px,
+    #0a0a0c 12px,
+    #0a0a0c 24px
+  );
+}
+
+.subtitle-word {
+  transition: all 250ms;
+}
+
+.subtitle-word:hover {
+  color: var(--highlight-color);
+  transform: translateY(-0.5rem);
+}
+
+.subtitle-word.active {
+  color: var(--highlight-color);
+  transform: translateY(-0.5rem);
+}

@@ -1,185 +1,263 @@
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
-
-import SubtitleSettingsPanel from "./SubtitleSettings";
 import { useAppStore } from "@/lib/initializations/store";
+import SubtitleSettingsPanel from "./SubtitleSettings";
 
 vi.mock("@/lib/initializations/store", () => ({
   useAppStore: vi.fn(),
 }));
 
-vi.mock("@/components/ui/card", () => ({
-  Card: ({ children }: any) => <div>{children}</div>,
-  CardHeader: ({ children }: any) => <div>{children}</div>,
-  CardContent: ({ children }: any) => <div>{children}</div>,
-  CardTitle: ({ children }: any) => <h2>{children}</h2>,
-}));
-
-vi.mock("@/components/ui/separator", () => ({
-  Separator: () => <hr />,
-}));
-
-vi.mock("@/components/ui/field", () => ({
-  Field: ({ children }: any) => <div>{children}</div>,
-  FieldLabel: ({ children }: any) => <label>{children}</label>,
-}));
-
-vi.mock("@/components/ui/label", () => ({
-  Label: ({ children, htmlFor }: any) => (
-    <label htmlFor={htmlFor}>{children}</label>
-  ),
-}));
-
-vi.mock("@/components/ui/switch", () => ({
-  Switch: ({ checked, onCheckedChange }: any) => (
-    <button onClick={() => onCheckedChange(!checked)}>
-      {checked ? "on" : "off"}
-    </button>
-  ),
-}));
-
-vi.mock("@/components/ui/tabs", () => ({
-  Tabs: ({ children }: any) => <div>{children}</div>,
-  TabsList: ({ children }: any) => <div>{children}</div>,
-  TabsTrigger: ({ children, value, onClick }: any) => (
-    <button onClick={onClick ?? (() => {})} data-value={value}>
-      {children}
-    </button>
-  ),
-}));
-
 vi.mock("@/components/ui/slider", () => ({
-  Slider: ({ value, onValueChange }: any) => (
+  Slider: ({
+    value,
+    onValueChange,
+  }: {
+    value: number[];
+    onValueChange: (value: number[]) => void;
+  }) => (
     <input
       type="range"
       role="slider"
       value={value[0]}
+      min={0}
+      max={1}
+      step={0.01}
       onChange={(e) => onValueChange([Number(e.target.value)])}
     />
   ),
 }));
 
 const mockedUseAppStore = vi.mocked(useAppStore);
+
 const setSubtitleSettings = vi.fn();
 
+const subtitleSettings = {
+  showSource: true,
+  showTranslation: false,
+  sourceFontSize: "medium",
+  translationFontSize: "small",
+  highlightFontColor: "#ffff00",
+  sourceFontColor: "#ffffff",
+  sourceBackgroundColor: "#000000",
+  translationFontColor: "#ffffff",
+  translationBackgroundColor: "#000000",
+  fontOpacity: 0.8,
+  backgroundOpacity: 0.5,
+};
+
 beforeEach(() => {
-  vi.resetAllMocks();
+  vi.clearAllMocks();
 
   mockedUseAppStore.mockReturnValue({
-    subtitleSettings: {
-      showSource: true,
-      showTranslation: true,
-      sourceFontSize: "medium",
-      translationFontSize: "small",
-      fontColor: "#ffffff",
-      backgroundColor: "#000000",
-      fontOpacity: 0.8,
-      backgroundOpacity: 0.5,
-    },
+    subtitleSettings,
     setSubtitleSettings,
-  });
+  } as ReturnType<typeof useAppStore>);
 });
 
 describe("SubtitleSettingsPanel", () => {
-  it("renders settings title", () => {
+  it("renders the settings controls", () => {
     render(<SubtitleSettingsPanel />);
 
-    expect(screen.getByText(/subtitle settings/i)).toBeInTheDocument();
-    expect(screen.getByText(/show source/i)).toBeInTheDocument();
-    expect(screen.getByText(/show translation/i)).toBeInTheDocument();
+    expect(screen.getByText("Subtitle Settings")).toBeInTheDocument();
+
+    expect(screen.getByLabelText("Show source")).toBeInTheDocument();
+    expect(screen.getByLabelText("Show translation")).toBeInTheDocument();
+
+    expect(screen.getByText("Source font size")).toBeInTheDocument();
+    expect(screen.getByText("Translation font size")).toBeInTheDocument();
+
+    expect(screen.getByText("Highlight Font")).toBeInTheDocument();
+    expect(screen.getByText("Source Font")).toBeInTheDocument();
+    expect(screen.getByText("Source BG")).toBeInTheDocument();
+    expect(screen.getByText("Translation Font")).toBeInTheDocument();
+    expect(screen.getByText("Translation BG")).toBeInTheDocument();
+
+    expect(screen.getByText("Font opacity")).toBeInTheDocument();
+    expect(screen.getByText("Background opacity")).toBeInTheDocument();
   });
 
-  it("toggles source subtitles", () => {
+  it("renders switches with the current visibility settings", () => {
     render(<SubtitleSettingsPanel />);
 
-    fireEvent.click(screen.getAllByRole("button")[0]);
+    expect(screen.getByRole("switch", { name: "Show source" })).toBeChecked();
+
+    expect(
+      screen.getByRole("switch", { name: "Show translation" }),
+    ).not.toBeChecked();
+  });
+
+  it("updates source visibility", async () => {
+    const user = userEvent.setup();
+
+    render(<SubtitleSettingsPanel />);
+
+    await user.click(screen.getByRole("switch", { name: "Show source" }));
 
     expect(setSubtitleSettings).toHaveBeenCalledWith({
       showSource: false,
     });
   });
 
-  it("toggles translation subtitles", () => {
+  it("updates translation visibility", async () => {
+    const user = userEvent.setup();
+
     render(<SubtitleSettingsPanel />);
 
-    fireEvent.click(screen.getAllByRole("button")[1]);
+    await user.click(screen.getByRole("switch", { name: "Show translation" }));
 
     expect(setSubtitleSettings).toHaveBeenCalledWith({
-      showTranslation: false,
+      showTranslation: true,
     });
   });
 
-  it("renders font size labels", () => {
+  it("updates source font size", async () => {
+    const user = userEvent.setup();
+
     render(<SubtitleSettingsPanel />);
 
-    expect(screen.getByText(/source font size/i)).toBeInTheDocument();
-    expect(screen.getByText(/translation font size/i)).toBeInTheDocument();
-  });
+    const largeTabs = screen.getAllByRole("tab", { name: "large" });
 
-  it("renders all font size options", () => {
-    render(<SubtitleSettingsPanel />);
-
-    expect(screen.getAllByText("small")).toHaveLength(2);
-    expect(screen.getAllByText("medium")).toHaveLength(2);
-    expect(screen.getAllByText("large")).toHaveLength(2);
-  });
-
-  it("changes font color", () => {
-    render(<SubtitleSettingsPanel />);
-
-    const input = screen.getByDisplayValue("#ffffff");
-
-    fireEvent.change(input, {
-      target: { value: "#ff0000" },
-    });
+    await user.click(largeTabs[0]);
 
     expect(setSubtitleSettings).toHaveBeenCalledWith({
-      fontColor: "#ff0000",
+      sourceFontSize: "large",
     });
   });
 
-  it("changes background color", () => {
+  it("updates translation font size", async () => {
+    const user = userEvent.setup();
+
     render(<SubtitleSettingsPanel />);
 
-    const input = screen.getByDisplayValue("#000000");
+    const largeTabs = screen.getAllByRole("tab", { name: "large" });
 
-    fireEvent.change(input, {
-      target: { value: "#00ff00" },
-    });
+    await user.click(largeTabs[1]);
 
     expect(setSubtitleSettings).toHaveBeenCalledWith({
-      backgroundColor: "#00ff00",
+      translationFontSize: "large",
     });
   });
 
-  it("renders opacity percentages", () => {
+  it("renders color inputs with current values", () => {
+    render(<SubtitleSettingsPanel />);
+
+    const colorInputs = screen.getAllByDisplayValue(/#[0-9a-fA-F]{6}/);
+
+    expect(colorInputs).toHaveLength(5);
+
+    expect(screen.getByDisplayValue("#ffff00")).toBeInTheDocument();
+
+    expect(screen.getAllByDisplayValue("#ffffff")).toHaveLength(2);
+
+    expect(screen.getAllByDisplayValue("#000000")).toHaveLength(2);
+  });
+
+  it("updates highlight font color", async () => {
+    const user = userEvent.setup();
+
+    render(<SubtitleSettingsPanel />);
+
+    const input = screen.getByDisplayValue("#ffff00");
+
+    await user.click(input);
+
+    // jsdom does not provide a native color picker, so trigger the
+    // change event directly.
+    await userEvent.setup();
+
+    Object.getOwnPropertyDescriptor(
+      HTMLInputElement.prototype,
+      "value",
+    )?.set?.call(input, "#ff0000");
+
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+
+    expect(setSubtitleSettings).toHaveBeenCalledWith({
+      highlightFontColor: "#ff0000",
+    });
+  });
+
+  it("updates source font color", () => {
+    render(<SubtitleSettingsPanel />);
+
+    const inputs = screen.getAllByDisplayValue("#ffffff");
+
+    inputs[0].dispatchEvent(new Event("change", { bubbles: true }));
+
+    // The native color input needs its value changed before dispatching.
+    Object.getOwnPropertyDescriptor(
+      HTMLInputElement.prototype,
+      "value",
+    )?.set?.call(inputs[0], "#ff0000");
+
+    inputs[0].dispatchEvent(new Event("change", { bubbles: true }));
+
+    expect(setSubtitleSettings).toHaveBeenCalledWith({
+      sourceFontColor: "#ff0000",
+    });
+  });
+
+  it("updates source background color", () => {
+    render(<SubtitleSettingsPanel />);
+
+    const inputs = screen.getAllByDisplayValue("#000000");
+
+    Object.getOwnPropertyDescriptor(
+      HTMLInputElement.prototype,
+      "value",
+    )?.set?.call(inputs[0], "#333333");
+
+    inputs[0].dispatchEvent(new Event("change", { bubbles: true }));
+
+    expect(setSubtitleSettings).toHaveBeenCalledWith({
+      sourceBackgroundColor: "#333333",
+    });
+  });
+
+  it("updates translation font color", () => {
+    render(<SubtitleSettingsPanel />);
+
+    const inputs = screen.getAllByDisplayValue("#ffffff");
+
+    Object.getOwnPropertyDescriptor(
+      HTMLInputElement.prototype,
+      "value",
+    )?.set?.call(inputs[1], "#00ff00");
+
+    inputs[1].dispatchEvent(new Event("change", { bubbles: true }));
+
+    expect(setSubtitleSettings).toHaveBeenCalledWith({
+      translationFontColor: "#00ff00",
+    });
+  });
+
+  it("updates translation background color", () => {
+    render(<SubtitleSettingsPanel />);
+
+    const inputs = screen.getAllByDisplayValue("#000000");
+
+    Object.getOwnPropertyDescriptor(
+      HTMLInputElement.prototype,
+      "value",
+    )?.set?.call(inputs[1], "#222222");
+
+    inputs[1].dispatchEvent(new Event("change", { bubbles: true }));
+
+    expect(setSubtitleSettings).toHaveBeenCalledWith({
+      translationBackgroundColor: "#222222",
+    });
+  });
+
+  it("renders font opacity as a percentage", () => {
     render(<SubtitleSettingsPanel />);
 
     expect(screen.getByText("80%")).toBeInTheDocument();
+  });
+
+  it("renders background opacity as a percentage", () => {
+    render(<SubtitleSettingsPanel />);
+
     expect(screen.getByText("50%")).toBeInTheDocument();
-  });
-
-  it("changes font opacity", () => {
-    render(<SubtitleSettingsPanel />);
-
-    fireEvent.change(screen.getAllByRole("slider")[0], {
-      target: { value: "0.3" },
-    });
-
-    expect(setSubtitleSettings).toHaveBeenCalledWith({
-      fontOpacity: 0.3,
-    });
-  });
-
-  it("changes background opacity", () => {
-    render(<SubtitleSettingsPanel />);
-
-    fireEvent.change(screen.getAllByRole("slider")[1], {
-      target: { value: "0.9" },
-    });
-
-    expect(setSubtitleSettings).toHaveBeenCalledWith({
-      backgroundOpacity: 0.9,
-    });
   });
 });

@@ -10,11 +10,11 @@ async function fetchStreamUrl(
   return res.json();
 }
 
-export function useStreamUrl(mediaContentId: string | null) {
+export function useStreamUrl(mediaContentId: string | null, enabled: boolean) {
   return useQuery({
     queryKey: ["stream", mediaContentId],
     queryFn: async () => fetchStreamUrl(mediaContentId!),
-    enabled: !!mediaContentId,
+    enabled: enabled,
     staleTime: Infinity,
   });
 }

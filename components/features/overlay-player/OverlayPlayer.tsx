@@ -19,6 +19,9 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { useOverlayLanguages } from "@/hooks/useOverlayLanguages";
+import YouTubePlayerSmall from "../player/YouTubePlayerSmall";
+import PaginationControls from "@/components/primitives/PaginationControls";
 
 export default function OverlayPlayer() {
   const { overlayOpen, setOverlayOpen } = useAppStore();
@@ -27,23 +30,32 @@ export default function OverlayPlayer() {
   );
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [page, setPage] = useState(0);
 
-  const { preferredSourceLanguage, preferredTranslationLanguage } =
-    useAppStore();
+  const languages = useOverlayLanguages();
 
   const searchResult = useSearch({
+    page,
+    limit: 30,
     query: searchQuery,
-    sourceLanguage: preferredSourceLanguage ?? "",
-    translationLanguage: preferredTranslationLanguage ?? "",
-    enabled: !!preferredSourceLanguage && !!preferredTranslationLanguage,
+    sourceLanguage: languages.source.value ?? "",
+    translationLanguage: languages.translation.value ?? "",
+    enabled: !!languages.source.value && !!languages.translation.value,
   });
 
-  const streamData = useStreamUrl(selectedItem?.media_content_id ?? null);
+  const streamData = useStreamUrl(
+    selectedItem?.media_content_id ?? null,
+    !!selectedItem?.media_content_id && !selectedItem.youtube_video_id,
+  );
 
   const OnSearchChange = useCallback((query: string) => {
     setSelected(null);
     setSearchQuery(query);
+    setPage(0);
   }, []);
+
+  const isPlayerVisible =
+    selectedItem && (streamData.data || selectedItem.youtube_video_id);
 
   return (
     <>
@@ -59,6 +71,10 @@ export default function OverlayPlayer() {
           </SheetTitle>
 
           <Header
+            source={languages.source}
+            translation={languages.translation}
+            isLoading={languages.isLoading || languages.isFetching}
+            isError={languages.isError}
             isOverlayOpen={overlayOpen}
             isSearchLoading={searchResult.isLoading}
             onSearchQueryChange={OnSearchChange}
@@ -66,15 +82,22 @@ export default function OverlayPlayer() {
           <div className="flex flex-1 gap-4 min-h-0">
             <div
               className={`${
-                selectedItem && streamData.data ? "flex-3" : "flex-0 border-0"
+                isPlayerVisible ? "flex-3" : "flex-0 border-0"
               } transition-all min-w-0 bg-background border rounded-lg relative overflow-hidden`}
             >
-              {selectedItem && streamData.data ? (
+              {isPlayerVisible ? (
                 <>
-                  <PlayerSmall
-                    streamUrl={streamData.data.streamUrl}
-                    mediaItem={selectedItem}
-                  />
+                  {selectedItem.youtube_video_id ? (
+                    <YouTubePlayerSmall
+                      videoId={selectedItem.youtube_video_id}
+                      mediaItem={selectedItem}
+                    />
+                  ) : (
+                    <PlayerSmall
+                      streamUrl={streamData.data!.streamUrl}
+                      mediaItem={selectedItem}
+                    />
+                  )}
                   <Button
                     asChild
                     variant="secondary"
@@ -94,7 +117,7 @@ export default function OverlayPlayer() {
                 <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-sm gap-2">
                   {selectedItem && streamData.isLoading ? (
                     <>
-                      <Spinner className="h-6 w-6 text-primary" />
+                      <Spinner className="h-6 w-6 text-primary-foreground" />
                       <span>Loading stream preview...</span>
                     </>
                   ) : (
@@ -110,13 +133,24 @@ export default function OverlayPlayer() {
                 </div>
               )}
             </div>
-            <SearchResults
-              searchQuery={searchQuery}
-              searchResults={searchResult}
-              selectedItem={selectedItem}
-              onSelect={setSelected}
-            />
+            <div className="flex-1 min-w-0 overflow-hidden">
+              <SearchResults
+                searchQuery={searchQuery}
+                searchResults={searchResult}
+                selectedItem={selectedItem}
+                onSelect={setSelected}
+              />
+            </div>
           </div>
+          {(searchResult.data?.totalPages ?? 0) > 1 ? (
+            <div className="pt-4">
+              <PaginationControls
+                page={page}
+                onPageChange={setPage}
+                pageCount={searchResult.data?.totalPages ?? 0}
+              />
+            </div>
+          ) : null}
         </SheetContent>
       </Sheet>
     </>

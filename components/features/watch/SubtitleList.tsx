@@ -2,10 +2,10 @@
 
 import { useEffect, useRef, useMemo, useCallback } from "react";
 import type { SubtitleLine } from "@/hooks/useSubtitleTrack";
-import Events from "@/events";
 import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
-import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
-import { cn } from "@/lib/utils";
+import { Table, TableBody } from "@/components/ui/table";
+import SubtitleRow from "@/components/features/watch/SubtitleRow";
+import SubtitleListSkeleton from "./SubtitleListSkeleton";
 
 interface SubtitleListProps {
   query: string;
@@ -14,9 +14,10 @@ interface SubtitleListProps {
   filteredSubtitlePairs: SubtitleLinePair[];
   shouldShowSourceLine: boolean;
   shouldShowTranslationLine: boolean;
+  isLoading: boolean;
 }
 
-interface SubtitleLinePair {
+export interface SubtitleLinePair {
   source: SubtitleLine;
   translation: SubtitleLine;
   start_ms: number;
@@ -27,31 +28,6 @@ interface SubtitleLinePair {
 const RESUME_AUTOSCROLL_DELAY_MS = 3000;
 const SCROLL_INTO_VIEW_MS = 500;
 
-function highlight(text: string, q: string) {
-  if (!q.trim()) return <span>{text}</span>;
-
-  const idx = text.toLowerCase().indexOf(q.toLowerCase());
-  if (idx === -1) return <span>{text}</span>;
-
-  return (
-    <span>
-      {text.slice(0, idx)}
-      <mark className="bg-highlight/50 p-1 rounded-[6px] text-primary-foreground">
-        {text.slice(idx, idx + q.length)}
-      </mark>
-      {text.slice(idx + q.length)}
-    </span>
-  );
-}
-
-function formatTime(ms: number) {
-  const totalSecs = Math.floor(ms / 1000);
-  const m = Math.floor(totalSecs / 60);
-  const s = totalSecs % 60;
-
-  return `${m}:${s.toString().padStart(2, "0")}`;
-}
-
 export default function SubtitleList({
   query,
   currentTimeMs,
@@ -59,6 +35,7 @@ export default function SubtitleList({
   filteredSubtitlePairs,
   shouldShowSourceLine,
   shouldShowTranslationLine,
+  isLoading,
 }: SubtitleListProps) {
   const shouldScrollSyncWithVideo = useRef(true);
   const isScrollingIntoView = useRef(false);
@@ -125,6 +102,10 @@ export default function SubtitleList({
     };
   }, []);
 
+  if (isLoading) {
+    return <SubtitleListSkeleton />;
+  }
+
   if (!shouldShowSourceLine && !shouldShowTranslationLine) {
     return (
       <Empty className="p-6">
@@ -163,55 +144,16 @@ export default function SubtitleList({
             const isActive = pair.index === activePairIndex;
 
             return (
-              <TableRow
+              <SubtitleRow
                 key={pair.index}
-                id={`subtitle-row-${i}`}
-                role="option"
-                ref={isActive ? activeRef : undefined}
-                onClick={() => Events.player.triggerJumpTo(pair.start_ms)}
-                className={cn(
-                  "border-none overflow-hidden cursor-pointer transition-colors rounded-xl hover:bg-background",
-                  isActive && "bg-primary/5 hover:bg-primary/10",
-                )}
-              >
-                <TableCell
-                  className={cn(
-                    "w-16 pr-2 pl-5 py-4 align-top text-xs leading-6 text-primary-foreground tabular-nums rounded-l-xl rounded-bl-xs border-2 border-r-0 border-transparent border-b border-b-border",
-                    isActive && "border-primary/50 border-b-2",
-                  )}
-                >
-                  {formatTime(pair.start_ms)}
-                </TableCell>
-
-                <TableCell
-                  className={cn(
-                    "pl-0 pr-3 py-4 align-top rounded-r-xl border-2 border-l-0 border-transparent border-b border-b-border",
-                    isActive && "border-primary/50 border-b-2",
-                  )}
-                >
-                  {shouldShowSourceLine && pair.source && (
-                    <div
-                      className={cn(
-                        "text-lg text-primary-foreground text-wrap mb-2",
-                        isActive && "font-semibold",
-                      )}
-                    >
-                      {highlight(pair.source.text, query)}
-                    </div>
-                  )}
-                  {shouldShowTranslationLine && pair.translation && (
-                    <div
-                      className={cn(
-                        "text-sm text-muted-foreground/80 text-wrap",
-                        shouldShowSourceLine && pair.source && "mt-0.5",
-                        isActive && "text-primary",
-                      )}
-                    >
-                      {highlight(pair.translation.text, query)}
-                    </div>
-                  )}
-                </TableCell>
-              </TableRow>
+                forwardActiveRef={activeRef}
+                query={query}
+                listOrderIndex={i}
+                subtitlePair={pair}
+                isActive={isActive}
+                shouldShowSourceLine={shouldShowSourceLine}
+                shouldShowTranslationLine={shouldShowTranslationLine}
+              />
             );
           })}
         </TableBody>

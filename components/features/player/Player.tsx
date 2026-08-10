@@ -22,6 +22,7 @@ interface PlayerProps {
     clean: string,
     line: SubtitleLine,
     contextTranslation: string,
+    contextLines: SubtitleLine[],
   ) => void;
 }
 
@@ -106,7 +107,11 @@ export default function Player({
   );
 
   return (
-    <div className="relative w-full max-w-6xl">
+    <div className="flex flex-col relative w-full max-w-6xl h-full mt-4">
+      <video ref={videoRef} title={title} playsInline>
+        <source src={streamUrl} type="video/mp4" />
+      </video>
+
       <SubtitleOverlay
         currentTimeMs={currentTimeMs}
         sourceLines={sourceLines}
@@ -114,10 +119,6 @@ export default function Player({
         settings={subtitleSettings}
         handleSubtitleWordClick={handleSubtitleWordClick}
       />
-
-      <video ref={videoRef} title={title} playsInline>
-        <source src={streamUrl} type="video/mp4" />
-      </video>
     </div>
   );
 }

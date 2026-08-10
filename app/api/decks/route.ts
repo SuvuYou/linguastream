@@ -53,3 +53,20 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({ decks: result });
 }
+
+export async function POST(req: NextRequest) {
+  const user = await getCurrentUser();
+  if (!user)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { name } = await req.json();
+  if (!name?.trim()) {
+    return NextResponse.json({ error: "Name required" }, { status: 400 });
+  }
+
+  const deck = await db.deck.create({
+    data: { user_id: user.id, name: name.trim(), is_default: false },
+  });
+
+  return NextResponse.json(deck);
+}

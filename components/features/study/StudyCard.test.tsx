@@ -30,7 +30,7 @@ const card = {
   contextual_definition: "A building for people to live in.",
   source_language: "de",
   translation_language: "en",
-  media_content_id: "media-1",
+  media_content_id: "mediaId",
   start_ms: 12345,
   repetitions: 2,
   interval_days: 5,
@@ -58,7 +58,7 @@ describe("StudyCard", () => {
       />,
     );
 
-    expect(screen.getByText("Haus")).toBeInTheDocument();
+    expect(screen.getAllByText("Haus").length).toBeGreaterThan(0);
     expect(screen.getByText("Das Haus ist groß.")).toBeInTheDocument();
     expect(screen.getByText("de → en")).toBeInTheDocument();
     expect(
@@ -160,7 +160,7 @@ describe("StudyCard", () => {
 
     expect(screen.getByRole("link")).toHaveAttribute(
       "href",
-      "/watch/media-1?t=12345",
+      "/watch/mediaId?t=12345",
     );
   });
 

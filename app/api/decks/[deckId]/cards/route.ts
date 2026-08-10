@@ -49,20 +49,24 @@ export async function GET(
   const mediaIds = [...new Set(cards.map((c) => c.media_content_id))];
   const mediaItems = await db.mediaContent.findMany({
     where: { id: { in: mediaIds } },
-    select: { id: true, jellyfin_id: true },
+    select: { id: true, jellyfin_id: true, youtube_video_id: true },
   });
 
-  const streamUrlMap = new Map(
+  const urlMap = new Map(
     mediaItems.map((m) => [
       m.id,
-      m.jellyfin_id ? getJellyfinStreamUrl(m.jellyfin_id) : null,
+      {
+        url: m.jellyfin_id ? getJellyfinStreamUrl(m.jellyfin_id) : null,
+        videoId: m.youtube_video_id ? m.youtube_video_id : null,
+      },
     ]),
   );
 
   return NextResponse.json({
     cards: cards.map((card) => ({
       ...card,
-      streamUrl: streamUrlMap.get(card.media_content_id) ?? null,
+      streamUrl: urlMap.get(card.media_content_id)?.url ?? null,
+      videoId: urlMap.get(card.media_content_id)?.videoId ?? null,
     })),
     total,
     pageCount: Math.ceil(total / limit),

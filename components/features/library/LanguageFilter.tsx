@@ -14,7 +14,7 @@ import {
 import { InfoIcon, OctagonXIcon } from "lucide-react";
 import { getLanguageLabel } from "@/helpers/language-helpers";
 
-interface LanguageFilterProps {
+export interface LanguageFilterProps {
   source: {
     value: string | null;
     available: string[];

@@ -1,10 +1,16 @@
 import { z } from "zod";
-import { LANGUAGES } from "./const";
+import { LANGUAGES, UPLOAD_CONTENT_TYPE, YOUTUBE_CONTENT_TYPE } from "./const";
 import type { LanguageCode } from "./const";
 
 export const LanguageCodeSchema = z.enum(
   LANGUAGES.map((l) => l.code) as [LanguageCode, ...LanguageCode[]],
 );
+
+export const LibrarySourceTypeSchema = z.enum([
+  "all",
+  YOUTUBE_CONTENT_TYPE,
+  UPLOAD_CONTENT_TYPE,
+] as const);
 
 export const WATCH_PAGE_PARAMS_SCHEMA = z.object({
   t: z
@@ -38,6 +44,33 @@ export const PUBLIC_LIBRARY_PARAMS_SCHEMA = z.object({
     .transform((v) => v === "true")
     .optional()
     .default(false),
+});
+
+export const PERSONAL_LIBRARY_PARAMS_SCHEMA = z.object({
+  q: z.string().optional(),
+
+  type: LibrarySourceTypeSchema.optional(),
+
+  src: LanguageCodeSchema.optional(),
+  trans: LanguageCodeSchema.optional(),
+
+  page: z
+    .string()
+    .transform((v) => Number(v))
+    .refine((n) => !isNaN(n) && n >= 0, { message: "Invalid page" })
+    .optional()
+    .default(0),
+});
+
+export const SEARCH_BAR_PARAMS_SCHEMA = z.object({
+  q: z.string().optional(),
+
+  page: z
+    .string()
+    .transform((v) => Number(v))
+    .refine((n) => !isNaN(n) && n >= 0, { message: "Invalid page" })
+    .optional()
+    .default(0),
 });
 
 export const DECK_DETAILS_PARAMS_SCHEMA = z.object({
@@ -109,6 +142,15 @@ export const FETCH_SUBTITLES_API_PARAMS_SCHEMA = z.object({
 export const PUT_INGEST_SUBTITLES_API_PARAMS_SCHEMA = z.discriminatedUnion(
   "acquisitionMethod",
   [
+    z.object({
+      sourceLang: z.string().min(2),
+      acquisitionMethod: z.literal("youtube"),
+      youtubeVideoId: z.string().min(1),
+      translateLangs: z.array(z.string()),
+      translateMethod: z.enum(["youtube", "libretranslate", "upload"]),
+      translateFiles: z.record(LanguageCodeSchema, z.string()).optional(),
+      removeLangs: z.array(z.string()).optional(),
+    }),
     z.object({
       sourceLang: z.string().min(2),
       acquisitionMethod: z.literal("upload"),

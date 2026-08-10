@@ -5,7 +5,9 @@ import { useQuery } from "@tanstack/react-query";
 export interface WatchData {
   id: string;
   title: string;
-  streamUrl: string;
+  type: string;
+  streamUrl?: string;
+  videoId?: string;
   sourceLanguage: string;
   translationLanguages: string[];
 }

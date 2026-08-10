@@ -38,6 +38,14 @@ export function useLibraryLanguages() {
     translationParam: libraryParams.params.trans,
   });
 
+  if (
+    !!preferredTranslationLanguage &&
+    preferredSourceLanguage === preferredTranslationLanguage
+  ) {
+    setPreferredTranslationLanguage(null);
+    libraryParams.remove("trans");
+  }
+
   return {
     ...query,
     source: {

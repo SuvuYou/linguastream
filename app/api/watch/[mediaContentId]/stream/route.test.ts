@@ -25,7 +25,7 @@ vi.mock("@/lib/db-helpers/jellyfin", () => ({
 
 const mockedGetJellyfinStreamUrl = vi.mocked(getJellyfinStreamUrl);
 
-function mockParams(mediaContentId = "media-1") {
+function mockParams(mediaContentId = "mediaId") {
   return {
     params: Promise.resolve({ mediaContentId }),
   };
@@ -165,11 +165,11 @@ describe("GET /api/media/[mediaContentId]/stream", () => {
 
     const req = new NextRequest("http://localhost");
 
-    await GET(req, mockParams("media-123"));
+    await GET(req, mockParams("mediaId23"));
 
     expect(db.mediaContent.findUnique).toHaveBeenCalledWith({
       where: {
-        id: "media-123",
+        id: "mediaId23",
       },
       select: {
         user_id: true,

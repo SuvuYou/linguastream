@@ -1,102 +1,109 @@
 "use client";
 
-import { useState, useMemo } from "react";
 import type { SubtitleLine } from "@/hooks/useSubtitleTrack";
-import { useAppStore } from "@/lib/initializations/store";
-import { Badge } from "@/components/ui/badge";
-import SubtitleList from "./SubtitleList";
 import {
   Sidebar,
   SidebarContent,
   SidebarHeader,
-  SidebarInput,
-  SidebarGroup,
 } from "@/components/ui/sidebar";
+import SidebarSubtitleSection from "./SidebarSubtitleSection";
+import { BookA, Captions, SlidersHorizontal } from "lucide-react";
+import SubtitleSettingsPanel from "@/components/features/watch/SubtitleSettings";
+import WordProfilePanel from "@/components/features/watch/WordProfilePanel/WordProfilePanel";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useEffect, useState } from "react";
+import Events from "@/events";
 
 interface SubtitleSidebarProps {
   currentTimeMs: number;
   sourceLines: SubtitleLine[];
   translationLines: SubtitleLine[];
+  isLoading: boolean;
 }
 
-export default function SubtitleSidebar({
-  currentTimeMs,
-  sourceLines,
-  translationLines,
-}: SubtitleSidebarProps) {
-  const { subtitleSettings } = useAppStore();
+type Sections = "subtitles" | "word-profile" | "subtitle-settings";
 
-  const [query, setQuery] = useState("");
+export default function SubtitleSidebar(props: SubtitleSidebarProps) {
+  const { currentTimeMs, sourceLines, translationLines, isLoading } = props;
+  const subtitleSectionProps = {
+    currentTimeMs,
+    sourceLines,
+    translationLines,
+    isLoading,
+  };
 
-  const shouldShowSourceLine =
-    subtitleSettings.showSource && sourceLines.length > 0;
-  const shouldShowTranslationLine =
-    subtitleSettings.showTranslation && translationLines.length > 0;
+  const [openedSection, setOpenedSection] = useState<Sections>("subtitles");
 
-  const subtitlePairs = useMemo(() => {
-    const maxLen = Math.max(sourceLines.length, translationLines.length);
+  useEffect(() => {
+    const onSelectWord = ({ state }: { state: "select" | "deselect" }) => {
+      if (state === "select") setOpenedSection("word-profile");
+    };
 
-    return Array.from({ length: maxLen }, (_, i) => ({
-      source: sourceLines[i] ?? null,
-      translation: translationLines[i] ?? null,
-      start_ms: sourceLines[i]?.start_ms ?? translationLines[i]?.start_ms ?? 0,
-      end_ms: sourceLines[i]?.end_ms ?? translationLines[i]?.end_ms ?? 0,
-      index: i,
-    }));
-  }, [sourceLines, translationLines]);
+    const unsubscribe = Events.subtitles.onSelectWord(onSelectWord);
 
-  const filteredSubtitlePairs = useMemo(() => {
-    if (!query.trim()) return subtitlePairs;
-
-    const q = query.toLowerCase();
-    return subtitlePairs.filter((pair) => {
-      if (shouldShowSourceLine && pair.source?.text.toLowerCase().includes(q))
-        return true;
-      if (
-        shouldShowTranslationLine &&
-        pair.translation?.text.toLowerCase().includes(q)
-      )
-        return true;
-      return false;
-    });
-  }, [subtitlePairs, query, shouldShowSourceLine, shouldShowTranslationLine]);
+    return () => unsubscribe();
+  }, []);
 
   return (
     <Sidebar
       side="right"
       collapsible="none"
       className="h-screen"
-      style={{ "--sidebar-width": "36rem" } as React.CSSProperties}
+      style={{ "--sidebar-width": "24rem" } as React.CSSProperties}
     >
       <SidebarHeader>
-        <div className="px-3 py-2">
-          <SidebarInput
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search subtitles..."
-          />
-        </div>
-
-        <div className="px-3 py-1.5 flex items-center">
-          <Badge className="text-xs font-normal">
-            {query.trim()
-              ? `${filteredSubtitlePairs.length} result${filteredSubtitlePairs.length !== 1 ? "s" : ""}`
-              : `${subtitlePairs.length} lines`}
-          </Badge>
-        </div>
+        <Tabs
+          value={openedSection}
+          onValueChange={(value) => setOpenedSection(value as Sections)}
+          className="w-full h-12"
+        >
+          <TabsList className="w-full h-12!">
+            <TabsTrigger
+              value="subtitles"
+              className="flex-1 text-xs capitalize dark:data-active:bg-primary"
+            >
+              <Captions className="size-6" />
+            </TabsTrigger>
+            <TabsTrigger
+              value="word-profile"
+              className="flex-1 text-xs capitalize dark:data-active:bg-primary"
+            >
+              <BookA className="size-6" />
+            </TabsTrigger>
+            <TabsTrigger
+              value="subtitle-settings"
+              className="flex-1 text-xs capitalize dark:data-active:bg-primary"
+            >
+              <SlidersHorizontal className="size-6" />
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
       </SidebarHeader>
 
       <SidebarContent className="mb-3 overflow-hidden">
-        <SidebarGroup className="h-full pl-0">
-          <SubtitleList
-            query={query}
-            currentTimeMs={currentTimeMs}
-            subtitlePairs={subtitlePairs}
-            filteredSubtitlePairs={filteredSubtitlePairs}
-            shouldShowSourceLine={shouldShowSourceLine}
-            shouldShowTranslationLine={shouldShowTranslationLine}
-          />
-        </SidebarGroup>
+        {openedSection === "subtitles" && (
+          <div
+            id="subtitle-settings-panel"
+            className="flex-1 min-h-0 overflow-y-auto"
+          >
+            <SidebarSubtitleSection {...subtitleSectionProps} />
+          </div>
+        )}
+
+        {openedSection === "word-profile" && (
+          <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+            <WordProfilePanel />
+          </div>
+        )}
+
+        {openedSection === "subtitle-settings" && (
+          <div
+            id="subtitle-settings-panel"
+            className="flex-1 min-h-0 overflow-y-auto"
+          >
+            <SubtitleSettingsPanel />
+          </div>
+        )}
       </SidebarContent>
     </Sidebar>
   );

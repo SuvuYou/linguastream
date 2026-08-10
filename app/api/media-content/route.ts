@@ -61,3 +61,42 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json(content);
 }
+
+const DeleteBodySchema = z.object({
+  mediaId: z.string().uuid(),
+});
+
+export async function DELETE(req: NextRequest) {
+  const user = await getCurrentUser();
+
+  if (!user)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const body = DeleteBodySchema.safeParse(await req.json());
+
+  if (!body.success) {
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  }
+
+  const { mediaId } = body.data;
+
+  const media = await db.mediaContent.findUnique({
+    where: { id: mediaId },
+    select: { user_id: true, type: true },
+  });
+
+  if (!media) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  if (media.user_id !== user.id)
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  if (media.type === JELLYFIN_CONTENT_TYPE)
+    return NextResponse.json(
+      { error: "Cannot delete Jellyfin content" },
+      { status: 400 },
+    );
+
+  await db.mediaContent.delete({ where: { id: mediaId } });
+
+  return NextResponse.json({ ok: true });
+}

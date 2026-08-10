@@ -1,11 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { meili } from "@/lib/initializations/meilisearch";
-import { indexAllSubtitleLines, SubtitleSearchDocument } from "./search";
-import { Index } from "meilisearch";
-import { mockDbMediaContent } from "@/helpers/tests/mocks/db.mediaContent";
-import { db } from "../initializations/db";
+import { db } from "@/lib/initializations/db";
+import { meili, SUBTITLE_INDEX } from "@/lib/initializations/meilisearch";
 import { JELLYFIN_CONTENT_TYPE } from "@/helpers/const";
-import { MergedContentItem } from "@/types";
+import { indexAllSubtitleLines } from "./search";
+
+vi.mock("@/lib/initializations/meilisearch", () => ({
+  SUBTITLE_INDEX: "subtitles",
+  meili: {
+    index: vi.fn(),
+    createIndex: vi.fn(),
+  },
+}));
 
 vi.mock("@/lib/initializations/db", () => ({
   db: {
@@ -15,33 +20,113 @@ vi.mock("@/lib/initializations/db", () => ({
   },
 }));
 
-vi.mock("@/lib/initializations/meilisearch", () => ({
-  meili: {
-    index: vi.fn(),
-  },
-  SUBTITLE_INDEX: "subtitles",
-}));
+const mockedIndex = {
+  delete: vi.fn(),
+  updateSettings: vi.fn(),
+  addDocuments: vi.fn(),
+};
 
-beforeEach(() => vi.resetAllMocks());
+const mockedMeiliIndex = vi.mocked(meili.index);
+const mockedCreateIndex = vi.mocked(meili.createIndex);
+const mockedFindMany = vi.mocked(db.mediaContent.findMany);
 
-const mockedDb = vi.mocked(db, true);
-const mockedMeili = vi.mocked(meili, true);
+beforeEach(() => {
+  vi.clearAllMocks();
+
+  mockedMeiliIndex.mockReturnValue(mockedIndex as never);
+  mockedCreateIndex.mockResolvedValue({} as never);
+  mockedIndex.delete.mockResolvedValue({} as never);
+  mockedIndex.updateSettings.mockResolvedValue({} as never);
+  mockedIndex.addDocuments.mockResolvedValue({} as never);
+});
+
+function sourceTrack(
+  lines: Array<{
+    id: string;
+    text: string;
+    start_ms: number;
+    end_ms: number;
+    index?: number;
+  }>,
+) {
+  return {
+    id: "source-track",
+    language: "de",
+    is_source: true,
+    subtitle_lines: lines.map((line, index) => ({
+      index,
+      ...line,
+    })),
+  };
+}
+
+function translationTrack(
+  language: string,
+  lines: Array<{
+    id: string;
+    text: string;
+    start_ms: number;
+    end_ms: number;
+    index?: number;
+  }>,
+) {
+  return {
+    id: `${language}-track`,
+    language,
+    is_source: false,
+    subtitle_lines: lines.map((line, index) => ({
+      index,
+      ...line,
+    })),
+  };
+}
+
+function mediaContent(overrides: Record<string, unknown> = {}) {
+  return {
+    id: "media-1",
+    title: "Test Movie",
+    jellyfin_id: "jellyfin-1",
+    youtube_video_id: null,
+    type: JELLYFIN_CONTENT_TYPE,
+    user_id: "user-1",
+    source_language: "de",
+    subtitle_tracks: [
+      sourceTrack([
+        {
+          id: "source-1",
+          text: "  Hallo Welt  ",
+          start_ms: 1000,
+          end_ms: 2000,
+        },
+      ]),
+      translationTrack("en", [
+        {
+          id: "translation-1",
+          text: "Hello world",
+          start_ms: 1000,
+          end_ms: 2000,
+        },
+      ]),
+    ],
+    ...overrides,
+  };
+}
 
 describe("indexAllSubtitleLines", () => {
-  it("configures meilisearch index", async () => {
-    const updateSettings = vi.fn();
-    const addDocuments = vi.fn().mockResolvedValue(undefined);
-
-    mockedMeili.index.mockReturnValue({
-      updateSettings,
-      addDocuments,
-    } as unknown as Index<SubtitleSearchDocument>);
-
-    mockDbMediaContent.findMany.empty();
+  it("recreates the subtitle index", async () => {
+    mockedFindMany.mockResolvedValue([]);
 
     const result = await indexAllSubtitleLines();
 
-    expect(updateSettings).toHaveBeenCalledWith({
+    expect(mockedMeiliIndex).toHaveBeenCalledWith(SUBTITLE_INDEX);
+
+    expect(mockedIndex.delete).toHaveBeenCalledOnce();
+
+    expect(mockedCreateIndex).toHaveBeenCalledWith(SUBTITLE_INDEX, {
+      primaryKey: "id",
+    });
+
+    expect(mockedIndex.updateSettings).toHaveBeenCalledWith({
       searchableAttributes: ["source_text"],
       filterableAttributes: [
         "source_language",
@@ -60,168 +145,580 @@ describe("indexAllSubtitleLines", () => {
     });
   });
 
-  it("skips when no media content exists", async () => {
-    const updateSettings = vi.fn();
-    const addDocuments = vi.fn();
-
-    mockedMeili.index.mockReturnValue({
-      updateSettings,
-      addDocuments,
-    } as unknown as Index<SubtitleSearchDocument>);
-
-    mockDbMediaContent.findMany.empty();
+  it("indexes a source line with its matching translation", async () => {
+    mockedFindMany
+      .mockResolvedValueOnce([mediaContent()] as never)
+      .mockResolvedValueOnce([]);
 
     const result = await indexAllSubtitleLines();
 
-    expect(addDocuments).not.toHaveBeenCalled();
-    expect(result.indexed).toBe(0);
+    expect(result.indexed).toBe(1);
+
+    expect(mockedIndex.addDocuments).toHaveBeenCalledWith(
+      [
+        {
+          id: "source-1_en",
+          source_subtitle_line_id: "source-1",
+          source_text: "Hallo Welt",
+          source_language: "de",
+          translation_language: "en",
+          translation_text: "Hello world",
+          start_ms: 1000,
+          end_ms: 2000,
+          media_content_id: "media-1",
+          media_title: "Test Movie",
+          jellyfin_id: "jellyfin-1",
+          youtube_video_id: "",
+          is_global: true,
+          owner_user_id: "user-1",
+        },
+      ],
+      {
+        primaryKey: "id",
+      },
+    );
   });
 
-  it("creates subtitle search documents from matching lines", async () => {
-    const updateSettings = vi.fn();
-    const addDocuments = vi.fn().mockResolvedValue(undefined);
-
-    mockedMeili.index.mockReturnValue({
-      updateSettings,
-      addDocuments,
-    } as unknown as Index<SubtitleSearchDocument>);
-
-    mockedDb.mediaContent.findMany
+  it("trims and normalizes source and translation text", async () => {
+    mockedFindMany
       .mockResolvedValueOnce([
-        {
-          id: "m1",
-          title: "Movie",
-          jellyfin_id: "j1",
-          type: JELLYFIN_CONTENT_TYPE,
-          user_id: "u1",
-          source_language: "en",
+        mediaContent({
           subtitle_tracks: [
-            {
-              is_source: true,
-              language: "en",
-              subtitle_lines: [
-                {
-                  id: "s1",
-                  text: "hello",
-                  start_ms: 0,
-                  end_ms: 1000,
-                  index: 0,
-                },
-              ],
-            },
-            {
-              is_source: false,
-              language: "de",
-              subtitle_lines: [
-                {
-                  id: "t1",
-                  text: "hallo",
-                  start_ms: 0,
-                  end_ms: 1000,
-                  index: 0,
-                },
-              ],
-            },
+            sourceTrack([
+              {
+                id: "source-1",
+                text: "   Hallo    schöne   Welt   ",
+                start_ms: 1000,
+                end_ms: 2000,
+              },
+            ]),
+            translationTrack("en", [
+              {
+                id: "translation-1",
+                text: "  Hello   beautiful ",
+                start_ms: 1000,
+                end_ms: 1500,
+              },
+              {
+                id: "translation-2",
+                text: " world   ",
+                start_ms: 1500,
+                end_ms: 2000,
+              },
+            ]),
           ],
-        },
-      ] as unknown as MergedContentItem[])
+        }),
+      ] as never)
       .mockResolvedValueOnce([]);
 
     await indexAllSubtitleLines();
 
-    expect(addDocuments).toHaveBeenCalled();
+    expect(mockedIndex.addDocuments).toHaveBeenCalledWith(
+      [
+        expect.objectContaining({
+          source_text: "Hallo    schöne   Welt",
+          translation_text: "Hello beautiful world",
+        }),
+      ],
+      {
+        primaryKey: "id",
+      },
+    );
+  });
 
-    const docs = addDocuments.mock.calls[0][0];
+  it("matches translation lines that overlap the source line", async () => {
+    mockedFindMany
+      .mockResolvedValueOnce([
+        mediaContent({
+          subtitle_tracks: [
+            sourceTrack([
+              {
+                id: "source-1",
+                text: "Hello",
+                start_ms: 1000,
+                end_ms: 2000,
+              },
+            ]),
+            translationTrack("en", [
+              {
+                id: "translation-1",
+                text: "First",
+                start_ms: 500,
+                end_ms: 1200,
+              },
+              {
+                id: "translation-2",
+                text: "Second",
+                start_ms: 1800,
+                end_ms: 2500,
+              },
+            ]),
+          ],
+        }),
+      ] as never)
+      .mockResolvedValueOnce([]);
 
-    expect(docs[0]).toEqual(
+    await indexAllSubtitleLines();
+
+    expect(mockedIndex.addDocuments).toHaveBeenCalledWith(
+      [
+        expect.objectContaining({
+          translation_text: "First Second",
+        }),
+      ],
+      {
+        primaryKey: "id",
+      },
+    );
+  });
+
+  it("matches translation lines within the 1000ms tolerance", async () => {
+    mockedFindMany
+      .mockResolvedValueOnce([
+        mediaContent({
+          subtitle_tracks: [
+            sourceTrack([
+              {
+                id: "source-1",
+                text: "Hello",
+                start_ms: 5000,
+                end_ms: 5500,
+              },
+            ]),
+            translationTrack("en", [
+              {
+                id: "translation-1",
+                text: "Hello translation",
+                start_ms: 6000,
+                end_ms: 6500,
+              },
+            ]),
+          ],
+        }),
+      ] as never)
+      .mockResolvedValueOnce([]);
+
+    await indexAllSubtitleLines();
+
+    expect(mockedIndex.addDocuments).toHaveBeenCalledWith(
+      [
+        expect.objectContaining({
+          translation_text: "Hello translation",
+        }),
+      ],
+      {
+        primaryKey: "id",
+      },
+    );
+  });
+
+  it("does not match translation lines outside overlap and tolerance", async () => {
+    mockedFindMany
+      .mockResolvedValueOnce([
+        mediaContent({
+          subtitle_tracks: [
+            sourceTrack([
+              {
+                id: "source-1",
+                text: "Hello",
+                start_ms: 1000,
+                end_ms: 1500,
+              },
+            ]),
+            translationTrack("en", [
+              {
+                id: "translation-1",
+                text: "Too late",
+                start_ms: 3001,
+                end_ms: 3500,
+              },
+            ]),
+          ],
+        }),
+      ] as never)
+      .mockResolvedValueOnce([]);
+
+    const result = await indexAllSubtitleLines();
+
+    expect(result.indexed).toBe(0);
+    expect(mockedIndex.addDocuments).not.toHaveBeenCalled();
+  });
+
+  it("creates one document for every translation track", async () => {
+    mockedFindMany
+      .mockResolvedValueOnce([
+        mediaContent({
+          subtitle_tracks: [
+            sourceTrack([
+              {
+                id: "source-1",
+                text: "Hallo",
+                start_ms: 1000,
+                end_ms: 2000,
+              },
+            ]),
+            translationTrack("en", [
+              {
+                id: "en-1",
+                text: "Hello",
+                start_ms: 1000,
+                end_ms: 2000,
+              },
+            ]),
+            translationTrack("uk", [
+              {
+                id: "uk-1",
+                text: "Привіт",
+                start_ms: 1000,
+                end_ms: 2000,
+              },
+            ]),
+          ],
+        }),
+      ] as never)
+      .mockResolvedValueOnce([]);
+
+    const result = await indexAllSubtitleLines();
+
+    expect(result.indexed).toBe(2);
+
+    expect(mockedIndex.addDocuments).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "source-1_en",
+          translation_language: "en",
+          translation_text: "Hello",
+        }),
+        expect.objectContaining({
+          id: "source-1_uk",
+          translation_language: "uk",
+          translation_text: "Привіт",
+        }),
+      ]),
+      {
+        primaryKey: "id",
+      },
+    );
+  });
+
+  it("indexes multiple source lines", async () => {
+    mockedFindMany
+      .mockResolvedValueOnce([
+        mediaContent({
+          subtitle_tracks: [
+            sourceTrack([
+              {
+                id: "source-1",
+                text: "Hallo",
+                start_ms: 1000,
+                end_ms: 1500,
+              },
+              {
+                id: "source-2",
+                text: "Wie geht's?",
+                start_ms: 3000,
+                end_ms: 3500,
+              },
+            ]),
+            translationTrack("en", [
+              {
+                id: "translation-1",
+                text: "Hello",
+                start_ms: 1000,
+                end_ms: 1500,
+              },
+              {
+                id: "translation-2",
+                text: "How are you?",
+                start_ms: 3000,
+                end_ms: 3500,
+              },
+            ]),
+          ],
+        }),
+      ] as never)
+      .mockResolvedValueOnce([]);
+
+    const result = await indexAllSubtitleLines();
+
+    expect(result.indexed).toBe(2);
+
+    const documents = mockedIndex.addDocuments.mock.calls[0][0];
+
+    expect(documents).toEqual([
       expect.objectContaining({
-        id: "s1_de",
-        source_text: "hello",
-        translation_text: "hallo",
-        media_content_id: "m1",
-        media_title: "Movie",
-        jellyfin_id: "j1",
-        is_global: true,
+        id: "source-1_en",
+        source_text: "Hallo",
+        translation_text: "Hello",
+      }),
+      expect.objectContaining({
+        id: "source-2_en",
+        source_text: "Wie geht's?",
+        translation_text: "How are you?",
+      }),
+    ]);
+  });
+
+  it("skips media without a source track", async () => {
+    mockedFindMany
+      .mockResolvedValueOnce([
+        mediaContent({
+          subtitle_tracks: [
+            translationTrack("en", [
+              {
+                id: "translation-1",
+                text: "Hello",
+                start_ms: 1000,
+                end_ms: 2000,
+              },
+            ]),
+          ],
+        }),
+      ] as never)
+      .mockResolvedValueOnce([]);
+
+    const result = await indexAllSubtitleLines();
+
+    expect(result.indexed).toBe(0);
+    expect(mockedIndex.addDocuments).not.toHaveBeenCalled();
+  });
+
+  it("skips source lines without a matching translation", async () => {
+    mockedFindMany
+      .mockResolvedValueOnce([
+        mediaContent({
+          subtitle_tracks: [
+            sourceTrack([
+              {
+                id: "source-1",
+                text: "No translation",
+                start_ms: 1000,
+                end_ms: 1500,
+              },
+            ]),
+            translationTrack("en", [
+              {
+                id: "translation-1",
+                text: "Far away",
+                start_ms: 5000,
+                end_ms: 5500,
+              },
+            ]),
+          ],
+        }),
+      ] as never)
+      .mockResolvedValueOnce([]);
+
+    const result = await indexAllSubtitleLines();
+
+    expect(result.indexed).toBe(0);
+    expect(mockedIndex.addDocuments).not.toHaveBeenCalled();
+  });
+
+  it("sets is_global for Jellyfin content", async () => {
+    mockedFindMany
+      .mockResolvedValueOnce([
+        mediaContent({
+          type: JELLYFIN_CONTENT_TYPE,
+        }),
+      ] as never)
+      .mockResolvedValueOnce([]);
+
+    await indexAllSubtitleLines();
+
+    expect(mockedIndex.addDocuments).toHaveBeenCalledWith(
+      [
+        expect.objectContaining({
+          is_global: true,
+        }),
+      ],
+      {
+        primaryKey: "id",
+      },
+    );
+  });
+
+  it("sets is_global to false for non-Jellyfin content", async () => {
+    mockedFindMany
+      .mockResolvedValueOnce([
+        mediaContent({
+          type: "youtube",
+          youtube_video_id: "youtube-1",
+          jellyfin_id: null,
+        }),
+      ] as never)
+      .mockResolvedValueOnce([]);
+
+    await indexAllSubtitleLines();
+
+    expect(mockedIndex.addDocuments).toHaveBeenCalledWith(
+      [
+        expect.objectContaining({
+          is_global: false,
+          jellyfin_id: "",
+          youtube_video_id: "youtube-1",
+        }),
+      ],
+      {
+        primaryKey: "id",
+      },
+    );
+  });
+
+  it("paginates through media contents using the last id as cursor", async () => {
+    mockedFindMany
+      .mockResolvedValueOnce([
+        mediaContent({ id: "media-1" }),
+        mediaContent({ id: "media-2" }),
+      ] as never)
+      .mockResolvedValueOnce([mediaContent({ id: "media-3" })] as never)
+      .mockResolvedValueOnce([]);
+
+    const result = await indexAllSubtitleLines();
+
+    expect(mockedFindMany).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        take: 50,
+        orderBy: { id: "asc" },
+      }),
+    );
+
+    expect(mockedFindMany).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        take: 50,
+        cursor: {
+          id: "media-2",
+        },
+        skip: 1,
+        orderBy: { id: "asc" },
+      }),
+    );
+
+    expect(mockedFindMany).toHaveBeenNthCalledWith(
+      3,
+      expect.objectContaining({
+        take: 50,
+        cursor: {
+          id: "media-3",
+        },
+        skip: 1,
+        orderBy: { id: "asc" },
+      }),
+    );
+
+    expect(result.indexed).toBe(3);
+  });
+
+  it("uses the expected database filters", async () => {
+    mockedFindMany.mockResolvedValue([]);
+
+    await indexAllSubtitleLines();
+
+    expect(mockedFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          subtitle_tracks: {
+            some: {},
+          },
+          source_language: {
+            not: expect.anything(),
+          },
+        },
       }),
     );
   });
 
-  it("chunks documents before sending to meilisearch", async () => {
-    const updateSettings = vi.fn();
-    const addDocuments = vi.fn().mockResolvedValue(undefined);
-
-    mockedMeili.index.mockReturnValue({
-      updateSettings,
-      addDocuments,
-    } as unknown as Index<SubtitleSearchDocument>);
-
-    const sourceLines = Array.from({ length: 1200 }, (_, i) => ({
-      id: `s${i}`,
-      text: "hello",
-      start_ms: 0,
-      end_ms: 1000,
-      index: i,
+  it("adds documents in chunks", async () => {
+    const sourceLines = Array.from({ length: 1001 }, (_, index) => ({
+      id: `source-${index}`,
+      text: `Source ${index}`,
+      start_ms: index * 3000,
+      end_ms: index * 3000 + 1000,
     }));
 
-    mockedDb.mediaContent.findMany
+    const translationLines = sourceLines.map((line, index) => ({
+      id: `translation-${index}`,
+      text: `Translation ${index}`,
+      start_ms: line.start_ms,
+      end_ms: line.end_ms,
+    }));
+
+    mockedFindMany
       .mockResolvedValueOnce([
-        {
-          id: "m1",
-          title: "Movie",
-          jellyfin_id: "j1",
-          type: JELLYFIN_CONTENT_TYPE,
-          user_id: "u1",
-          source_language: "en",
+        mediaContent({
           subtitle_tracks: [
-            {
-              is_source: true,
-              language: "en",
-              subtitle_lines: sourceLines,
-            },
-            {
-              is_source: false,
-              language: "de",
-              subtitle_lines: sourceLines,
-            },
+            sourceTrack(sourceLines),
+            translationTrack("en", translationLines),
           ],
-        },
-      ] as unknown as MergedContentItem[])
+        }),
+      ] as never)
       .mockResolvedValueOnce([]);
 
-    await indexAllSubtitleLines();
+    const result = await indexAllSubtitleLines();
 
-    expect(addDocuments).toHaveBeenCalledTimes(2);
+    expect(result.indexed).toBe(1001);
+
+    expect(mockedIndex.addDocuments).toHaveBeenCalledTimes(2);
+
+    expect(mockedIndex.addDocuments).toHaveBeenNthCalledWith(
+      1,
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "source-0_en",
+        }),
+      ]),
+      {
+        primaryKey: "id",
+      },
+    );
+
+    expect(mockedIndex.addDocuments.mock.calls[0][0]).toHaveLength(1000);
+
+    expect(mockedIndex.addDocuments.mock.calls[1][0]).toHaveLength(1);
+
+    expect(mockedIndex.addDocuments.mock.calls[1][0]).toEqual([
+      expect.objectContaining({
+        id: "source-1000_en",
+      }),
+    ]);
   });
 
-  it("skips media without source track", async () => {
-    const updateSettings = vi.fn();
-    const addDocuments = vi.fn();
-
-    mockedMeili.index.mockReturnValue({
-      updateSettings,
-      addDocuments,
-    } as unknown as Index<SubtitleSearchDocument>);
-
-    mockDbMediaContent.findMany.once({
-      subtitle_tracks: [
-        {
-          is_source: false,
-          language: "de",
-          subtitle_lines: [
-            {
-              id: "t1",
-              text: "hallo",
-              start_ms: 0,
-              end_ms: 1000,
-              index: 0,
-            },
+  it("does not add documents when there are no matching translations", async () => {
+    mockedFindMany
+      .mockResolvedValueOnce([
+        mediaContent({
+          subtitle_tracks: [
+            sourceTrack([
+              {
+                id: "source-1",
+                text: "Hello",
+                start_ms: 1000,
+                end_ms: 1500,
+              },
+            ]),
+            translationTrack("en", [
+              {
+                id: "translation-1",
+                text: "Unrelated",
+                start_ms: 10000,
+                end_ms: 11000,
+              },
+            ]),
           ],
-        },
-      ],
-    } as unknown as MergedContentItem);
+        }),
+      ] as never)
+      .mockResolvedValueOnce([]);
 
-    await indexAllSubtitleLines();
+    const result = await indexAllSubtitleLines();
 
-    expect(addDocuments).not.toHaveBeenCalled();
+    expect(result).toEqual({
+      indexed: 0,
+      match_tolerance_ms: 1000,
+      chunk_size: 1000,
+    });
+
+    expect(mockedIndex.addDocuments).not.toHaveBeenCalled();
   });
 });
