@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import CardsList from "@/components/features/deck-details/CardsList";
-import { BookOpen } from "lucide-react";
+import { BookOpen, Copy } from "lucide-react";
 import SourceLanguageFilter from "@/components/features/deck-details/SourceLanguageFilter";
 import { useZodSearchParams } from "@/hooks/useZodSearchParams";
 import { DECK_DETAILS_PARAMS_SCHEMA } from "@/helpers/params-schema";
@@ -119,6 +119,19 @@ export default function DeckDetailPage({ deckId }: DeckDetailPageProps) {
               setConfirmationDialogOpen(false);
             }}
           />
+
+          <Button
+            variant="outline"
+            size="lg"
+            className="px-6"
+            onClick={() =>
+              navigator.clipboard.writeText(
+                deckCards.data?.cards.map((c) => c.word).join("\n") ?? "",
+              )
+            }
+          >
+            <Copy />
+          </Button>
 
           <SourceLanguageFilter
             source={{

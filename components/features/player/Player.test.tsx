@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
-
+import { render, screen } from "@testing-library/react";
 import Player from "./Player";
 import { useAppStore } from "@/lib/initializations/store";
 import { useAnimationTick } from "@/hooks/useAnimationTick";
