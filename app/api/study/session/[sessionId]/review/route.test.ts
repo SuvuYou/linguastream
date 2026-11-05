@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { POST } from "./route";
 import { db } from "@/lib/initializations/db";
-import { calculateNextReview } from "@/lib/algorithms/sm2";
+import { calculateNextReview } from "@/lib/algorithms/fsrs";
 import { mockGetCurrentUser } from "@/helpers/tests/mocks/getCurrentUser";
 
 vi.mock("@/lib/firebase/session", () => ({

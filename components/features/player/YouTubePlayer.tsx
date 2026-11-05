@@ -69,10 +69,6 @@ export default function YouTubePlayer({
     async function init() {
       const container = iframeContainerRef.current;
 
-      if (!container) {
-        return;
-      }
-
       await loadYouTubeAPI();
 
       playerRef.current = new window.YT.Player(container, {

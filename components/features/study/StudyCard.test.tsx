@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import StudyCard from "./StudyCard";
-import { calculateNextReview } from "@/lib/algorithms/sm2";
+import { calculateNextReview } from "@/lib/algorithms/fsrs";
 
 vi.mock("@/lib/algorithms/sm2", () => ({
   calculateNextReview: vi.fn(),
