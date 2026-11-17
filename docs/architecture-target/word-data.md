@@ -16,4 +16,6 @@ Costs and reference figures: `architecture-target/cost.md`.
 
 **Instant layer:** a word click shows the line translation and the dictionary entry immediately from Postgres (target under 200 ms); the Gemini sense selection loads afterwards. No external call is on the critical path.
 
+**Word pack (D-058, D-060):** at transfer, one bundle per video from the imported dictionary: each lemma with a short gloss in the user's native language, POS and gender. Missing non-English glosses are translated in one Gemini batch and cached for everyone; the prompt carries the German word, part of speech, English gloss and an example (D-065).
+
 **AI limiter:** per-user daily quotas and a global monthly cap in Redis; fall back to dictionary-only data.

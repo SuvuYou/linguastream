@@ -11,9 +11,12 @@ Knowledge base for the app. Paths in these docs are written from `docs/`.
 | `codebase-guide/` | Layout, commands, conventions, git workflow |
 | `legal/` | Legal guardrails every change must respect |
 | `decisions/` | Daily decision archive (`decisions-{date}-{topic}.md`) with an index |
-| `roadmap/` | Ordered steps and the tasks before the demo |
+| `roadmap/` | The plan (`plan.md`, D-062), the phase 1 backend checklist, the draft steps and the tasks before the demo |
+| `study/` | The study plan (`plan.md`) and a study guide with resources for each block |
+| `research/` | Research behind open decisions (e.g. word data sources) |
 | `open-questions.md` | Questions that block or shape a step |
 | `changes/` | One folder per roadmap step or change: spec, plan, tasks |
+| `Inspiration/` | Competitor screenshots with notes, grouped by feature; `feature-review.md` rates and orders the candidate features |
 
 ## Rules
 

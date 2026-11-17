@@ -15,3 +15,4 @@ No lawyer consultation is planned (D-015). The design rests on these assumptions
 11. **Processing text on the server without storing it** (public edition) is a temporary copy under §44a UrhG. Untested.
 12. **Assumption 8 is doubtful:** the fee cap needs a natural person not acting commercially or professionally and can be set aside as inequitable (D-034).
 13. **The private instance needs no Impressum** because it is login-gated, has no public sign-up and is not promoted (D-035). Unverified; it stops being true the moment the instance is offered to people the developer does not know.
+14. **Transcribing the audio of a user's own file on our server, then deleting it,** is part of that user's private copy, like assumptions 1 and 3 (D-040). Only lawful sources are covered. Untested.

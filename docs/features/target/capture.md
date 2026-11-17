@@ -8,5 +8,5 @@ The extension lives in a separate private repository and is given to friends dir
 | Transfer button → full processing | UI + Backend | Extension | ⬜ | "Open in LinguaStream" (D-021). Quota in characters (D-022); hidden if the video forbids embedding (D-027). |
 | Add YouTube video by URL | UI + Backend | Library | 🟡 | Today: oEmbed metadata only. Target (D-028, proposed): paste a URL → the video opens in the embedded player → the extension captures there. Needs the Q-06 spike. |
 | Music check and video-ID blocklist | Backend + Compliance | Extension, server | ⬜ | D-036. The private instance warns on Music-category videos; the blocklist applies on every deployment. |
-| Extension sign-in (token handoff) | Backend | Extension | ⬜ | Q-14 |
+| Extension sign-in (token handoff) | Backend | Extension | ⬜ | D-053 |
 | "Paste transcript" fallback | UI | Library | ⬜ | Only if the extension method fails (D-014). Also the only route for a video without a capture (D-029). |

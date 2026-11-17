@@ -1,5 +1,7 @@
 # Auth
 
+**Since D-053:** one domain split by path (`/api/*` → NestJS, the rest → Next.js); both verify the Firebase session cookie through one shared check. The extension gets a short-lived custom token from our page, signs in to Firebase and sends ID tokens to NestJS.
+
 - Web app: Firebase (Google sign-in or email + password) → existing httpOnly session cookie.
 - Public pages don't load Firebase; the sign-in modal imports it dynamically (D-013).
 - Extension: a short-lived token handed over by the logged-in site, refreshed by the extension. Details TBD in the extension spike.

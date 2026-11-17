@@ -1,5 +1,7 @@
 # Upload flow (D-040)
 
+> **Postponed (D-066).** Designed, not built.
+
 Private instance only. No video or audio is stored on the server.
 
 1. The user picks a local video file. It plays from their disk.

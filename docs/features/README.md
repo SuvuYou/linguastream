@@ -9,11 +9,13 @@ When a change lands, update both in the same PR (see `changes/README.md`): the l
 
 Both are organised by **capability** (one file per area), not by page, because most features appear on several pages and pages move. Each target row has a **Where** column; `by-page.md` is the page view built from it.
 
+Candidate features from the competitor review, rated and ordered but not yet assigned to areas: `Inspiration/feature-review.md`.
+
 The feature set is **not final**. Files marked ⚠ are under discussion: they describe what exists or was proposed, not what will be built. Rows apply to the private instance unless they say Demo (D-038).
 
 ## Target status
 
-✅ built and matches the target · 🟡 partial or inconsistent · ⬜ planned · ❔ undecided · ⏳ deferred with the public edition (D-038)
+✅ built and matches the target · 🟡 partial or inconsistent · ⬜ planned · ❔ undecided · ⏳ deferred (with the public edition, D-038, or postponed, e.g. uploads, D-066)
 
 ## Type
 

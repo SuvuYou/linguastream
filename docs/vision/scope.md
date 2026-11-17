@@ -17,6 +17,6 @@ The boundary table below describes the private instance.
 | Accounts via Google sign-in or email + password | Paid tier or ads (see `legal/copyright.md`, rule 7) |
 | Optional later: a curated catalog of YouTube channels (metadata only) | Jellyfin, Netflix and other streaming sites |
 
-**Uploads (D-040):** in scope for the private instance. The video plays from the user's disk; the audio is transcribed and deleted; no media is stored on the server.
+**Uploads (D-040):** designed, postponed (D-066). The video plays from the user's disk; the audio is transcribed and deleted; no media is stored on the server.
 
 Reasons and legal basis: `decisions/` and `legal/`.

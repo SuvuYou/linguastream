@@ -7,7 +7,7 @@
 How the app is meant to work once the roadmap steps land. For how it works today, see `architecture-legacy/`.
 
 
-One EU VPS running Docker Compose (D-006). *Open (Q-15):* where Postgres runs: Neon today, possibly the VPS.
+One EU VPS running Docker Compose (D-006): Caddy, Next.js (pages), NestJS (API and worker, D-049), Redis (cache, quotas, BullMQ), Postgres (self-hosted, D-049). Server size chosen after measuring the load (Q-30). Deployed by GitHub Actions; backups as in `architecture-target/backups-and-deletion.md` (D-051).
 
 ```mermaid
 flowchart LR
@@ -19,15 +19,17 @@ flowchart LR
   LP -- sign-in modal loads Firebase --> FB[Firebase Auth]
   EXT -- captured captions --> API
   APP --> C[Caddy TLS]
-  C --> API[Next.js<br/>pages + API]
-  API --> PG[(Postgres, location open Q-15<br/>data + full-text search)]
+  C --> WEB[Next.js<br/>pages]
+  C --> API[NestJS<br/>API, D-049]
+  WEB --> API
+  API --> PG[(Postgres on the VPS<br/>data + full-text search)]
   API --> R[(Redis<br/>cache, rate limits,<br/>AI quotas)]
-  API -- enqueue --> Q[Job queue]
-  Q --> W[Worker]
+  API -- enqueue --> Q[BullMQ<br/>on Redis]
+  Q --> W[Worker<br/>NestJS]
   W --> SP[spaCy<br/>local]
   W --> TR[Translation provider<br/>LLM, D-023]
   W --> GM[Gemini<br/>word sense]
-  W --> GQ[Transcription API<br/>uploads, D-040]
+  W -.-> GQ[Transcription API<br/>uploads, postponed D-066]
   W --> PG
   API -- SSE progress --> APP
 ```

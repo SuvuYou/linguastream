@@ -33,7 +33,7 @@ Built from your notes in the screenshot `.md` files (likes and dislikes). Not as
 | # | Feature | Refs | Feasible | Effort | Necessity | Notes |
 |---|---|---|---|---|---|---|
 | 16 | Transcript with words coloured by status, current word highlighted, translation on hover | [1](transcript-panel/languagereactor-transcript-colored-words-hover-gloss.md), [2](transcript-panel/lingopie-read-along-explain-save-grammar-index.md) | ✅ | M | Must | After word statuses (step 1/5). You disliked Lingopie's list having no word highlight. |
-| 17 | "Explain" a line or word with AI | [1](transcript-panel/lingopie-read-along-explain-save-grammar-index.md), [2](ai-explanations/lingopie-line-explanation-and-chat.md) | ✅ | M | Later (bottom list) | Decided: possibly at the end. Building it means changing the "no AI chat" non-goal in `vision/product.md` (a one-shot explain is not a chat). Costs go through the AI limiter. |
+| 17 | "Explain" a line or word with AI | [1](transcript-panel/lingopie-read-along-explain-save-grammar-index.md), [2](ai-explanations/lingopie-line-explanation-and-chat.md) | ✅ | M | Later (bottom list) | Allowed as a one-shot exception to "no AI chat" (D-044); bottom of the list. Costs go through the AI limiter. |
 
 ## Word lookup
 
@@ -47,12 +47,12 @@ Built from your notes in the screenshot `.md` files (likes and dislikes). Not as
 | 23 | Senses each with an example, forms, etymology, IPA | [1](word-details/trancy-ai-definition-ipa-forms.md), [2](word-details/trancy-ai-definition-senses-etymology-phrases.md) | ✅ | M | Must (senses, forms) / Should (rest) | All in Wiktextract, free, no AI needed. After the import (step 4). |
 | 24 | Phrases, synonyms / antonyms, related words | [1](word-details/trancy-ai-definition-synonyms-related.md), [2](word-details/tubevocab-collocations-synonyms-common-mistake.md), [3](word-details/tubevocab-contextual-meaning-usage-tips.md) | ✅ | S | Should | Also in Wiktextract (derived terms, multiword expressions, synonyms). Only a tab once the import exists. |
 | 25 | Compact grammar badges (POS, gender, number, case) | [1](word-popup/lingopie-popup-grammar-tags.md) | ✅ | S | Should | From spaCy morphology (step 3) |
-| 26 | Phrase detection: verb phrases and separable verbs shown as one item, with a breakdown of parts and lemmas | [1](word-popup/lingopie-phrase-breakdown-lemma-features.md) | ⚠️ | L | Should | Waits on the model selection decisions (normaliser Q-11, parser Q-12): spaCy marks separable prefixes (`svp`), Wiktextract lists multiword expressions, but accuracy depends on the chosen model. Contents still to be decided. |
+| 26 | Phrase detection: verb phrases and separable verbs shown as one item, with a breakdown of parts and lemmas | [1](word-popup/lingopie-phrase-breakdown-lemma-features.md) | ⚠️ | L | Should | spaCy `sm` (D-050) marks separable prefixes (`svp`), Wiktextract lists multiword expressions; a larger model only if accuracy is poor. Contents still to be decided. |
 | 27 | Pick a phrase by hand (Shift-click words, save as one) | [1](word-popup/fluentai-gesture-settings-hover-click-shift.md) | ✅ | M | Later (bottom list) | Good feature, bottom of the list. Cards need to hold a multi-word item. |
 | 28 | Usage tips / common mistakes, only when there is something real to say | [1](word-details/tubevocab-collocations-synonyms-common-mistake.md), [2](word-details/tubevocab-contextual-meaning-usage-tips.md) | ✅ | M | Could | LLM call allowed to return nothing; cached per lemma (dictionary data, not user content, so the cache can be shared). |
 | 29 | Customisable gestures: hover / click / right-click / Shift-click → action | [1](word-popup/fluentai-gesture-settings-hover-click-shift.md) | ✅ | M | Could | |
 | 30 | Popup size setting | [1](translation-sources/fluentai-engine-fallback-order-status-keys.md) | ✅ | S | Could | |
-| 31 | Extension: look up any word on any web page (YouTube titles, comments, other sites), with trigger options (button, Alt+select, direct) | [1](web-page-lookup/trancy-noun-popup-on-youtube-title.md), [2](web-page-lookup/trancy-verb-popup-on-page.md), [3](web-page-lookup/trancy-web-page-translation-settings.md) | ✅ | M | Should (later) | Plain translation of selected words on any website, added later. Needs host permission for all sites, so guardrail 15 ("youtube.com and the app's own domain only") must be changed by a decision first. |
+| 31 | Extension: look up any word on any web page (YouTube titles, comments, other sites), with trigger options (button, Alt+select, direct) | [1](web-page-lookup/trancy-noun-popup-on-youtube-title.md), [2](web-page-lookup/trancy-verb-popup-on-page.md), [3](web-page-lookup/trancy-web-page-translation-settings.md) | ✅ | M | Should (later) | Plain translation of selected words on any website, added later (D-043). Capture stays youtube.com-only; lookup sends only the selected word or phrase. |
 
 ## Word colouring and words in a video
 
@@ -72,10 +72,10 @@ Built from your notes in the screenshot `.md` files (likes and dislikes). Not as
 | 38 | Filters: status, source video, list, search; sort by date or frequency | [1](vocabulary-notebook/fluentai-notebook-status-tabs-source.md), [2](vocabulary-notebook/fluentai-notebook-filter-by-video.md), [3](vocabulary-notebook/languagereactor-saved-words-rank-context-tags.md) | ✅ | M | Must | |
 | 39 | Saved context with the word highlighted, link to the source moment | [1](vocabulary-notebook/languagereactor-saved-words-rank-context-tags.md) | ✅ | S | Must | Cards already copy their sentence and keep the clip times |
 | 40 | Edit a word: own translation, note, reset to dictionary | [1](vocabulary-notebook/lingopie-edit-personal-translation-note.md), [2](vocabulary-notebook/lingopie-word-detail-last-occurrence.md), [3](vocabulary-notebook/lingopie-word-detail-clip-practice-games.md) | ✅ | S | Must | |
-| 41 | Quick status change from the list | [1](vocabulary-notebook/lingopie-vocab-srs-stage-buttons.md), [2](vocabulary-notebook/lingopie-word-detail-last-occurrence.md) | ✅ | S | Should | Two separate systems: word status is the user's own judgement and doesn't depend on cards or FSRS. A word can be "learning" while its card waits a month. Status buttons in the list just set the status. |
+| 41 | Quick status change from the list | [1](vocabulary-notebook/lingopie-vocab-srs-stage-buttons.md), [2](vocabulary-notebook/lingopie-word-detail-last-occurrence.md) | ✅ | S | Should | Decided (D-041): word status and FSRS are separate systems. A word can be "learning" while its card waits a month. Status buttons just set the status. |
 | 42 | Hide meanings (eye toggle) to test yourself | [1](vocabulary-notebook/trancy-hide-meanings-self-test.md) | ✅ | S | Should | |
 | 43 | Bulk actions: set status, add to list, export, delete | [1](vocabulary-notebook/fluentai-notebook-bulk-actions.md) | ✅ | M | Should | Export limited to one context sentence per card (guardrail 6) |
-| 44 | Lists with name, description, icon and colour | [1](vocabulary-notebook/fluentai-create-list-icon-color-ai.md) | ✅ | S–M | Should | Overlaps today's decks: decide whether lists **are** decks |
+| 44 | Lists with name, description, icon and colour | [1](vocabulary-notebook/fluentai-create-list-icon-color-ai.md) | ✅ | S–M | Should | Decided (D-045): lists are decks. One global vocabulary; a word can be in several decks. |
 | 45 | Filter by grammar: POS, gender, tense, number, person | [1](vocabulary-notebook/lingopie-filter-by-grammar-features.md) | ✅ | M | Could | After spaCy; stored per saved occurrence |
 | 46 | Book-cover hover animation for lists | [1](vocabulary-notebook/trancy-word-list-book-cover-animation.md) | ✅ | S | Could | CSS only |
 | 47 | Ready-made word lists (Goethe A1–B1 …) | [1](vocabulary-notebook/trancy-goethe-word-lists-srs-stages.md) | ⚠️ | M | Later (bottom list) | Later, from an openly licensed word list (the Goethe-Institut lists themselves are copyrighted, guardrail 9). |
@@ -85,7 +85,7 @@ Built from your notes in the screenshot `.md` files (likes and dislikes). Not as
 | # | Feature | Refs | Feasible | Effort | Necessity | Notes |
 |---|---|---|---|---|---|---|
 | 48 | Card editing, inline | [1](flashcard-review/fluentai-card-inline-edit.md), [2](flashcard-review/fluentai-card-front-context-clip.md) | ✅ | M | Must | Already planned (step 7) |
-| 49 | Session direction: word → meaning or meaning → word | [1](flashcard-review/fluentai-review-settings-mode-direction.md) | ✅ | S | Should | Direction is only display: the card stores everything, and the session shows either the word or the translation on the front. One schedule per card. |
+| 49 | Session direction: word → meaning or meaning → word | [1](flashcard-review/fluentai-review-settings-mode-direction.md) | ✅ | S | Should | Decided (D-042): direction is only display; one schedule per card. |
 | 50 | Session summary with undo last review | [1](flashcard-review/fluentai-session-summary-undo.md) | ✅ | S–M | Should | Keep the card's previous FSRS state to restore |
 | 51 | Card layout: reorder and hide sections (hide, not delete, as you noted) | [1](flashcard-review/fluentai-card-back-custom-layout.md) | ✅ | M | Could | |
 
@@ -98,7 +98,7 @@ Built from your notes in the screenshot `.md` files (likes and dislikes). Not as
 | 54 | Onboarding: learning, native (and UI) language in one step | [1](onboarding-placement/trancy-onboarding-native-language.md) | ✅ | S | Should | |
 | 55 | Level per video: known %, difficulty band, "at my level / easier / harder" filter | [1](discover-catalog/fluentai-catalog-known-percent-per-video-difficulty-filter.md), [2](discover-catalog/other-catalog-by-cefr-level-and-speech-pace.md), [3](discover-catalog/lingopie-catalog-genre-rows-level-duration-filters.md) | ⚠️ | M | Later (bottom list) | Discovery page, bottom of the list. Works for videos in your library only (the server can't fetch transcripts of others, D-007, D-029). The grade is our own estimate from word frequency, not official CEFR. |
 | 56 | Pick interests / channels for discovery | [1](onboarding-placement/trancy-onboarding-pick-youtube-channels.md) | ⚠️ | L | Later (bottom list) | Discovery page, bottom of the list. Needs the curated catalog (Q-08, metadata only). |
-| 57 | Your uploads: list, rename, delete, metadata; local files only | [1](own-media/fluentai-recent-files-menu.md), [2](own-media/fluentai-empty-state-import-or-link.md), [3](own-media/fluentai-rename-file.md) | ✅ | L | Later (bottom list) | Uploads are decided, second to the YouTube integration. Bottom of the list, but above the other bottom items. Local files only. |
+| 57 | Your uploads: list, rename, delete, metadata; local files only | [1](own-media/fluentai-recent-files-menu.md), [2](own-media/fluentai-empty-state-import-or-link.md), [3](own-media/fluentai-rename-file.md) | ✅ | L | Later (bottom list) | Designed (D-040), postponed (D-066). First item on the bottom list. Local files only. |
 
 ## Search
 
@@ -146,14 +146,12 @@ In this order. Uploads come first, as you set; the order among the rest is my su
 6. "Explain" with AI (#17)
 7. Ready-made word lists from an open source (#47)
 8. Signed-in devices (#65), maybe never
+9. Split German compounds missing from the dictionary (D-055)
 
 ## Still open
 
-- **Lists vs decks (#44):** one concept or two?
 - **Fullscreen (#14):** research which route keeps our subtitles visible.
-- **Phrase detection (#26):** after the model selection decisions (Q-11, Q-12).
-- **Extension on any website (#31):** needs a decision changing guardrail 15.
-- **Uploads:** you've decided to offer them; `open-questions.md` still lists Q-19 as open, and the cost estimate there is still missing.
+- **Phrase detection (#26):** starts from spaCy `sm` and Wiktextract (D-050); revisit if accuracy is poor.
 
 ## Design references (not features)
 

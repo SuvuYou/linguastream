@@ -92,12 +92,12 @@ Each group lists the features visible in its screenshots and which sites have th
 ## web-page-lookup
 - Word popup on any web page text (e.g. the YouTube title); trigger by button, Alt+select or direct; auto-save looked-up words; AI precise definition (trancy)
 
-→ Not planned
+→ Planned later, on any website (D-043)
 
 ## ai-explanations
 - "Learning feed": AI explanation of the current line, suggested follow-up questions, free chat (lingopie)
 
-→ Out of scope (no AI chat, `vision/product.md`)
+→ Bottom of the list (`feature-review.md` #17); conflicts with the "no AI chat" non-goal
 
 ## vocabulary-notebook
 - Word list with **status tabs**, translation, type, **source video**, next review, date; filter by video and list; import / export; bulk actions (set status, add to list, export, delete) (fluentai)
@@ -134,7 +134,7 @@ Each group lists the features visible in its screenshots and which sites have th
 ## own-media
 - Upload a video or audio file or open a link; recent files with rename and delete; **AI subtitles** with step progress (extract audio, upload, …); dual subtitles on your own file (fluentai)
 
-→ `library.md` (uploads, Q-19)
+→ `library.md` (uploads, D-040)
 
 ## account-settings
 - Personal info, display name, **delete account** (fluentai)

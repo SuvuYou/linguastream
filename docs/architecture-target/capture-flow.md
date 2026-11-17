@@ -4,7 +4,7 @@
 2. The extension sends the caption track to `POST /api/captures` with the user's token. The payload schema (Zod) is shared between the extension and the API.
 3. The API stores the raw track for that user and enqueues a processing job.
 4. The worker, in order:
-   a. **Normalise** — the normaliser returns an *edit list* against the captured word sequence (punctuation, capitalisation, sentence boundaries), never rewritten text; output is validated by comparing word sequences (D-025). Raw text is kept alongside.
+   a. **Normalise** (D-025, D-064): the LLM returns the punctuated, capitalised text; code aligns its words with the captured words, derives the edit list (punctuation, capitalisation, sentence boundaries) and rejects the result if any word changed. Raw text is kept alongside.
    b. **spaCy** analyses the whole video — tokens, lemmas, morphology, dependencies. Local and free.
    c. **Translate whole sentences** (not cues) via the provider interface, mapping results back onto cues by time (D-026, D-023).
    d. Compute lemma counts, update the full-text index, create the library entry.

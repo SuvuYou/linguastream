@@ -11,3 +11,4 @@ Design: `architecture-target/word-data.md`.
 | Sense in context: Gemini picks the dictionary sense, cached | Backend | Watch page | ⬜ | Replaces the Gemini-generated word profile (D-010) |
 | AI limiter with dictionary-only fallback | Backend | Server | ⬜ | D-010 |
 | Word translation and analysis on hover and click | UI | Extension on youtube.com | ⬜ | Later, after the thin extension (D-021). Source track only. |
+| Word lookup on any website | UI | Extension, any site | ⬜ | Later (D-043). Sends only the selected word or phrase. |
