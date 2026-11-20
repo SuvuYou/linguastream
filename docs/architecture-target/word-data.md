@@ -12,10 +12,12 @@ Costs and reference figures: `architecture-target/cost.md`.
 
 **Score sync to the extension:** the server expands the user's known lemmas into inflected forms and ships that set (~300–500 KB, or ~50 KB as a Bloom filter). The browser only does set membership (D-024). The score is approximate and labelled as such.
 
-**Known constraint:** the score needs the player to have loaded a German track, which happens only when the user has captions switched on in that language. With captions off, the extension prompts the user to enable them and does not toggle them itself.
+**Known constraint:** the score needs the player to have loaded a German track, which happens only when the user has captions switched on in that language. With captions off, the extension switches the German track on after a user action in the private instance (D-071) and asks the user to do it in the public edition.
 
 **Instant layer:** a word click shows the line translation and the dictionary entry immediately from Postgres (target under 200 ms); the Gemini sense selection loads afterwards. No external call is on the critical path.
 
 **Word pack (D-058, D-060):** at transfer, one bundle per video from the imported dictionary: each lemma with a short gloss in the user's native language, POS and gender. Missing non-English glosses are translated in one Gemini batch and cached for everyone; the prompt carries the German word, part of speech, English gloss and an example (D-065).
 
 **AI limiter:** per-user daily quotas and a global monthly cap in Redis; fall back to dictionary-only data.
+
+**Proposal (not decided): cacheable small-popup lookups.** Serve the short glosses as a plain GET keyed by form, lemma, POS and languages, with a data version in the URL (`/api/words/gloss/v1?...`), `Cache-Control: public, max-age=31536000`, cached by Caddy or a CDN. A repeat lookup never leaves the browser; a dictionary re-import bumps the version. Language Reactor does this (`research/competitors/`).

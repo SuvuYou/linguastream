@@ -8,12 +8,26 @@ Newest first.
 
 | ID (links to the day file) | Decision | Date | Status |
 |---|---|---|---|
+| [D-083](decisions-2026-11-20-spikes-done.md) | Spike follow-ups and a word-data spike before the feature order | 2026-11-20 | accepted |
+| [D-082](decisions-2026-11-20-spikes-done.md) | Security requirements | 2026-11-20 | accepted |
+| [D-081](decisions-2026-11-20-spikes-done.md) | The join rule checks verbs with Wiktextract; spaCy always runs after normalisation | 2026-11-20 | accepted |
+| [D-080](decisions-2026-11-20-spikes-done.md) | Revocation checked on every API call, cached briefly per user | 2026-11-20 | accepted |
+| [D-079](decisions-2026-11-20-spikes-done.md) | Extension sign-in spike 003 done | 2026-11-20 | accepted |
+| [D-078](decisions-2026-11-20-spikes-done.md) | Punctuation spike 002 done; the join rule skips verbs | 2026-11-20 | accepted (verb check via Wiktextract: D-081) |
+| [D-077](decisions-2026-11-20-spikes-done.md) | Use YouTube's punctuation; the LLM step only for unpunctuated tracks | 2026-11-20 | accepted (rule refined by D-078) |
+| [D-076](decisions-2026-11-20-spikes-done.md) | Misheard words: visible fix suggestions, bottom of the feature list | 2026-11-20 | accepted |
+| [D-075](decisions-2026-11-19-capture-spike.md) | Never restore the caption setting after capture | 2026-11-19 | accepted |
+| [D-074](decisions-2026-11-19-capture-spike.md) | Player control spike 001 done | 2026-11-19 | accepted |
+| [D-073](decisions-2026-11-19-capture-spike.md) | Uploaded German captions first; the user's own track choice wins | 2026-11-19 | accepted |
+| [D-072](decisions-2026-11-19-capture-spike.md) | Capture spike 000 done | 2026-11-19 | accepted |
+| [D-071](decisions-2026-11-19-capture-spike.md) | Switching captions on: player control in the private instance, a prompt in the public edition | 2026-11-19 | accepted |
+| [D-070](decisions-2026-11-18-competitor-research.md) | Caption hash check is per user | 2026-11-18 | accepted |
 | [D-069](decisions-2026-11-17-backend-and-word-data.md) | D-043 limits confirmed | 2026-11-17 | accepted |
 | [D-068](decisions-2026-11-17-backend-and-word-data.md) | Corrections to earlier entries | 2026-11-17 | accepted |
 | [D-067](decisions-2026-11-17-backend-and-word-data.md) | Word search uses lemma arrays; full-text search only for free-text phrases | 2026-11-17 | accepted |
 | [D-066](decisions-2026-11-17-backend-and-word-data.md) | Uploads postponed; a privacy note for friends | 2026-11-17 | accepted |
 | [D-065](decisions-2026-11-17-backend-and-word-data.md) | Gloss translation prompt includes the word's context | 2026-11-17 | accepted |
-| [D-064](decisions-2026-11-17-backend-and-word-data.md) | Punctuation: punctuated text from the LLM, edit list by word alignment | 2026-11-17 | accepted |
+| [D-064](decisions-2026-11-17-backend-and-word-data.md) | Punctuation: punctuated text from the LLM, edit list by word alignment | 2026-11-17 | accepted (only for unpunctuated tracks: D-077) |
 | [D-063](decisions-2026-11-17-backend-and-word-data.md) | Words with several meanings: all meanings on the back, connection meanings marked | 2026-11-17 | accepted |
 | [D-062](decisions-2026-11-17-backend-and-word-data.md) | Order of work: study plan, spikes, feature order; learning in parallel | 2026-11-17 | accepted |
 | [D-061](decisions-2026-11-17-backend-and-word-data.md) | What this project is | 2026-11-17 | accepted |
@@ -24,7 +38,7 @@ Newest first.
 | [D-056](decisions-2026-11-17-backend-and-word-data.md) | Word lookup levels and what each shows | 2026-11-17 | accepted (full popup corrected by D-058, D-068) |
 | [D-055](decisions-2026-11-17-backend-and-word-data.md) | German compounds: nothing for now | 2026-11-17 | accepted |
 | [D-054](decisions-2026-11-17-backend-and-word-data.md) | Monorepo: pnpm workspaces with Turborepo; contracts published as a package | 2026-11-17 | accepted |
-| [D-053](decisions-2026-11-17-backend-and-word-data.md) | Auth across the two apps and the extension | 2026-11-17 | accepted |
+| [D-053](decisions-2026-11-17-backend-and-word-data.md) | Auth across the two apps and the extension | 2026-11-17 | accepted (confirmed by D-079) |
 | [D-052](decisions-2026-11-17-backend-and-word-data.md) | Per-line word data and per-video counts | 2026-11-17 | accepted |
 | [D-051](decisions-2026-11-17-backend-and-word-data.md) | Operations: backups, deployment, server choice, demo hosting | 2026-11-17 | accepted (demo reasoning corrected by D-068) |
 | [D-050](decisions-2026-11-17-backend-and-word-data.md) | Models: LLM punctuation, spaCy `sm`, one translation model | 2026-11-17 | accepted (punctuation updated by D-064) |
@@ -49,7 +63,7 @@ Newest first.
 | [D-031](decisions-2026-11-16-legal-design-and-deployments.md) | Two editions | 2026-11-16 | accepted (public edition deferred: D-038) |
 | [D-030](decisions-2026-11-16-legal-design-and-deployments.md) | Uploads, subtitle-file import and the Plyr/WhisperX components reopened | 2026-11-16 | accepted (resolved by D-040) |
 | [D-029](decisions-2026-11-16-legal-design-and-deployments.md) | No transcript without a capture or a paste | 2026-11-16 | accepted |
-| [D-028](decisions-2026-11-16-legal-design-and-deployments.md) | Adding by URL opens the embedded player and captures there | 2026-11-16 | proposed (needs spike) |
+| [D-028](decisions-2026-11-16-legal-design-and-deployments.md) | Adding by URL opens the embedded player and captures there | 2026-11-16 | proposed (spike passed: D-072) |
 | [D-027](decisions-2026-11-15-capture-pipeline-and-word-data.md) | Check embeddability before offering transfer | 2026-11-15 | accepted |
 | [D-026](decisions-2026-11-15-capture-pipeline-and-word-data.md) | Translate sentences, not caption cues | 2026-11-15 | accepted |
 | [D-025](decisions-2026-11-15-capture-pipeline-and-word-data.md) | Normalisation returns a verifiable edit list, never rewritten text | 2026-11-15 | accepted (mechanism updated by D-064) |
@@ -58,12 +72,12 @@ Newest first.
 | [D-022](decisions-2026-11-15-capture-pipeline-and-word-data.md) | Transfer quota is counted in characters, server-side | 2026-11-15 | accepted |
 | [D-021](decisions-2026-11-15-capture-pipeline-and-word-data.md) | Two surfaces, one source of truth: capture vs transfer | 2026-11-15 | accepted (capture-only-on-youtube.com part: see D-028) |
 | [D-020](decisions-2026-11-15-capture-pipeline-and-word-data.md) | Sentence segmentation is a precondition for parsing | 2026-11-15 | accepted |
-| [D-019](decisions-2026-11-15-capture-pipeline-and-word-data.md) | spaCy `de_core_news_sm` in the worker, replacing Google Cloud Natural Language | 2026-11-15 | accepted (pending spike) |
+| [D-019](decisions-2026-11-15-capture-pipeline-and-word-data.md) | spaCy `de_core_news_sm` in the worker, replacing Google Cloud Natural Language | 2026-11-15 | accepted (pending punctuation spike) |
 | [D-018](decisions-2026-11-15-capture-pipeline-and-word-data.md) | Translation by Gemini Flash-Lite, lazily per watched window | 2026-11-15 | accepted |
 | [D-017](decisions-2026-11-15-capture-pipeline-and-word-data.md) | No DeepL; word meanings come from the dictionary | 2026-11-15 | accepted |
 | [D-016](decisions-2026-11-15-capture-pipeline-and-word-data.md) | Capture the source track only | 2026-11-15 | accepted |
 | [D-015](decisions-2026-11-15-capture-pipeline-and-word-data.md) | Corrected legal basis; real address; no lawyer review | 2026-11-15 | accepted |
-| [D-014](decisions-2026-11-15-capture-pipeline-and-word-data.md) | Capture method: passive copy of the player's own caption response | 2026-11-15 | accepted (pending spike) |
+| [D-014](decisions-2026-11-15-capture-pipeline-and-word-data.md) | Capture method: passive copy of the player's own caption response | 2026-11-15 | accepted (confirmed by D-072) |
 | [D-013](decisions-2026-11-15-capture-pipeline-and-word-data.md) | Login as a modal on a third-party-free landing page | 2026-11-15 | accepted |
 | [D-012](decisions-2026-11-15-capture-pipeline-and-word-data.md) | Captured transcripts are processed asynchronously through a queue | 2026-11-15 | accepted |
 | [D-011](decisions-2026-11-15-capture-pipeline-and-word-data.md) | Postgres full-text search replaces Meilisearch | 2026-11-15 | accepted (D-049) (narrowed by D-067) |

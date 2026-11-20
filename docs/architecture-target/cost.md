@@ -10,7 +10,8 @@ Budget (`vision/targets.md`): soft cap **€30 a month**, hard cap **€50 a mon
 | Extra VPS RAM for spaCy `de_core_news_sm` | ~€3 | D-019 |
 | Postgres | €0 extra: self-hosted on the VPS (D-049). Hosted alternatives cost more: Neon now bills by usage (no fixed $19), Supabase paid from $25, DigitalOcean from $15 | D-049 |
 | Backup storage off the server, server snapshots | A few euros (Hetzner object storage, for example, starts at €6.49) | D-051 |
-| Firebase Auth, Sentry, uptime check | Not priced yet | |
+| Firebase Auth | €0. Email/password and Google sign-in, and custom tokens for the extension, are free on the Spark plan (no card needed) up to 50,000 monthly active users. Only phone/SMS sign-in, multi-factor auth and SAML/OIDC cost money or need the Identity Platform upgrade; we use none of them. Checked 2026-11-20 on third-party summaries of Google's pricing page; confirm there | D-053 |
+| Sentry, uptime check | Not priced yet | |
 | Domain | Not priced yet | |
 
 ## Per-use costs
@@ -19,7 +20,7 @@ Budget (`vision/targets.md`): soft cap **€30 a month**, hard cap **€50 a mon
 |---|---|---|
 | Translation track, whole video at transfer | ~$0.03 per 1-hour video on gemini-3.1-flash-lite ($0.25 / $1.50 per 1M tokens, from a comparison site; confirm on Google's pricing page). Thinking tokens disabled. | D-023 (corrects D-018's $0.008 and D-021's ~$0.01) |
 | Sense in context (Gemini) | Negligible; cached per (user, lemma, sentence hash) | `architecture-target/word-data.md` |
-| Punctuation and sentences | A separate LLM call before translation: about $0.03 per hour of video, like translation (corrected in D-068) | D-064 |
+| Punctuation and sentences | Usually €0: YouTube's punctuation is kept, plus a free rule (D-077, D-078). Only unpunctuated tracks get the LLM step: measured $0.031–0.034 per hour of video (spike 002) | D-064, D-077 |
 | spaCy analysis | €0 (local) | D-019 |
 | Dictionary and frequency data | One-off import, €0 | D-010 |
 | Transcription of uploads (postponed, D-066) | $0.04 per hour of audio (Groq Whisper turbo; $0.111 for large-v3). €0 when the file has subtitles | D-040 |
@@ -28,7 +29,7 @@ Budget (`vision/targets.md`): soft cap **€30 a month**, hard cap **€50 a mon
 
 ## Estimated monthly API spend
 
-At 150 hour-long video transfers a month: about **$9** (translation and punctuation, ~$0.06 per hour; D-023, D-068). Uploads are postponed (D-066). Add the fixed costs above once they are priced.
+At 150 hour-long video transfers a month: about **$4.50** (translation only, ~$0.03 per hour; punctuation is free for punctuated tracks, D-077). **Unmeasured:** the neighbouring sentences in the translation prompt (D-077) may double the input tokens, so the real figure may be closer to the earlier $9 (F-15). Uploads are postponed (D-066). Add the fixed costs above once they are priced.
 
 ## Reference: one hour of German video
 

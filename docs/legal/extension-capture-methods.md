@@ -7,7 +7,7 @@ YouTube gates caption downloads behind a proof-of-origin token that only its own
 | 1 | The user opens YouTube's "Show transcript" panel and pastes it (or the extension reads the panel the user opened) | Allowed. Fallback (D-014). |
 | 2 | Reading caption lines as they appear on screen during playback | Allowed. Not planned: only covers what was watched. |
 | 3 | **Copying the caption response YouTube's own player loaded**, with captions switched on by the user | **Allowed. Primary method (D-014).** |
-| 4 | Driving the player to switch tracks so it loads other languages | Not without a new decision in `decisions/`. |
+| 4 | Driving the player to switch tracks so it loads other languages | **Private instance only (D-071):** switching on the learning-language source track on the video the user opened, on a user action. Public edition and demo: never; ask the user to turn captions on. |
 | 5 | Making our own caption requests with the player's token | **Never.** |
 | 6 | Generating tokens ourselves, or any server-side fetch | **Never.** |
 

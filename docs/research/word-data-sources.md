@@ -97,6 +97,8 @@ Badges come in two kinds, and that answers "how is the data filled when a word i
 
 **Common pattern:** word colouring and the first popup come from data already in the browser; only the detailed or AI view makes a network call. The word-pack design in section 1 is the same idea, built at transfer time.
 
+**Network traffic (2026-11-18):** what Language Reactor and FluentAI actually call is in `research/competitors/language-reactor-and-fluentai-api.md`.
+
 **What none of them shows publicly:** their storage or backend stack. Trancy and FluentAI lean on LLMs for definitions; Language Reactor is the most dictionary-driven; Lingopie controls its own content and pre-translates it.
 
 ## 8. Costs

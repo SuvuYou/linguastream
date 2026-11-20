@@ -1,5 +1,5 @@
 # 000 – Embed capture spike
-Status: draft
+Status: done (D-072)
 Roadmap step: 0 (spikes)
 
 ## Problem
@@ -29,6 +29,9 @@ A yes/no answer, with evidence, to: **can a passive MV3 extension capture the so
 5. **Video category readable** from inside the embed (for the music check, D-036): note where, if anywhere, it appears.
 6. **Embeddability:** what the user sees for a video that forbids embedding (D-027).
 7. **youtube-nocookie.com:** checks 1–3 again on that domain.
+8. **Punctuation in German auto-captions:** on 3 German videos with auto-captions, does the json3 text already contain punctuation and capitals? (English auto-captions did on 2026-11-18.) Decides whether the punctuation step (D-064) runs always, sometimes or never.
+9. **Bracket tags:** note any `[Musik]`, `[Applaus]`-style tags and how they are segmented.
+10. **Audio tracks:** on a video with AI dubs, is original vs dubbed readable from what the player loaded (e.g. `acont=original` / `dubbed-auto` in the audio track IDs)? Needed for Q-36.
 
 ## Out of scope
 Sending anything to the server, the token handoff (D-053), the production extension, store listing, the Firebase SDK in the extension (separate check).

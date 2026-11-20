@@ -120,6 +120,7 @@ Built from your notes in the screenshot `.md` files (likes and dislikes). Not as
 | 66 | Separate interface language | [1](account-settings/fluentai-learning-native-interface-language.md) | ✅ | L | Later | Translating the whole UI; English is enough for friends |
 | 67 | Keyboard shortcuts for status (L / K / I) | [1](translation-sources/fluentai-engine-fallback-order-status-keys.md) | ✅ | S | Later | You put it last and out of scope |
 | 68 | Stats: streak, accuracy, heatmap | [1](progress-stats/tubevocab-streak-accuracy-activity-heatmap.md) | ✅ | M | Later | You marked it probably out of scope |
+| 69 | Word fix suggestions for misheard caption words | – (spike 002) | ⚠️ | M | Later (bottom list) | The captured text stays as it is; the model's suggested fixes are shown next to the words they would replace, visible to the user, never applied silently (D-076). Evidence: spike 002, where the model tried 4–68 word changes per video. |
 
 ## Must-haves in suggested order
 
@@ -147,6 +148,7 @@ In this order. Uploads come first, as you set; the order among the rest is my su
 7. Ready-made word lists from an open source (#47)
 8. Signed-in devices (#65), maybe never
 9. Split German compounds missing from the dictionary (D-055)
+10. Word fix suggestions for misheard caption words (#69)
 
 ## Still open
 
