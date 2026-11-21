@@ -8,7 +8,9 @@ Newest first.
 
 | ID (links to the day file) | Decision | Date | Status |
 |---|---|---|---|
-| [D-088](decisions-2026-11-21-parallel-frontend-and-trello.md) | Trello boards track the build order of Foundation and Core | 2026-11-21 | accepted |
+| [D-090](decisions-2026-11-21-parallel-frontend-and-trello.md) | The roadmap follows the study plan: Foundation needs only Block B; deployment moves to Demo | 2026-11-21 | accepted |
+| [D-089](decisions-2026-11-21-parallel-frontend-and-trello.md) | Visual design: graphite with a blue accent; the Theme Studio is the reference | 2026-11-21 | accepted |
+| [D-088](decisions-2026-11-21-parallel-frontend-and-trello.md) | Trello boards track the build order of every section | 2026-11-21 | accepted |
 | [D-087](decisions-2026-11-21-parallel-frontend-and-trello.md) | Frontend built on mock data in parallel with the backend | 2026-11-21 | accepted |
 | [D-086](decisions-2026-11-20-spikes-done.md) | Word-data spike closed; gap decisions made during development | 2026-11-20 | accepted |
 | [D-085](decisions-2026-11-20-spikes-done.md) | Prisma stays the database library | 2026-11-20 | accepted |

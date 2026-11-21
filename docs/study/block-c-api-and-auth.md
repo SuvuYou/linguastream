@@ -1,6 +1,6 @@
 # Block C: NestJS API and auth
 
-**When:** before building `apps/api`. **Hours:** about 43.
+**When:** before Core step B0 (API and auth), the first Core step; publishing a package before B1 (D-090). **Hours:** about 43.
 **Block exercise:** the first NestJS module (captures or vocabulary) with a guard that accepts the session cookie or an ID token (D-053), Zod validation, and integration tests.
 
 ## 1. Node.js + TS server (#1) · ~15 h

@@ -1,6 +1,6 @@
 # Block E: processing pipeline
 
-**When:** before building the worker. **Hours:** about 24.
+**When:** before Core steps B2 (the worker) and B3 (the dictionary import). **Hours:** about 26.
 **Block exercise:** a capture goes in, a BullMQ job punctuates (D-064), analyses (spaCy), translates and indexes it, and the browser sees each step over SSE; killing the worker mid-job does not lose it.
 
 ## 1. Redis (#9) · ~5 h
@@ -69,3 +69,18 @@
 - [Gemini context caching](https://ai.google.dev/gemini-api/docs/caching)
 
 **You know it when** a runaway job cannot cost more than the cap you set.
+
+## 5. Postgres bulk loading (part of #3) · ~2 h
+
+**Learn**
+- `COPY ... FROM` (and Prisma's `$executeRaw` for it), why it is much faster than many `INSERT`s.
+- Loading into a staging table, then moving rows with one `INSERT ... SELECT` in a transaction.
+- Dropping and rebuilding indexes around a large load; `ANALYZE` afterwards.
+
+**Exercise:** load spike 004's Wiktextract extract with `COPY` and compare the time with row-by-row inserts.
+
+**Resources**
+- [COPY](https://www.postgresql.org/docs/current/sql-copy.html)
+- [Populating a database](https://www.postgresql.org/docs/current/populate.html)
+
+**You know it when** the full dictionary import runs in minutes and can be repeated safely.

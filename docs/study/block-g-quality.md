@@ -1,6 +1,6 @@
 # Block G: quality
 
-**When:** before the Core ships to friends, and before the demo. **Hours:** about 14.
+**When:** frontend testing next to Block F; load testing before Demo step D2; Playwright before Important step E5. **Hours:** about 14.
 **Block exercise:** an E2E test of the Core flow (open a video, look up a word, save it, review it) running in CI, plus a load test whose numbers go in the README.
 
 ## 1. Frontend testing · ~6 h

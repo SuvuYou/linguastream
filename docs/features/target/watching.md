@@ -9,7 +9,8 @@
 | Windowed subtitle loading | Backend | Watch page | ⬜ | Never committed; needs indexes |
 | Show / blur / hide per track, from one player control (feature review #1) | UI | Watch page | ⬜ |  |
 | Previous / repeat / next line, with keys (feature review #2) | UI | Watch page | ⬜ |  |
-| Player + transcript sidebar layout, redesigned (feature review #4) | UI | Watch page | 🟡 | The layout exists; this is the redesign target |
+| Player + transcript sidebar layout, redesigned (feature review #4) | UI | Watch page | 🟡 | Design: Theme Studio, lines grouped under time markers (D-089) |
+| Transcript text size S / M / L, set in the player settings panel and in Settings | UI | Watch page, Settings | ⬜ | D-089; 13 px default |
 | Transcript: words coloured by status, current word highlighted, translation on hover (feature review #16) | UI | Watch page | ⬜ | Needs word statuses (`target/vocabulary.md`) |
 | Playback modes: normal / pause after each line / repeat each line (feature review #3) | UI | Watch page | ⬜ | Polling: the pause lands within ~0.2 s of the line end |
 | Subtitle style per track: size, colours, background colour and opacity, font, bold, outline, reset (feature review #5) | UI | Watch page | 🟡 | Basic styling exists |

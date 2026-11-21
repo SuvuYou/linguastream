@@ -7,6 +7,7 @@ What makes friends keep using it, and the differentiators. Roadmap steps C1–C4
 | 1 | Placement on first visit (#53) | [vocabulary](../../features/target/vocabulary.md) | ⬜ | Without it every word starts unknown (Q-05) |
 | 2 | Onboarding: learning, native (and UI) language in one step (#54) | [account](../../features/target/account.md) | ⬜ | With placement |
 | 3 | Word coloring by status and frequency | [vocabulary](../../features/target/vocabulary.md) | ⬜ | Needs placement |
+| 4b | Rank coloured by usefulness (D-089) | [vocabulary](../../features/target/vocabulary.md) | ⬜ | With the colouring |
 | 4 | Status colours: per status, light and dark, background or text (#33) | [vocabulary](../../features/target/vocabulary.md) | ⬜ | Basic settings for the colouring |
 | 5 | Transcript: words coloured by status, current word highlighted, translation on hover (#16) | [watching](../../features/target/watching.md) | ⬜ | Must |
 | 6 | Postgres full-text search, per user | [search](../../features/target/search.md) | ⬜ | Differentiator 1; lemma arrays for words (D-067) |

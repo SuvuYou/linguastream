@@ -25,7 +25,7 @@
 - [ ] In Claude Code: `/graphify .`. Code is parsed locally for free; docs and PDFs go through the model, so start with the code folders, not `docs/`.
 
 ## 6. Strix (AI pentesting) — not now
-Set up before the friends milestone (after B6), when there is an API and an extension worth attacking.
+Set up before the friends milestone (after D1, D-090), when there is an API and an extension worth attacking.
 - [ ] Docker running; `pipx install strix-agent` (the `curl | bash` installer needs WSL or Git Bash on Windows).
 - [ ] A paid LLM API key, separate from the Claude subscription: `setx STRIX_LLM "openrouter/z-ai/glm-5.3"`, `setx LLM_API_KEY "..."`, then a new terminal. Using Claude as Strix's model needs Anthropic's cyber verification programme.
 - [ ] `npx skills add usestrix/strix` for its nine skills.

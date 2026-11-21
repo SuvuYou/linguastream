@@ -1,9 +1,11 @@
 # Block D: deployment and operations
 
-**When:** before the first deployment. **Hours:** about 28.
+**When:** before Demo step D1, the first deployment (D-090). Until then everything runs locally. **Hours:** about 26.
 **Block exercise:** deploy the current app to the VPS with Compose and Caddy from a GitHub Actions workflow, then restore last night's backup into a fresh database.
 
-## 1. Docker (#6) · ~8 h
+## 1. Docker (#6), the rest of it · ~6 h
+
+Running Postgres locally with Compose was covered in Block B (section 5).
 
 **Learn**
 - Images and layers, multi-stage builds, small images, `.dockerignore`.

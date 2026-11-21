@@ -11,6 +11,7 @@ Clear value, not blocking. Roadmap steps E1–E5.
 | 4 | Player quick menu (#8) | [watching](../../features/target/watching.md) | ⬜ |  |
 | 5 | Pause while the pointer is over the subtitles (#9) | [watching](../../features/target/watching.md) | ⬜ |  |
 | 6 | A–B loop picked from transcript lines (#10) | [watching](../../features/target/watching.md) | ⬜ |  |
+| 7b | Transcript text size S / M / L (D-089) | [watching](../../features/target/watching.md) | ⬜ | In the player settings panel and Settings |
 | 7 | Collapsible sidebar (#11) | [watching](../../features/target/watching.md) | ⬜ |  |
 | | **Deeper lookup (E2)** | | | |
 | 8 | Hover translation | [word-lookup](../../features/target/word-lookup.md) | ⬜ | The small popup on hover (D-056) |

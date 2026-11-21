@@ -6,10 +6,10 @@ Status keys as in `features/target/`: ⬜ not started · 🟡 partly there · �
 
 | # | Section | Goal | Features |
 |---|---|---|---|
-| 1 | [Foundation](1-foundation.md) | Monorepo, data, deployment, operations: nothing visible, everything depends on it | 9 |
-| 2 | [Core](2-core.md) | The smallest version friends can use: capture → watch → look up → save → review | 38 |
+| 1 | [Foundation](1-foundation.md) | Monorepo and data model: nothing visible, everything depends on it | 4 |
+| 2 | [Core](2-core.md) | The smallest version that works end to end: API → capture → watch → look up → save → review | 40 |
 | 3 | [Essential](3-essential.md) | What makes friends stay, and the differentiators | 16 |
-| 4 | [Demo](4-demo.md) | The public read-only demo for recruiters | 9 |
+| 4 | [Demo](4-demo.md) | Going live: deployment and operations, friends, the public read-only demo | 14 |
 | 5 | [Important](5-important.md) | Clear value, not blocking | 28 |
 | 6 | [Nice to have](6-nice-to-have.md) | Polish | 12 |
 | 7 | [Later](7-later.md) | Bottom of the list, later, public edition | 20 |

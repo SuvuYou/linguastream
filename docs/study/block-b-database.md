@@ -1,17 +1,15 @@
-# Block B: cleanup and database
+# Block B: Foundation: monorepo and database
 
-**When:** before the cleanup and data model work. **Hours:** about 42.
+**When:** sections 3 (pnpm + Turborepo) and 5 (local Docker) before A1, about 6 hours; the rest before A2. This is all the study Foundation needs (D-090). **Hours:** about 32.
 **Block exercise:** write the migration for the new vocabulary model (D-045, D-047, D-052, D-063) on a copy of the data, with `EXPLAIN ANALYZE` before and after the new indexes.
 
-## 1. SQL + PostgreSQL (#3) · ~30 h
+## 1. SQL + PostgreSQL, part 1 (#3) · ~18 h
 
 **Learn**
 - Joins, grouping, window functions, CTEs.
 - Indexes: B-tree, GIN; composite and partial indexes; reading `EXPLAIN ANALYZE`.
 - Transactions and isolation levels; when a deletion must be one transaction (D-066 deletion log).
 - `jsonb` and arrays, with GIN indexes on them (the per-line word JSON and lemma arrays, D-052).
-- Full-text search (`tsvector`, the `german` configuration) and `pg_trgm`, for phrase search only (D-067).
-- `COPY` for bulk loading (the Wiktextract import).
 - Prisma migrations: writing raw SQL inside them when Prisma can't express it.
 
 **Exercise:** pgexercises up to the joins and aggregates sections, then load 1,000 lines of word JSON and find every line containing a lemma, with and without a GIN index.
@@ -20,12 +18,13 @@
 - [PostgreSQL documentation](https://www.postgresql.org/docs/current/)
 - [Indexes](https://www.postgresql.org/docs/current/indexes.html), [Using EXPLAIN](https://www.postgresql.org/docs/current/using-explain.html)
 - [JSON types](https://www.postgresql.org/docs/current/datatype-json.html), [Arrays](https://www.postgresql.org/docs/current/arrays.html), [GIN](https://www.postgresql.org/docs/current/gin.html)
-- [Full text search](https://www.postgresql.org/docs/current/textsearch.html), [pg_trgm](https://www.postgresql.org/docs/current/pgtrgm.html), [COPY](https://www.postgresql.org/docs/current/sql-copy.html)
 - [Use The Index, Luke](https://use-the-index-luke.com/)
 - [PostgreSQL Exercises](https://pgexercises.com/)
 - [Prisma Migrate](https://www.prisma.io/docs/orm/prisma-migrate)
 
 **You know it when** you can read a query plan and say why it is slow, and fix it with an index.
+
+**Later parts of #3:** `COPY` for bulk loading is in Block E (before the Wiktextract import, B3); full-text search and `pg_trgm` are in Block H (before library search, C2).
 
 ## 2. Backend testing (#5) · ~6 h
 
@@ -74,3 +73,22 @@
 - [ABC of FSRS](https://github.com/open-spaced-repetition/fsrs4anki/wiki/ABC-of-FSRS)
 
 **You know it when** you can explain why one schedule per word (D-047) still works with several meanings (D-063).
+
+## 5. Docker for local development · ~2 h
+
+**Learn**
+- What an image and a container are, just enough to use them.
+- A `compose.yaml` with one `postgres` service: image tag, environment variables, a named volume, a published port.
+- `docker compose up -d`, `down`, `logs`, `ps`; connecting Prisma to it with `DATABASE_URL`.
+- Adding Redis the same way later (B2).
+
+Building images, multi-stage Dockerfiles and deployment are in Block D, before the first deployment (Demo, D1).
+
+**Exercise:** `docker compose up -d` starts Postgres, `prisma migrate dev` runs against it, and the data is still there after `docker compose down` and `up` again.
+
+**Resources**
+- [Docker get started](https://docs.docker.com/get-started/)
+- [Postgres image](https://hub.docker.com/_/postgres)
+- [Compose file reference](https://docs.docker.com/reference/compose-file/)
+
+**You know it when** a fresh clone of the repo has a working database after one command.
