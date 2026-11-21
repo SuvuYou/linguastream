@@ -1,5 +1,25 @@
 # Decisions 2026-11-20: spikes done
 
+## D-086 · Word-data spike closed; gap decisions made during development · 2026-11-20 · accepted
+**Result (spike 004, first run):** the German Wiktextract import works (53 s, 735 MB in Postgres, gender on 99% of nouns), covers 85–97% of the lemmas in 16 videos, word packs are 2–15 KB gzipped, Gemini sense picks cost ~$0.00007 each and look better than "first sense", Ukrainian glosses cost under a cent per video. Weak spots: unknown compounds and new words (e.g. "Nebenmission", which Language Reactor finds), poor first glosses for frequent function words, near-duplicate senses. Parser bugs (auxiliaries as forms, separable verbs, homographs, memory) were fixed in the spike code; the rerun was not done.
+**Decision:** close the spike. How to fill dictionary gaps, default glosses for frequent words, compounds and Q-34 are decided when the dictionary step is built (Q-34, Q-40, Q-41, Q-42). Next: the feature order and roadmap.
+
+## D-085 · Prisma stays the database library · 2026-11-20 · accepted
+**Decision:** Prisma remains the ORM for both apps, with the schema in `packages/db` (D-054), on the self-hosted Postgres on the VPS (D-049). Queries Prisma doesn't express well (lemma-array lookups with GIN indexes, full-text search, bulk `COPY` imports for the dictionary) use raw SQL (`$queryRaw` or Prisma's typed SQL files), kept in one place per module.
+**Why:** the current app already uses it, least rework. Compared with Drizzle and Kysely on 2026-11-20; it had only been carried over from D-E1 before.
+**Note:** Neon (D-E1's hosted Postgres) is already replaced by D-049; this decision is only about the library.
+
+## D-084 · Rejected punctuation chunks keep their punctuation; long runs split at pauses · 2026-11-20 · accepted
+**Decision:**
+1. **Salvage:** when the LLM punctuation step (unpunctuated tracks only, D-077) is still rejected after the retry because the model changed words, the chunk keeps the punctuation and capitals of every word the model left unchanged. Changed, dropped or added words are ignored; the captured words stay as they are (D-025 unchanged).
+2. **Safety net:** after normalisation, any run of more than 40 words without a sentence end is split at the longest pause between two words (json3 start times), at least 10 words into the run. The split is a sentence boundary only; no mark is added to the text.
+**Why:** F-12 showed that a chunk rejected after the retry got no edits at all, leaving ~500-word "sentences" on unpunctuated tracks, which break translation, cards and read-along lines. Salvage reuses the existing word alignment at no extra cost; the safety net is free, deterministic and also catches what salvage can't.
+**Not chosen:** retrying rejected chunks in smaller pieces (extra cost; may be added if salvage leaves gaps).
+**Updates** D-064 (rejection no longer means "no punctuation") and D-077 point 1. Implemented in the spike: `spike-002-punctuation-2.zip`.
+
+## Note on D-073 (2026-11-20)
+Reviewed and kept after F-09: uploaded German tracks have line timings only (no `tOffsetMs`); auto tracks have word timings. So on videos with uploaded German captions, read-along always highlights whole lines. Accepted.
+
 ## D-083 · Spike follow-ups and a word-data spike before the feature order · 2026-11-20 · accepted
 **Decision:** The checks the spikes didn't run, plus new ones from the review (same bytes per track, an unpunctuated track, the page never seeing the token), are listed in `roadmap/spike-follow-ups.md` and run before the roadmap step that depends on them. Phase 4 starts with a **word-data spike** (`changes/004-word-data-spike/`), because word data is where the product's value and complexity are and it hasn't been tested. All spike code goes into a private `linguastream-spikes` repository.
 **Why:** the review found three spikes closed on general reports, and the untested risks are in word data, not plumbing.

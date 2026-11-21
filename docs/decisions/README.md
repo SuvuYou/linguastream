@@ -8,6 +8,11 @@ Newest first.
 
 | ID (links to the day file) | Decision | Date | Status |
 |---|---|---|---|
+| [D-088](decisions-2026-11-21-parallel-frontend-and-trello.md) | Trello boards track the build order of Foundation and Core | 2026-11-21 | accepted |
+| [D-087](decisions-2026-11-21-parallel-frontend-and-trello.md) | Frontend built on mock data in parallel with the backend | 2026-11-21 | accepted |
+| [D-086](decisions-2026-11-20-spikes-done.md) | Word-data spike closed; gap decisions made during development | 2026-11-20 | accepted |
+| [D-085](decisions-2026-11-20-spikes-done.md) | Prisma stays the database library | 2026-11-20 | accepted |
+| [D-084](decisions-2026-11-20-spikes-done.md) | Rejected punctuation chunks keep their punctuation; long runs split at pauses | 2026-11-20 | accepted |
 | [D-083](decisions-2026-11-20-spikes-done.md) | Spike follow-ups and a word-data spike before the feature order | 2026-11-20 | accepted |
 | [D-082](decisions-2026-11-20-spikes-done.md) | Security requirements | 2026-11-20 | accepted |
 | [D-081](decisions-2026-11-20-spikes-done.md) | The join rule checks verbs with Wiktextract; spaCy always runs after normalisation | 2026-11-20 | accepted |

@@ -42,6 +42,9 @@ Same model, `--prompt boundaries`: the model may move sentence ends (join wrongl
 ## Rule test (D-077 point 2)
 `npm run rule`: 15 joins over 7 videos, about 10 right; 9 shared with the Gemini boundaries run. Wrong: "freut mich. bin", "weitermacht. wird", "daran. macht", "gemacht. sehr", "gast. beispielsweise". Skipping verbs/auxiliaries fixes the first three (D-078).
 
+## Unpunctuated track (F-12, 2026-11-20)
+Run on an unpunctuated German auto track (`eR1zYD2SWo0`, gaming live stream): the LLM step punctuates it well where a chunk is accepted. But a chunk rejected after the retry gets **no edits at all** (`deriveEdits` is all-or-nothing), so its ~500 words stay one "sentence" (a wall of text in the sample). Seen in earlier runs too. On punctuated tracks this is harmless (YouTube's punctuation stays); on unpunctuated tracks it breaks everything that works per sentence (translation, cards, read-along lines). The production pipeline needs a fallback for rejected chunks: **D-084** (keep the punctuation of unchanged words; split runs over 40 words at the longest pause). In the spike as `spike-002-punctuation-2.zip`; rerun this track to confirm the walls are gone.
+
 ## Recommendation for D-064
 Replaced by D-077: keep YouTube's punctuation, a free join rule (refined by D-078), the LLM step only for unpunctuated tracks, translation with neighbouring sentences as context.
 

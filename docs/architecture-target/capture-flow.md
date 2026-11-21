@@ -4,7 +4,7 @@
 2. The extension sends the caption track to `POST /api/captures` with the user's token. The payload schema (Zod) is shared between the extension and the API.
 3. The API stores the raw track for that user and enqueues a processing job.
 4. The worker, in order:
-   a. **Normalise** (D-025, D-077): YouTube's punctuation is kept. A free rule joins wrong splits (full stop + lowercase word that can't be a verb according to Wiktextract, D-078, D-081) as edits. Only a track that looks unpunctuated goes to the LLM, which returns punctuated text; code aligns its words with the captured words, derives the edit list and rejects the result if any word changed (D-064). Raw text is kept alongside.
+   a. **Normalise** (D-025, D-077): YouTube's punctuation is kept. A free rule joins wrong splits (full stop + lowercase word that can't be a verb according to Wiktextract, D-078, D-081) as edits. Only a track that looks unpunctuated goes to the LLM, which returns punctuated text; code aligns its words with the captured words, derives the edit list and rejects the result if any word changed (D-064); a chunk still rejected after one retry keeps the punctuation of its unchanged words (D-084). Then any run of more than 40 words without a sentence end is split at the longest pause, as a boundary only (D-084). Raw text is kept alongside.
    b. **spaCy** (always after normalisation, D-081) analyses the whole video — tokens, lemmas, morphology, dependencies. Local and free.
    c. **Translate whole sentences** (not cues), each with its neighbouring sentences as context (D-077), via the provider interface, mapping results back onto cues by time (D-026, D-023).
    d. Compute lemma counts, update the full-text index, create the library entry.

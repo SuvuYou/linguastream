@@ -1,23 +1,81 @@
-# Roadmap steps
+# Roadmap: feature order (phase 4)
 
-> **Draft.** Rebuilt after the spikes as a feature order with a Core section (D-062, `roadmap/plan.md`).
+> **Proposed 2026-11-20, for review.** The feature order itself, section by section with links to `features/target/`, is in `roadmap/feature-queue/`; this file groups those features into build steps. Replaces the earlier draft. Built from `Inspiration/feature-review.md` (numbers like #18 refer to it), `features/target/`, the spike results and the decisions up to D-086.
 
-Ordered. Each step becomes a folder under `docs/changes/` when work starts (see `changes/README.md`). Estimates are rough and assume about 25 hours of building a week (40 in total, 15 of them study: `study/plan.md`). Keep applying for jobs in parallel.
+Sections are ordered by necessity. Within a section, steps are in build order. Each step starts with its study block (D-062) and becomes a folder under `docs/changes/` with a spec when work starts (`changes/README.md`). Spike gaps to close first are listed per step (`roadmap/spike-follow-ups.md`).
 
-Ship a small Core first, then add features in order (D-061, D-062). Fast word lookup must be in place before anyone besides the developer uses it. Public-facing compliance work applies only to the demo (D-038): `roadmap/before-demo.md`. Friends get a one-page privacy note (D-066).
+**Two tracks (D-087):** after A1, the web frontend is built on mock data (Zod contracts + MSW) in parallel with the backend; each frontend item connects to the real API when its backend item is done. The extension follows the backend track. Cards for A and B are on the Trello boards (D-088).
 
-| # | Step | Contents | Depends on | Est. |
-|---|---|---|---|---|
-| 0 | **Spikes + decisions** | ~~Test capture method 3 on youtube.com~~ **done 2026-11-15: works via an XHR hook** (see D-014). ~~Embed and real MV3 extension~~ **done 2026-11-19 (D-072).** ~~Player control~~ **done (D-074).** Check whether YouTube's German auto-captions already carry punctuation, and try the LLM edit list on a few videos (D-050). | – | 1–2 weeks |
-| 1 | **Cleanup + database** | Remove Jellyfin (library, sync, admin mode, stream route), the local ingest pipeline (`spawn-ingest`, `ml/`, LibreTranslate, self-hosted WhisperX), server yt-dlp (`/api/youtube/subtitles`), DeepL calls; Meilisearch → Postgres full-text search. Keep SRT/VTT import (D-040). Plyr stays as a candidate player for local files. Add indexes with before/after `EXPLAIN ANALYZE`. One migration for FSRS + `UserWord` with SM-2 data backfill. Duplicate-card handling. Integration tests against real Postgres in CI. `.gitattributes`. | 0 | 3 weeks |
-| 2 | **Deploy + operations (private instance)** | Docker Compose on a VPS (Caddy, Next.js standalone, Redis, worker). CI builds and deploys. Sentry (scrubbed), structured logs, `/health`, uptime check, backups with documented retention + deletion log. Account and data deletion. Rate limits. Accounts created by hand; a short note for friends on what is stored and how to have it deleted (D-038). | 1 | 2 weeks |
-| 3 | **YouTube capture flow** | Extension in its own private repository (D-039): capture method 3, transfer button, embeddability check (D-027), music warning + video-ID blocklist (D-036); paste fallback. Token handoff for the extension (D-053). `POST /api/captures` with a shared Zod schema. Queue + worker: normalisation as an edit list (D-025), spaCy (D-019), sentence translation via the provider interface (D-023, D-026), lemma counts, search index. SSE progress. Character-based quotas and spend cap (D-022). | 0, 2 | 3 weeks |
-| 4 | **Fast word lookup + dictionary data** | Timing logs first. Instant layer served from Postgres. Wiktextract import, frequency table, Gemini sense picking, AI limiter. Definitions saved. | 1, 3 | 2–3 weeks |
-| 5 | **Vocabulary system** | Placement step, word coloring, per-video ranked word list, coverage score, known-% score in the extension, "mark as known?" prompt for mature cards. | 3, 4 | 2–3 weeks |
-| 6 | **Grammar view v1** | Scope not yet defined (`features/target/grammar.md`); settled in the feature discussion. Case labels only if the spike showed acceptable accuracy. | 4 | 2 weeks |
-| 7 | **Remaining features + quality** | Hover translation, windowed subtitle loading, card editing, Playwright E2E for the core flow, accessibility checks. | 5 | 2 weeks |
-| 8 | **Friends + demo** | Give the extension and an account to a few people the developer knows; collect feedback and track the numbers. No public sign-up (D-038). Build the read-only demo deployment and work through `roadmap/before-demo.md`. | 2–7 | ongoing |
-| 9 | **Upload pipeline (D-040): postponed (D-066)** | Spike browser audio extraction first. Local playback, file fingerprint, resumable audio upload, chunked parallel transcription with timestamp stitching (Groq behind a provider interface), audio deletion test; embedded/sidecar subtitles skip transcription. Reuses the step 3 worker. | 3 | 2 weeks |
-| – | **Later / deferred** | Anki export (single context sentence per card), curated YouTube catalog (metadata only), grammar pattern search, recommendations by coverage score. Public edition (D-031, deferred by D-038). AWS + Terraform, pgvector/RAG, MCP server, Auth0, paid tier: not planned. | | |
+Estimates assume about 25 hours of building a week (`study/plan.md`). They are rough and usually optimistic.
 
-Redesign: planned separately. Don't restyle components during these steps unless a step touches them anyway.
+| Section | Goal | Steps | Estimate |
+|---|---|---|---|
+| **A. Foundation** | Nothing visible, everything depends on it | A0–A4 | ~7 weeks |
+| **B. Core** | The smallest version friends can use: capture → watch → look up → save → review | B1–B6 | ~13 weeks |
+| **C. Essential** | What makes friends stay, and the differentiators | C1–C4 | ~7 weeks |
+| **D. Demo** | The public read-only demo for recruiters | D1 | ~2 weeks |
+| **E. Important** | Clear value, not blocking | E1–E5 | ~9 weeks |
+| **F. Nice to have** | Polish | F1 | as time allows |
+| **G. Later** | Bottom list and deferred | – | – |
+
+**Honest timing:** A + B is about 20 weeks, so friends get the first usable version around five months from starting A1. Cutting B further would mean dropping review or word lookup, which is the product. The way to get there sooner is to keep each step's scope as written and move extras to later sections.
+
+## A. Foundation
+
+| # | Step | Contents | Study | Depends on | Est. |
+|---|---|---|---|---|---|
+| A0 | **Dev tooling** | Claude Code, the hooks, the claude.ai skills, impeccable, taste-skill, graphify. Checklist and commands: `roadmap/dev-tooling.md`. Strix comes later (see the friends milestone). | – | – | 1 day |
+| A1 | **Monorepo and cleanup** | pnpm + Turborepo (D-054): `apps/web` (the current Next.js app), `apps/api` (NestJS skeleton), `packages/db` (Prisma), `packages/contracts` (Zod schemas, published for the extension). Remove Jellyfin, the local ingest pipeline (`ml/`, LibreTranslate, WhisperX), server yt-dlp, DeepL, Meilisearch. Update the app's `CLAUDE.md` (it points to old doc paths). | B (pnpm, Turborepo) | – | 2 weeks |
+| A2 | **Data model** | One migration set: videos and tracks (raw json3 compressed, content hash, processing version: D-070), lines with per-word JSON and lemma arrays (D-052), lemma counts per video, vocabulary words with status (D-041), connections (D-047), decks ↔ words (D-045), FSRS schedule per word with SM-2 backfill (D-004), dictionary tables (from spike 004). Indexes checked with `EXPLAIN ANALYZE`. Integration tests against real Postgres in CI. | B (SQL, Postgres, testing, FSRS) | A1 | 2 weeks |
+| A3 | **API and auth** | NestJS: one auth guard for the session cookie and the extension's ID token (D-053), revocation check cached per user (D-080), CSRF via `SameSite=Strict` + Origin check, Zod validation, rate limits, input limits (D-082). First routes moved from Next.js. | C | A1, A2 | 1.5 weeks |
+| A4 | **Deployment and operations** | EU VPS (8 GB fits spike 004's 735 MB dictionary), Docker Compose, Caddy path split, CI build and deploy, backups with one practised restore, Sentry (scrubbed), logs, health check, uptime check, CSP (D-082). Account and data deletion (#60). Privacy note for friends (D-066). | D | A3 | 2 weeks |
+
+## B. Core: the first version friends can use
+
+| # | Step | Contents | Study | Spike gaps first | Depends on | Est. |
+|---|---|---|---|---|---|---|
+| B1 | **Capture and transfer** | Extension in its own private repo (D-039): passive hook (D-014), player control in the private instance (D-071, D-073, D-075), transfer button that page scripts can't click (D-082) and the button in the YouTube player (#52), sign-in handoff with a one-time code (D-053, D-079), hash check per user (D-070), embeddability (D-027) and music check (D-036), minimum-version check, paste fallback. `POST /api/captures`. | C (publishing a package) | F-01–F-11, F-16–F-20 | A3 | 2.5 weeks |
+| B2 | **Processing pipeline** | BullMQ worker: normalisation with YouTube's punctuation, the join rule with the Wiktextract verb check, and the LLM step for unpunctuated tracks (D-077, D-078, D-081; test on `4Ja5iJtYOPw`); spaCy after normalisation, separable verbs joined; translation of sentences with neighbouring context (D-077); per-line word data and lemma counts (D-052); SSE progress and the progress toast (#15); quotas and spend cap (D-022). | E | F-12–F-15 | B1, A4 | 3 weeks |
+| B3 | **Dictionary and word packs** | Wiktextract import and form index (spike 004 code), frequency ranks, word pack per video (D-058) with Ukrainian glosses (D-060, D-065). Decide here: missing words (Q-40), default glosses (Q-41), compounds (Q-42). | E (LLM in production) | – | A2 | 1.5 weeks |
+| B4 | **Watch page** | Player with transcript sidebar (#4, basic), dual subtitles (exists), show / blur / hide per track (#1), previous / repeat / next line (#2), windowed subtitle loading. | F | – | B2 | 1.5 weeks |
+| B5 | **Word lookup** | Small popup on click (#18): gloss, status buttons, Save. Full view (#19) in tabs (#20): meanings and forms (#23), badges (#25, D-058), status and frequency (#21). Right-click cycles status (#22). Served from Postgres under 200 ms, timing logged. Levels as in D-056. | F | – | B3, B4 | 2 weeks |
+| B6 | **Save and review** | Save → vocabulary word + connection with the sentence, translation and meaning (D-047; how the meaning is picked: Q-34). Cards with one FSRS schedule per word; front: a random connection with its clip; back: all meanings, the connection's meaning marked (D-063). Study sessions (exist), edit a word (#40), edit a card (#48), link from saved context to the moment (#39). | B (FSRS) | – | B5 | 2.5 weeks |
+
+**Milestone: friends.** Accounts by hand, the extension handed over, the privacy note. Before handing it over: set up Strix and scan the API and the extension (`roadmap/dev-tooling.md` §6). Collect feedback before C.
+
+## C. Essential: what makes it worth using
+
+| # | Step | Contents | Est. |
+|---|---|---|---|
+| C1 | **Word status everywhere** | Placement by frequency band with live preview (#53), onboarding languages (#54), status colours on subtitles and a coloured transcript with the current word highlighted (#16, #33 basic). | 2 weeks |
+| C2 | **Library search and connections** (differentiators 1 and 2) | Search a word or phrase across your library → clips, card from any clip (#58; lemma arrays + full-text search, D-067). Connections: every moment a saved word appears in your library (#59, list part). | 2 weeks |
+| C3 | **Vocabulary notebook and coverage** (differentiator 3) | Notebook filters and sort (#38). Words of this video by frequency band (#32). Known-word coverage per video in the app and on YouTube (D-024). "Mark as known?" for mature cards. | 2 weeks |
+| C4 | **Playback modes** | Normal / pause after each line / repeat each line (#3). | 0.5 week |
+
+## D. Demo
+
+| # | Step | Contents | Est. |
+|---|---|---|---|
+| D1 | **Read-only demo** | Separate deployment, rights-cleared videos, no login, changes discarded, no paid calls; Impressum, privacy note, consent prompt, attributions (Wiktextract CC BY-SA, FrequencyWords). Everything in `roadmap/before-demo.md`, including Q-20 (name) and Q-21 (YouTube policies). README, screen recording, load-test numbers. | 2 weeks |
+
+## E. Important
+
+| # | Step | Contents | Est. |
+|---|---|---|---|
+| E1 | **Player polish** | Subtitle styles per track (#5) with the −/+ number input (#6), quick menu (#8), action buttons on subtitle hover (#7), pause on hover (#9), A–B loop (#10), collapsible sidebar (#11). | 2 weeks |
+| E2 | **Deeper lookup** | Phrases and related words (#24), phrase detection with separable verbs as one item (#26), word lookup on any website in the extension (#31, D-043). | 2.5 weeks |
+| E3 | **Vocabulary and review polish** | Suggested words (#34), saved words of this video (#35), quick status change (#41), hide meanings (#42), bulk actions (#43), lists with name, icon, colour (#44), session direction (#49), session summary with undo (#50). | 2 weeks |
+| E4 | **Grammar view v1** (differentiator 4) | Scope still undefined (`features/target/grammar.md`): define it first. | 2 weeks |
+| E5 | **Platform** | Themes (#62), translation fallback order (#61), Google sign-in, Playwright end-to-end tests and accessibility checks, the daily breakage check for the extension (D-082). | 1.5 weeks |
+
+## F. Nice to have
+
+Read-along word highlight (#12), hide controls when idle (#13), fullscreen with our subtitles (#14, research first), usage tips (#28), custom gestures (#29), popup size (#30), colour picker (#36), colour by part of speech (#37), grammar filters in the notebook (#45), list hover animation (#46), card layout settings (#51), usage page (#64).
+
+## G. Later
+
+**Bottom list, in order:** your uploads (#57, D-066), pick a phrase by hand (#27), discovery page (#55, #56), word graph view (#59), translation engine picker (#63), "Explain" with AI (#17), ready-made word lists from an open source (#47), signed-in devices (#65), compound splitting if not solved in B3 (D-055, Q-42), word fix suggestions (#69, D-076).
+
+**Also later:** separate interface language (#66), status shortcuts (#67), stats (#68), Anki export, curated catalog (Q-08). Public edition (deferred, D-038).
+
+**Not planned:** AWS + Terraform, pgvector/RAG, MCP server, Auth0, paid tier.

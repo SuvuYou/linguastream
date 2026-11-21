@@ -1,5 +1,5 @@
 # 004 – Word-data spike
-Status: draft
+Status: done, first run only (D-086)
 Roadmap step: phase 4, before the feature order (D-083)
 
 ## Problem

@@ -12,3 +12,6 @@ Runs on the server after a transfer. Design: `architecture-target/capture-flow.m
 | Lemma counts and search index update | Backend + Data | Server | ⬜ | Feeds vocabulary and search |
 | Progress over SSE, retries, failed state the user can retry | UI + Backend | Library | ⬜ | D-012 |
 | Transfer quota (characters), AI quotas, monthly spend cap | Backend | Server | ⬜ | D-022, enforced in Redis |
+| Progress toast with steps (feature review #15) | UI | Library, watch page | ⬜ | Shows the SSE progress |
+| Translation engine fallback order (internal) (feature review #61) | Backend | Server | ⬜ | One model for now (D-050) |
+| User-facing translation engine picker (feature review #63) | UI | Settings | ⏳ | Bottom of the list |

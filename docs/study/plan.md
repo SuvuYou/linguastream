@@ -119,7 +119,7 @@ Ordered by value for job applications, following the transition plan's flags.
 ## Order
 
 1. **Block A**, then the spikes (phase 3).
-2. After the spikes, the feature order with its Core section (phase 4) decides the order of blocks B–G. The blocks above follow the most likely order: database, API, deployment, pipeline, app, quality.
+2. The roadmap (`roadmap/steps.md`) sets the order: Block B with A1–A2, C with A3, D with A4, E with B2–B3, F with B4–B5, G with E5.
 3. The separate track runs alongside throughout.
 
 ## Progress

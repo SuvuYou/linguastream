@@ -16,14 +16,14 @@ Paste each run's report (popup → Copy report) into `reports/run-X.json` next t
 ## Checks
 | # | Check | Result (works / doesn't / partly) | Evidence |
 |---|---|---|---|
-| 1 | Hook runs in the embed frame | works (reported, not confirmed) | General report 2026-11-19; confirm: F-01 |
-| 2 | Caption request seen in the embed (json3, timings) | works (reported, not confirmed) | General report 2026-11-19; confirm: F-01 |
-| 3 | Same format as youtube.com, word offsets on auto captions | works (reported, not confirmed) | General report 2026-11-19; confirm: F-01 |
-| 4a | Captions on via the user clicking CC in the embed | works (reported, not confirmed) | General report 2026-11-19; confirm: F-01 |
+| 1 | Hook runs in the embed frame | works | confirmed 2026-11-20 (F-01): tested repeatedly, in several environments |
+| 2 | Caption request seen in the embed (json3, timings) | works | confirmed 2026-11-20 (F-01): tested repeatedly, in several environments |
+| 3 | Same format as youtube.com, word offsets on auto captions | works | confirmed 2026-11-20 (F-01): tested repeatedly, in several environments |
+| 4a | Captions on via the user clicking CC in the embed | works | confirmed 2026-11-20 (F-01): tested repeatedly, in several environments |
 | 4b | Captions on via `cc_load_policy=1&cc_lang_pref=de` | doesn't work | 2026-11-19: captions stayed off. The legal question in the spec is moot. |
-| 5 | Video category readable (watch page / embed) | partly (watch page) | 2026-11-19: only in some `/youtubei/v1/player` responses (those with `microformat`); two responses per video, one in English labels without category, one in the UI language with `Music`. Embed not checked yet. Treat missing as unknown. |
-| 6 | What a non-embeddable video shows | not run (F-03) | Note: `playableInEmbed` is often missing (popup shows –); only an explicit `false` means blocked. |
-| 7 | youtube-nocookie.com: checks 1–3 | not run (F-02) | |
+| 5 | Video category readable (watch page / embed) | partly (watch page and embed) | 2026-11-19: only in some `/youtubei/v1/player` responses (those with `microformat`); two responses per video, one in English labels without category, one in the UI language with `Music`. 2026-11-20 (F-04): same in the embed, present sometimes, mostly not. **Not reliable:** also showed `Music` on videos that were not music videos. Neither presence nor absence can be trusted for D-036. |
+| 6 | What a non-embeddable video shows | not seen yet (F-03 open) | Note: `playableInEmbed` is often missing (popup shows –); only an explicit `false` means blocked. 2026-11-20: no blocked video met during testing; to close, upload an own unlisted video with "Allow embedding" off. |
+| 7 | youtube-nocookie.com: checks 1–3 | works | 2026-11-20 (F-02) |
 | 8 | German auto captions already punctuated? (sentence ends per words) | moved | Punctuation spike |
 | 9 | Bracket tags (`[Musik]`, `[ __ ]` = censored word) | moved | Punctuation spike |
 | 10 | Original vs AI-dubbed audio readable | moved | Player-control spike (001) |
