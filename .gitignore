@@ -1,8 +1,8 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
-/.pnp
+node_modules
+.pnp
 .pnp.*
 .yarn/*
 !.yarn/patches
@@ -11,15 +11,19 @@
 !.yarn/versions
 npm
 
+# monorepo build output and caches
+dist
+.turbo
+
 # testing
-/coverage
+coverage
 
 # next.js
-/.next/
-/out/
+.next/
+out/
 
 # production
-/build
+build
 
 # misc
 .DS_Store
@@ -33,6 +37,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -41,13 +46,21 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-/lib/generated/prisma
+apps/web/lib/generated/prisma
 
 # Local ML uploads
 __pycache__/
-/linguastream-uploads/
+linguastream-uploads/
 *.log
 ml/logs/
 
 # Meilisearch
-/data.ms
+data.ms
+
+# Claude Code: personal settings stay local
+.claude/settings.local.json
+.claude/settings.json
+/Claude outputs
+
+# Knowledge base lives on its own branch (feature/docs)
+/docs

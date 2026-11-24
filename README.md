@@ -112,7 +112,7 @@ Search a word or phrase and get every occurrence across your library, with the o
 - [Zod](https://zod.dev/) for schema validation
 
 ### Data
-- [Neon](https://neon.tech/) PostgreSQL
+- PostgreSQL 17 (Docker Compose locally)
 - [Meilisearch](https://www.meilisearch.com/) for full-text subtitle phrase search (runs locally)
 - [Firebase Auth](https://firebase.google.com/docs/auth)
 
@@ -129,8 +129,8 @@ Search a word or phrase and get every occurrence across your library, with the o
 
 ### Prerequisites
 
-- Node.js 20+ and npm (or your preferred package manager)
-- A [Neon](https://neon.tech/) PostgreSQL database
+- Node.js 24+ and pnpm (`corepack enable` or `npm install -g pnpm`)
+- Docker (for the local PostgreSQL in `compose.yaml`)
 - A [Firebase](https://console.firebase.google.com/) project with Authentication enabled
 - A running [Jellyfin](https://jellyfin.org/) server with an API key
 - [Meilisearch](https://www.meilisearch.com/docs/learn/self_hosted/getting_started_with_self_hosted_meilisearch) running locally
@@ -143,20 +143,24 @@ Search a word or phrase and get every occurrence across your library, with the o
 git clone https://github.com/<your-username>/<your-repo>.git
 cd <your-repo>
 
-# 2. Install dependencies
-npm install
+# 2. Install dependencies (also generates the Prisma client)
+pnpm install
 
-# 3. Create your environment file
-cp .env.example .env.local
+# 3. Start the local database
+docker compose up -d
+
+# 4. Create the web app's environment file
+cp apps/web/.env.example apps/web/.env.local
 # ...then fill in the values (see the next section)
 
-# 4. Generate the Prisma client and apply migrations
-npx prisma generate
-npx prisma migrate dev
+# 5. Apply migrations
+pnpm db:migrate
 
-# 5. Start the dev server
-npm run dev
+# 6. Start the dev server (web on :3000, API on :3001)
+pnpm dev
 ```
+
+The repository is a pnpm + Turborepo monorepo: `apps/web` (Next.js), `apps/api` (NestJS), `packages/contracts` (shared Zod schemas) and `packages/db` (Prisma, being moved there).
 
 ### First run checklist
 
@@ -173,7 +177,7 @@ npm run dev
 | `JELLYFIN_URL` | Yes | Public URL of your Jellyfin server. |
 | `JELLYFIN_API_KEY` | Yes | API key created in Jellyfin under **Dashboard > API Keys**. |
 | `JELLYFIN_USER_ID` | Yes | ID of the Jellyfin user whose library is synced. |
-| `DATABASE_URL` | Yes | Neon PostgreSQL connection string used by Prisma. |
+| `DATABASE_URL` | Yes | PostgreSQL connection string used by Prisma. Locally: `postgresql://linguastream:linguastream@localhost:5432/linguastream` (the `compose.yaml` database). |
 | `NEXT_PUBLIC_FIREBASE_API_KEY` | Yes | Firebase web app API key (from **Project settings > General**). |
 | `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Yes | Firebase auth domain. |
 | `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | Yes | Firebase project ID. |
