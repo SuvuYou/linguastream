@@ -3,11 +3,7 @@ import { NextRequest } from "next/server";
 import { GET } from "./route";
 import { db } from "@/lib/initializations/db";
 import { mockGetCurrentUser } from "@/helpers/tests/mocks/getCurrentUser";
-import {
-  fetchJellyfinWatchItem,
-  getJellyfinStreamUrl,
-} from "@/lib/db-helpers/jellyfin";
-import { JELLYFIN_CONTENT_TYPE, YOUTUBE_CONTENT_TYPE } from "@/helpers/const";
+import { YOUTUBE_CONTENT_TYPE } from "@/helpers/const";
 import { mockDbMediaContent } from "@/helpers/tests/mocks/db.mediaContent";
 
 vi.mock("@/lib/firebase/session", () => ({
@@ -22,14 +18,7 @@ vi.mock("@/lib/initializations/db", () => ({
   },
 }));
 
-vi.mock("@/lib/db-helpers/jellyfin", () => ({
-  fetchJellyfinWatchItem: vi.fn(),
-  getJellyfinStreamUrl: vi.fn(),
-}));
-
 const mockedFindUnique = vi.mocked(db.mediaContent.findUnique);
-const mockedFetchJellyfinWatchItem = vi.mocked(fetchJellyfinWatchItem);
-const mockedGetJellyfinStreamUrl = vi.mocked(getJellyfinStreamUrl);
 
 function mockParams(mediaContentId = "mediaId") {
   return {
@@ -91,8 +80,6 @@ describe("GET /api/watch/[mediaContentId]", () => {
       error: "Forbidden",
     });
 
-    expect(mockedFetchJellyfinWatchItem).not.toHaveBeenCalled();
-    expect(mockedGetJellyfinStreamUrl).not.toHaveBeenCalled();
   });
 
   it("allows the owner to access private content", async () => {
@@ -126,79 +113,6 @@ describe("GET /api/watch/[mediaContentId]", () => {
     });
   });
 
-  it("allows anyone to access public Jellyfin content", async () => {
-    mockGetCurrentUser.override({
-      id: "different-user",
-    });
-
-    mockDbMediaContent.findUnique.override({
-      user_id: "id",
-      type: JELLYFIN_CONTENT_TYPE,
-      title: "Database title",
-      source_language: "en",
-      jellyfin_id: "jellyfin-123",
-      subtitle_tracks: [{ language: "en" }, { language: "de" }],
-    });
-
-    mockedFetchJellyfinWatchItem.mockResolvedValue({
-      Id: "jellyfin-123",
-      Name: "Jellyfin title",
-      Type: "Movie",
-    });
-
-    mockedGetJellyfinStreamUrl.mockReturnValue("stream-url");
-
-    const req = new NextRequest("http://localhost");
-
-    const res = await GET(req, mockParams());
-    const json = await res.json();
-
-    expect(res.status).toBe(200);
-
-    expect(json).toEqual({
-      id: "mediaId",
-      title: "Jellyfin title",
-      type: JELLYFIN_CONTENT_TYPE,
-      streamUrl: "stream-url",
-      sourceLanguage: "en",
-      translationLanguages: ["de"],
-    });
-
-    expect(mockedFetchJellyfinWatchItem).toHaveBeenCalledWith("jellyfin-123");
-
-    expect(mockedGetJellyfinStreamUrl).toHaveBeenCalledWith("jellyfin-123");
-  });
-
-  it("uses the media title if the Jellyfin item has no name", async () => {
-    mockGetCurrentUser.base();
-
-    mockDbMediaContent.findUnique.override({
-      user_id: "id",
-      type: JELLYFIN_CONTENT_TYPE,
-      title: "Database title",
-      source_language: "en",
-      jellyfin_id: "jellyfin-123",
-      subtitle_tracks: [{ language: "en" }],
-    });
-
-    mockedFetchJellyfinWatchItem.mockResolvedValue({
-      Id: "jellyfin-123",
-      Name: undefined,
-      Type: "Movie",
-    });
-
-    mockedGetJellyfinStreamUrl.mockReturnValue("stream-url");
-
-    const req = new NextRequest("http://localhost");
-
-    const res = await GET(req, mockParams());
-    const json = await res.json();
-
-    expect(res.status).toBe(200);
-
-    expect(json.title).toBe("Database title");
-  });
-
   it("returns a YouTube watch payload", async () => {
     mockGetCurrentUser.base();
 
@@ -227,8 +141,6 @@ describe("GET /api/watch/[mediaContentId]", () => {
       translationLanguages: ["de"],
     });
 
-    expect(mockedFetchJellyfinWatchItem).not.toHaveBeenCalled();
-    expect(mockedGetJellyfinStreamUrl).not.toHaveBeenCalled();
   });
 
   it("excludes the source language from translation languages", async () => {
@@ -300,35 +212,6 @@ describe("GET /api/watch/[mediaContentId]", () => {
       error: "Unsupported content type",
     });
 
-    expect(mockedFetchJellyfinWatchItem).not.toHaveBeenCalled();
-    expect(mockedGetJellyfinStreamUrl).not.toHaveBeenCalled();
-  });
-
-  it("returns 400 if Jellyfin content has no jellyfin id", async () => {
-    mockGetCurrentUser.base();
-
-    mockDbMediaContent.findUnique.override({
-      user_id: "id",
-      type: JELLYFIN_CONTENT_TYPE,
-      title: "Jellyfin video",
-      source_language: "en",
-      jellyfin_id: null,
-      subtitle_tracks: [],
-    });
-
-    const req = new NextRequest("http://localhost");
-
-    const res = await GET(req, mockParams());
-    const json = await res.json();
-
-    expect(res.status).toBe(400);
-
-    expect(json).toEqual({
-      error: "Unsupported content type",
-    });
-
-    expect(mockedFetchJellyfinWatchItem).not.toHaveBeenCalled();
-    expect(mockedGetJellyfinStreamUrl).not.toHaveBeenCalled();
   });
 
   it("returns 400 if YouTube content has no video id", async () => {
@@ -373,7 +256,6 @@ describe("GET /api/watch/[mediaContentId]", () => {
         title: true,
         type: true,
         source_language: true,
-        jellyfin_id: true,
         youtube_video_id: true,
         subtitle_tracks: {
           select: {

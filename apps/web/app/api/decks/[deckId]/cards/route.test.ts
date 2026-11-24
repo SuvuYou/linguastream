@@ -3,14 +3,9 @@ import { NextRequest } from "next/server";
 import { GET } from "./route";
 import { db } from "@/lib/initializations/db";
 import { mockGetCurrentUser } from "@/helpers/tests/mocks/getCurrentUser";
-import { getJellyfinStreamUrl } from "@/lib/db-helpers/jellyfin";
 
 vi.mock("@/lib/firebase/session", () => ({
   getCurrentUser: vi.fn(),
-}));
-
-vi.mock("@/lib/db-helpers/jellyfin", () => ({
-  getJellyfinStreamUrl: vi.fn(),
 }));
 
 vi.mock("@/lib/initializations/db", () => ({
@@ -86,13 +81,9 @@ describe("GET /api/decks/[deckId]/cards", () => {
     vi.mocked(db.mediaContent.findMany).mockResolvedValue([
       {
         id: "mediaId",
-        jellyfin_id: "jf-1",
+        youtube_video_id: "yt-1",
       },
     ] as never);
-
-    vi.mocked(getJellyfinStreamUrl).mockReturnValue(
-      "https://example.com/stream",
-    );
 
     const req = new NextRequest("http://localhost?limit=10&page=0");
 
@@ -108,8 +99,8 @@ describe("GET /api/decks/[deckId]/cards", () => {
           media_content_id: "mediaId",
           word: "hello",
           word_profile: null,
-          videoId: null,
-          streamUrl: "https://example.com/stream",
+          videoId: "yt-1",
+          streamUrl: null,
         },
       ],
       total: 1,
@@ -119,7 +110,7 @@ describe("GET /api/decks/[deckId]/cards", () => {
     });
   });
 
-  it("GET -> returns null streamUrl when media has no jellyfin id", async () => {
+  it("GET -> returns null streamUrl and videoId when media has no YouTube id", async () => {
     mockGetCurrentUser.base();
 
     vi.mocked(db.deck.findFirst).mockResolvedValue({
@@ -139,7 +130,7 @@ describe("GET /api/decks/[deckId]/cards", () => {
     vi.mocked(db.mediaContent.findMany).mockResolvedValue([
       {
         id: "mediaId",
-        jellyfin_id: null,
+        youtube_video_id: null,
       },
     ] as never);
 
@@ -149,8 +140,7 @@ describe("GET /api/decks/[deckId]/cards", () => {
     const body = await res.json();
 
     expect(body.cards[0].streamUrl).toBeNull();
-
-    expect(getJellyfinStreamUrl).not.toHaveBeenCalled();
+    expect(body.cards[0].videoId).toBeNull();
   });
 
   it("GET -> filters by language and search query", async () => {

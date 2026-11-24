@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-import AddContentModal from "@/components/features/personal-library/AddContentModal/AddContentModal";
 import { PERSONAL_LIBRARY_PARAMS_SCHEMA } from "@/helpers/params-schema";
 import { useZodSearchParams } from "@/hooks/useZodSearchParams";
 import SearchBar from "../primitives/SearchBar";
@@ -15,8 +13,6 @@ export default function PersonalLibraryPage() {
   const personalLibraryParams = useZodSearchParams(
     PERSONAL_LIBRARY_PARAMS_SCHEMA,
   );
-
-  const [addModalOpen, setAddModalOpen] = useState(false);
 
   const languages = useLibraryLanguages();
 
@@ -47,12 +43,6 @@ export default function PersonalLibraryPage() {
 
       <CardsGrid
         isLanguagesLoading={languages.isLoading || languages.isFetching}
-        openAddModal={() => setAddModalOpen(true)}
-      />
-
-      <AddContentModal
-        isOpen={addModalOpen}
-        onClose={() => setAddModalOpen(false)}
       />
     </section>
   );

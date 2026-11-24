@@ -14,10 +14,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { BookHeart, Layers, SquareLibrary } from "lucide-react";
+import { BookHeart, Layers } from "lucide-react";
 
 const NAV_LINKS = [
-  { href: "/dashboard", label: "Library", icon: <SquareLibrary /> },
   { href: "/dashboard/personal", label: "Personal", icon: <BookHeart /> },
   { href: "/dashboard/decks", label: "Decks", icon: <Layers /> },
 ] as const;

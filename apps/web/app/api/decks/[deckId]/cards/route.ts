@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/initializations/db";
-import { getJellyfinStreamUrl } from "@/lib/db-helpers/jellyfin";
 import { getCurrentUser } from "@/lib/firebase/session";
 
 export async function GET(
@@ -49,16 +48,15 @@ export async function GET(
   const mediaIds = [...new Set(cards.map((c) => c.media_content_id))];
   const mediaItems = await db.mediaContent.findMany({
     where: { id: { in: mediaIds } },
-    select: { id: true, jellyfin_id: true, youtube_video_id: true },
+    select: { id: true, youtube_video_id: true },
   });
 
+  // Only YouTube items have a source now; streamUrl stays in the response for
+  // the Plyr player until uploads return (D-066).
   const urlMap = new Map(
     mediaItems.map((m) => [
       m.id,
-      {
-        url: m.jellyfin_id ? getJellyfinStreamUrl(m.jellyfin_id) : null,
-        videoId: m.youtube_video_id ? m.youtube_video_id : null,
-      },
+      { url: null, videoId: m.youtube_video_id ? m.youtube_video_id : null },
     ]),
   );
 

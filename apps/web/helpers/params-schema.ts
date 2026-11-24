@@ -139,39 +139,6 @@ export const FETCH_SUBTITLES_API_PARAMS_SCHEMA = z.object({
   lang: LanguageCodeSchema.optional(),
 });
 
-export const PUT_INGEST_SUBTITLES_API_PARAMS_SCHEMA = z.discriminatedUnion(
-  "acquisitionMethod",
-  [
-    z.object({
-      sourceLang: z.string().min(2),
-      acquisitionMethod: z.literal("youtube"),
-      youtubeVideoId: z.string().min(1),
-      translateLangs: z.array(z.string()),
-      translateMethod: z.enum(["youtube", "libretranslate", "upload"]),
-      translateFiles: z.record(LanguageCodeSchema, z.string()).optional(),
-      removeLangs: z.array(z.string()).optional(),
-    }),
-    z.object({
-      sourceLang: z.string().min(2),
-      acquisitionMethod: z.literal("upload"),
-      sourceFile: z.string().min(1),
-      translateLangs: z.array(z.string()),
-      translateMethod: z.enum(["libretranslate", "deepl", "upload"]),
-      translateFiles: z.record(LanguageCodeSchema, z.string()).optional(),
-      removeLangs: z.array(z.string()).optional(),
-    }),
-    z.object({
-      sourceLang: z.string().min(2),
-      acquisitionMethod: z.literal("whisperx"),
-      videoFilePath: z.string().min(1),
-      translateLangs: z.array(z.string()),
-      translateMethod: z.enum(["libretranslate", "deepl", "upload"]),
-      translateFiles: z.record(LanguageCodeSchema, z.string()).optional(),
-      removeLangs: z.array(z.string()).optional(),
-    }),
-  ],
-);
-
 export function parseSearchParams<T extends z.ZodTypeAny>(
   schema: T,
   params: URLSearchParams | Record<string, string | string[] | undefined>,

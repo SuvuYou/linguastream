@@ -5,7 +5,7 @@ import { useSearch } from "@/hooks/useSearch";
 import { useStreamUrl } from "@/hooks/useStreamUrl";
 import { useAppStore } from "@/lib/initializations/store";
 import PlayerSmall from "@/components/features/player/PlayerSmall";
-import type { SubtitleSearchDocument } from "@/lib/db-helpers/search";
+import type { SubtitleSearchDocument } from "@/types/search";
 import Link from "next/link";
 import { SearchOverlayProvider } from "@/components/layout/SearchOverlayProvider";
 import Header from "./Header";

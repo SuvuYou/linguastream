@@ -2,7 +2,7 @@
 
 import { UseQueryResult } from "@tanstack/react-query";
 import type { SearchResponse } from "@/types/search";
-import type { SubtitleSearchDocument } from "@/lib/db-helpers/search";
+import type { SubtitleSearchDocument } from "@/types/search";
 import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { Spinner } from "@/components/ui/spinner";
 import {

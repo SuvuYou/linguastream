@@ -24,12 +24,6 @@ vi.mock("./PersonalCard", () => ({
   ),
 }));
 
-vi.mock("./AddNewCard", () => ({
-  default: ({ onAdd }: { onAdd: () => void }) => (
-    <button onClick={onAdd}>Add Content</button>
-  ),
-}));
-
 vi.mock("@/components/features/library/LibrarySkeleton", () => ({
   default: () => <div data-testid="library-skeleton" />,
 }));
@@ -74,7 +68,6 @@ const mockedUsePersonalLibrary = vi.mocked(usePersonalLibrary);
 const mockedUseZodSearchParams = vi.mocked(useZodSearchParams);
 
 describe("CardsGrid", () => {
-  const openAddModal = vi.fn();
   const setParams = vi.fn();
 
   beforeEach(() => {
@@ -100,7 +93,7 @@ describe("CardsGrid", () => {
     } as any);
 
     render(
-      <CardsGrid isLanguagesLoading={false} openAddModal={openAddModal} />,
+      <CardsGrid isLanguagesLoading={false} />,
     );
 
     expect(screen.getByText("Movie One")).toBeInTheDocument();
@@ -115,7 +108,7 @@ describe("CardsGrid", () => {
     } as any);
 
     render(
-      <CardsGrid isLanguagesLoading={false} openAddModal={openAddModal} />,
+      <CardsGrid isLanguagesLoading={false} />,
     );
 
     expect(screen.getByTestId("library-skeleton")).toBeInTheDocument();
@@ -128,7 +121,7 @@ describe("CardsGrid", () => {
       isError: false,
     } as any);
 
-    render(<CardsGrid isLanguagesLoading openAddModal={openAddModal} />);
+    render(<CardsGrid isLanguagesLoading />);
 
     expect(screen.getByTestId("library-skeleton")).toBeInTheDocument();
   });
@@ -141,34 +134,13 @@ describe("CardsGrid", () => {
     } as any);
 
     render(
-      <CardsGrid isLanguagesLoading={false} openAddModal={openAddModal} />,
+      <CardsGrid isLanguagesLoading={false} />,
     );
 
     expect(screen.getByText("Failed to load library")).toBeInTheDocument();
     expect(
       screen.getByText("Please try refreshing the page."),
     ).toBeInTheDocument();
-  });
-
-  it("calls openAddModal when Add Content is clicked", async () => {
-    const user = userEvent.setup();
-
-    mockedUsePersonalLibrary.mockReturnValue({
-      data: {
-        items: [],
-        pageCount: 0,
-      },
-      isLoading: false,
-      isError: false,
-    } as any);
-
-    render(
-      <CardsGrid isLanguagesLoading={false} openAddModal={openAddModal} />,
-    );
-
-    await user.click(screen.getByRole("button", { name: "Add Content" }));
-
-    expect(openAddModal).toHaveBeenCalledOnce();
   });
 
   it("renders pagination when there are multiple pages", () => {
@@ -182,7 +154,7 @@ describe("CardsGrid", () => {
     } as any);
 
     render(
-      <CardsGrid isLanguagesLoading={false} openAddModal={openAddModal} />,
+      <CardsGrid isLanguagesLoading={false} />,
     );
 
     expect(screen.getByText("Page 0 of 3")).toBeInTheDocument();
@@ -201,7 +173,7 @@ describe("CardsGrid", () => {
     } as any);
 
     render(
-      <CardsGrid isLanguagesLoading={false} openAddModal={openAddModal} />,
+      <CardsGrid isLanguagesLoading={false} />,
     );
 
     await user.click(screen.getByRole("button", { name: "Next page" }));

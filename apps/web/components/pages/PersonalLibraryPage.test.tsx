@@ -54,32 +54,12 @@ vi.mock("../features/personal-library/SourceUploadFilter", () => ({
 }));
 
 vi.mock("../features/personal-library/Grid/CardsGrid", () => ({
-  default: ({
-    isLanguagesLoading,
-    openAddModal,
-  }: {
-    isLanguagesLoading: boolean;
-    openAddModal: () => void;
-  }) => (
+  default: ({ isLanguagesLoading }: { isLanguagesLoading: boolean }) => (
     <div data-testid="cards-grid">
       {isLanguagesLoading && "Loading languages"}
-      <button onClick={openAddModal}>Open Add Modal</button>
     </div>
   ),
 }));
-
-vi.mock(
-  "@/components/features/personal-library/AddContentModal/AddContentModal",
-  () => ({
-    default: ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) =>
-      isOpen ? (
-        <div data-testid="add-modal">
-          Add Content Modal
-          <button onClick={onClose}>Close</button>
-        </div>
-      ) : null,
-  }),
-);
 
 vi.mock("../ui/separator", () => ({
   Separator: () => <div data-testid="separator" />,
@@ -194,26 +174,5 @@ describe("PersonalLibraryPage", () => {
     expect(screen.getByTestId("cards-grid")).toHaveTextContent(
       "Loading languages",
     );
-  });
-
-  it("opens add content modal", async () => {
-    const user = userEvent.setup();
-
-    render(<PersonalLibraryPage />);
-
-    await user.click(screen.getByRole("button", { name: "Open Add Modal" }));
-
-    expect(screen.getByTestId("add-modal")).toBeInTheDocument();
-  });
-
-  it("closes add content modal", async () => {
-    const user = userEvent.setup();
-
-    render(<PersonalLibraryPage />);
-
-    await user.click(screen.getByRole("button", { name: "Open Add Modal" }));
-    await user.click(screen.getByRole("button", { name: "Close" }));
-
-    expect(screen.queryByTestId("add-modal")).not.toBeInTheDocument();
   });
 });

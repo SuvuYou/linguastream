@@ -1,16 +1,16 @@
 import { vi } from "vitest";
 import type { MediaContent } from "@prisma/client";
 import { db } from "@/lib/initializations/db";
-import { JELLYFIN_CONTENT_TYPE, JOB_STATUS } from "@/helpers/const";
+import { JOB_STATUS, YOUTUBE_CONTENT_TYPE } from "@/helpers/const";
 
 const createBaseMediaContent = (): MediaContent => ({
   id: "mediaId",
   user_id: "userId",
   title: "title",
-  type: JELLYFIN_CONTENT_TYPE,
+  type: YOUTUBE_CONTENT_TYPE,
   source_language: "en",
   source_subtitle_acquisition_method: "whisperx",
-  jellyfin_id: "jellyfinId",
+  jellyfin_id: null,
   file_path: "path/file",
   youtube_video_id: "ytId",
   job_status: JOB_STATUS.DONE,

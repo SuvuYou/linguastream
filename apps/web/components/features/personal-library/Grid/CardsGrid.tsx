@@ -1,7 +1,6 @@
 "use client";
 
 import PersonalCard from "./PersonalCard";
-import AddNewCard from "./AddNewCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   DEFAULT_LIBRARY_RESPONSE,
@@ -20,13 +19,9 @@ import PaginationControls from "@/components/primitives/PaginationControls";
 
 interface CardsGridProps {
   isLanguagesLoading: boolean;
-  openAddModal: () => void;
 }
 
-export default function CardsGrid({
-  isLanguagesLoading,
-  openAddModal,
-}: CardsGridProps) {
+export default function CardsGrid({ isLanguagesLoading }: CardsGridProps) {
   const { data, isLoading, isError } = usePersonalLibrary();
 
   const params = useZodSearchParams(PERSONAL_LIBRARY_PARAMS_SCHEMA);
@@ -60,8 +55,6 @@ export default function CardsGrid({
         </div>
       ) : (
         <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-4">
-          <AddNewCard onAdd={() => openAddModal()} />
-
           {items.map((item) => (
             <PersonalCard key={item.id} item={item} />
           ))}

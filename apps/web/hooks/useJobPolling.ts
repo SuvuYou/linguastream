@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { JOB_STATUS } from "@/helpers/const";
-import { LIBRARY_QUERY_KEY } from "./useLibrary";
 
 const POLL_INTERVAL_MS = 2000;
 
@@ -54,7 +53,7 @@ export function useJobPolling(
 
       if (data.status === JOB_STATUS.DONE || data.status === JOB_STATUS.ERROR) {
         stopPolling();
-        queryClient.invalidateQueries({ queryKey: [LIBRARY_QUERY_KEY] });
+        queryClient.invalidateQueries({ queryKey: ["personal-library"] });
       }
     } catch {
       // silently ignore network errors
@@ -91,7 +90,7 @@ export function useJobPolling(
 
   async function resetJob() {
     await fetch(`/api/jobs/${mediaId}`, { method: "DELETE" });
-    queryClient.invalidateQueries({ queryKey: [LIBRARY_QUERY_KEY] });
+    queryClient.invalidateQueries({ queryKey: ["personal-library"] });
   }
 
   return { jobState, elementRef, resetJob };

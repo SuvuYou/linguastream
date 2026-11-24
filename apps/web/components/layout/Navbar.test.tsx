@@ -49,7 +49,7 @@ beforeEach(() => {
 
 describe("AppSidebar", () => {
   it("renders application title", () => {
-    mockedUsePathname.mockReturnValue("/dashboard");
+    mockedUsePathname.mockReturnValue("/dashboard/personal");
 
     render(<AppSidebar />);
 
@@ -57,17 +57,17 @@ describe("AppSidebar", () => {
   });
 
   it("renders all navigation links", () => {
-    mockedUsePathname.mockReturnValue("/dashboard");
+    mockedUsePathname.mockReturnValue("/dashboard/personal");
 
     render(<AppSidebar />);
 
-    expect(screen.getByText("Library")).toBeInTheDocument();
+    expect(screen.queryByText("Library")).not.toBeInTheDocument();
     expect(screen.getByText("Personal")).toBeInTheDocument();
     expect(screen.getByText("Decks")).toBeInTheDocument();
   });
 
   it("renders sign out button", () => {
-    mockedUsePathname.mockReturnValue("/dashboard");
+    mockedUsePathname.mockReturnValue("/dashboard/personal");
 
     render(<AppSidebar />);
 
@@ -79,7 +79,7 @@ describe("AppSidebar", () => {
 
     render(<AppSidebar />);
 
-    expect(screen.getByRole("link", { name: /library/i })).not.toHaveAttribute(
+    expect(screen.getByRole("link", { name: /personal/i })).not.toHaveAttribute(
       "aria-current",
     );
   });
