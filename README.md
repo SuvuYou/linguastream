@@ -123,8 +123,9 @@ pnpm install
 # 3. Start the local database
 docker compose up -d
 
-# 4. Create the web app's environment file
-cp apps/web/.env.example apps/web/.env.local
+# 4. Create the environment files
+cp .env.example .env                              # DATABASE_URL (shared)
+cp apps/web/.env.example apps/web/.env.local      # web app variables
 # ...then fill in the values (see the next section)
 
 # 5. Apply migrations
@@ -134,7 +135,7 @@ pnpm db:migrate
 pnpm dev
 ```
 
-The repository is a pnpm + Turborepo monorepo: `apps/web` (Next.js), `apps/api` (NestJS), `packages/contracts` (shared Zod schemas) and `packages/db` (Prisma, being moved there).
+The repository is a pnpm + Turborepo monorepo: `apps/web` (Next.js), `apps/api` (NestJS), `packages/contracts` (shared Zod schemas) and `packages/db` (Prisma schema, migrations and client).
 
 ### First run checklist
 
@@ -143,7 +144,7 @@ The repository is a pnpm + Turborepo monorepo: `apps/web` (Next.js), `apps/api` 
 
 ## Environment variables
 
-All of them live in `apps/web/.env.local`; `apps/web/.env.example` lists them.
+`DATABASE_URL` lives in the repo-root `.env` (shared by `packages/db` and the web app; see `/.env.example`). All others live in `apps/web/.env.local` (see `apps/web/.env.example`).
 
 | Variable | Required | Description |
 | --- | :---: | --- |

@@ -99,11 +99,11 @@ Language-learning web app plus a Chrome extension: YouTube videos with dual subt
 - No paid features, ads or public transcript pages without a legal review.
 
 ## Code rules
-- Target stack (D-049, D-054, D-085): pnpm + Turborepo monorepo with `apps/web` (Next.js), `apps/api` (NestJS + BullMQ worker), `packages/db` (Prisma), `packages/contracts` (Zod); Postgres self-hosted on the VPS. The workspaces exist since change 005; the Prisma schema still lives in `apps/web/prisma` until it moves to `packages/db` (Foundation card [4]).
+- Target stack (D-049, D-054, D-085): pnpm + Turborepo monorepo with `apps/web` (Next.js), `apps/api` (NestJS + BullMQ worker), `packages/db` (Prisma), `packages/contracts` (Zod); Postgres self-hosted on the VPS. The workspaces exist since change 005. The Prisma schema, migrations and client live in `packages/db` (Foundation card [4]); the web app reaches the database only through `apps/web/lib/initializations/db.ts`, a re-export that goes away in B0. Import Prisma types from `@linguastream/db`, and only with `import type` in client components (a value import would pull the Postgres driver into the browser bundle).
 - Jellyfin, Meilisearch, WhisperX, LibreTranslate, DeepL, server yt-dlp and the `ml/` ingest script were removed (Foundation card [3]). Don't bring them back. Adding videos returns with the extension (B1); library search returns on Postgres (C2, D-067). Until then `/api/search` returns an empty page and `/api/watch/[id]/stream` returns 404 on purpose.
 - Uploads are postponed (D-066): don't extend or remove Plyr or video upload yet. The Plyr players stay even though nothing feeds them a stream URL right now.
 - Package manager: pnpm (never npm or yarn). Run a command in one workspace with `pnpm --filter @linguastream/<name> <script>`.
-- Migrations: `pnpm db:migrate` (runs `prisma migrate dev` in `apps/web`). Never `db push`. Never edit an applied migration.
+- Migrations: `pnpm db:migrate` (runs `prisma migrate dev` in `packages/db`). `DATABASE_URL` lives in the repo-root `.env`. Never `db push`. Never edit an applied migration.
 - Queries Prisma can't express well (lemma arrays, full-text search, bulk imports) use raw SQL, kept in one place per module (D-085).
 - Every API route: authenticate (→ 401), validate input with Zod, keep DB queries in the data layer (`apps/web/lib/db-helpers/` today).
 - Await route `params` (Next 16).
