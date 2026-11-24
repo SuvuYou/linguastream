@@ -66,10 +66,14 @@ export default function YouTubePlayer({
   const { subtitleSettings } = useAppStore();
 
   useEffect(() => {
+    let destroyed = false;
+
     async function init() {
       const container = iframeContainerRef.current;
 
       await loadYouTubeAPI();
+
+      if (destroyed || !iframeContainerRef.current) return;
 
       playerRef.current = new window.YT.Player(container, {
         videoId,
@@ -92,6 +96,8 @@ export default function YouTubePlayer({
     init();
 
     return () => {
+      destroyed = true;
+      isReadyRef.current = false;
       playerRef.current?.destroy();
     };
   }, [videoId, initialTimeMs]);
