@@ -1,14 +1,11 @@
-import type { User } from "@linguastream/db";
+import { getCurrentUserRoute, type CurrentUser } from "@linguastream/contracts";
 import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/api/client";
 
 export function useUser() {
-  return useQuery<User>({
+  return useQuery<CurrentUser>({
     queryKey: ["user"],
-    queryFn: async () => {
-      const res = await fetch("/api/user");
-      if (!res.ok) throw new Error("Failed to fetch user");
-      return res.json();
-    },
+    queryFn: () => apiRequest(getCurrentUserRoute),
     staleTime: Infinity,
   });
 }

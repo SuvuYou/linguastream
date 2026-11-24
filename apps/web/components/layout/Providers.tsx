@@ -1,8 +1,14 @@
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useState } from "react";
+import dynamic from "next/dynamic";
+import { useCallback, useState } from "react";
+import { isMockingEnabled } from "@/mocks/config";
 import { TooltipProvider } from "../ui/tooltip";
+
+const MockServiceWorker = dynamic(() => import("@/mocks/MockServiceWorker"), {
+  ssr: false,
+});
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -16,6 +22,13 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         },
       }),
   );
+
+  // With API mocks on (development only), wait for the mock service worker so the
+  // first requests don't reach the real API before it intercepts them
+  const [mocksReady, setMocksReady] = useState(() => !isMockingEnabled());
+  const onMocksReady = useCallback(() => setMocksReady(true), []);
+
+  if (!mocksReady) return <MockServiceWorker onReady={onMocksReady} />;
 
   return (
     <TooltipProvider>

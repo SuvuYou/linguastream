@@ -9,6 +9,8 @@ dotenv.config({ path: path.resolve(process.cwd(), "../../.env"), quiet: true });
 
 const nextConfig: NextConfig = {
   // transpilePackages: ["plyr"], TODO: Check if this is needed after building
+
+  typescript: { tsconfigPath: "tsconfig.ci.json" },
 };
 
 export default nextConfig;

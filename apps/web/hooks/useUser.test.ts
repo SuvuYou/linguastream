@@ -1,42 +1,47 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { createWrapper } from "@/helpers/tests/providers";
 import { useUser } from "@/hooks/useUser";
 
-beforeEach(() => vi.resetAllMocks());
+function mockFetch(status: number, body: unknown) {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue(new Response(JSON.stringify(body), { status })),
+  );
+}
+
+afterEach(() => vi.unstubAllGlobals());
 
 describe("useUser hook", () => {
-  it("returns user data", async () => {
-    global.fetch = vi.fn(
-      () =>
-        Promise.resolve({
-          ok: true,
-          json: () =>
-            Promise.resolve({
-              id: "u1",
-              email: "test@example.com",
-            }),
-        }) as Promise<Response>,
-    );
-
-    const { result } = renderHook(() => useUser(), {
-      wrapper: createWrapper(),
+  it("returns the user from GET /api/user", async () => {
+    mockFetch(200, {
+      id: "u1",
+      email: "test@example.com",
+      display_name: null,
+      native_language: "uk",
+      is_admin: false,
     });
 
-    await waitFor(() => {
-      expect(result.current.data?.id).toBe("u1");
-    });
+    const { result } = renderHook(() => useUser(), { wrapper: createWrapper() });
+
+    await waitFor(() => expect(result.current.data?.id).toBe("u1"));
+    expect(fetch).toHaveBeenCalledWith("/api/user", { method: "GET" });
   });
 
-  it("handles fetch error", async () => {
-    global.fetch = vi.fn(() => Promise.reject(new Error("fail")));
+  it("errors when the response doesn't match the contract", async () => {
+    mockFetch(200, { id: "u1", email: "test@example.com" });
 
-    const { result } = renderHook(() => useUser(), {
-      wrapper: createWrapper(),
-    });
+    const { result } = renderHook(() => useUser(), { wrapper: createWrapper() });
 
-    await waitFor(() => {
-      expect(result.current.isError).toBe(true);
-    });
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error?.name).toBe("ApiContractError");
+  });
+
+  it("errors when the request fails", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("fail")));
+
+    const { result } = renderHook(() => useUser(), { wrapper: createWrapper() });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
   });
 });

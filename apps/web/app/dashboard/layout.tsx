@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Navbar from "@/components/layout/Navbar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 
@@ -10,7 +11,7 @@ export default function RootLayout({
     <SidebarProvider>
       <Navbar />
       <main className="flex min-h-dvh w-full flex-col bg-sidebar">
-        {children}
+        <Suspense>{children}</Suspense>
       </main>
     </SidebarProvider>
   );

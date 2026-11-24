@@ -1,16 +1,14 @@
 import { vi } from "vitest";
 import { useUser } from "@/hooks/useUser";
-import type { User } from "@linguastream/db";
+import type { CurrentUser } from "@linguastream/contracts";
 import type { UseQueryResult } from "@tanstack/react-query";
 
-const createBaseUser = () => ({
+const createBaseUser = (): CurrentUser => ({
   id: "",
-  firebase_uid: "",
   email: "",
   display_name: "",
   native_language: "",
   is_admin: false,
-  created_at: new Date(),
 });
 
 const createBaseUserResponse = () =>
@@ -18,20 +16,20 @@ const createBaseUserResponse = () =>
     isLoading: false,
     isError: false,
     data: createBaseUser(),
-  }) as UseQueryResult<User>;
+  }) as UseQueryResult<CurrentUser>;
 
 const createLoadingUserResponse = () =>
   ({
     ...createBaseUserResponse(),
     isLoading: true,
-  }) as UseQueryResult<User>;
+  }) as UseQueryResult<CurrentUser>;
 
 const createErrorUserResponse = () =>
   ({
     ...createBaseUserResponse(),
     isLoading: false,
     isError: true,
-  }) as UseQueryResult<User>;
+  }) as UseQueryResult<CurrentUser>;
 
 const createAdminUserResponse = () => {
   const response = {
@@ -42,7 +40,7 @@ const createAdminUserResponse = () => {
 
   response.data.is_admin = true;
 
-  return response as UseQueryResult<User>;
+  return response as UseQueryResult<CurrentUser>;
 };
 
 const mockedUseUser = vi.mocked(useUser);

@@ -3,7 +3,6 @@ import { render, renderHook, waitFor, act } from "@testing-library/react";
 
 import { useJobPolling } from "@/hooks/useJobPolling";
 import { JOB_STATUS } from "@/helpers/const";
-import { LIBRARY_QUERY_KEY } from "@/hooks/useLibrary";
 import { createWrapper } from "@/helpers/tests/providers";
 
 const invalidateQueries = vi.fn();

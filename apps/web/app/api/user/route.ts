@@ -1,3 +1,4 @@
+import type { CurrentUser } from "@linguastream/contracts";
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/firebase/session";
 
@@ -13,5 +14,5 @@ export async function GET() {
     display_name: user.display_name,
     native_language: user.native_language,
     is_admin: user.is_admin,
-  });
+  } satisfies CurrentUser);
 }
