@@ -48,14 +48,8 @@ next-env.d.ts
 
 apps/web/lib/generated/prisma
 
-# Local ML uploads
-__pycache__/
-linguastream-uploads/
+# logs
 *.log
-ml/logs/
-
-# Meilisearch
-data.ms
 
 # Claude Code: personal settings stay local
 .claude/settings.local.json

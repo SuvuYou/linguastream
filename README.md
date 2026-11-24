@@ -27,32 +27,25 @@ A personal language-learning web app with double subtitles, clickable words, AI 
 - [Architecture](#architecture)
 - [Getting started](#getting-started)
 - [Environment variables](#environment-variables)
-- [Running the supporting services](#running-the-supporting-services)
 - [Testing](#testing)
-- [CI/CD and branching](#cicd-and-branching)
-- [Roadmap](#roadmap)
 
 ---
 
 ## About
 
-LinguaStream is a language-learning platform. You can pick a movie from your Jellyfin server or paste a YouTube link, and watch it with the original subtitles and a translation overlaid at the same time. Click any word to see what it means *in context*, then save it to a flashcard deck. Cards are scheduled with the SM-2 spaced repetition algorithm, and every card keeps a link back to the exact clip it came from.
+LinguaStream is a language-learning platform. You watch YouTube videos with the original subtitles and a translation overlaid at the same time. Click any word to see what it means *in context*, then save it to a flashcard deck. Cards are scheduled with the SM-2 spaced repetition algorithm, and every card keeps a link back to the exact clip it came from.
 
-Because every subtitle line is indexed in Meilisearch, you can also search for any word or phrase and instantly jump to every moment in your library where it was spoken.
+> **Being rebuilt.** The old ingest stack (Jellyfin, Meilisearch, WhisperX, LibreTranslate, DeepL, server-side yt-dlp) has been removed. Adding videos comes back with the browser extension, and library-wide phrase search comes back on PostgreSQL; both are on the roadmap.
 
 ## Features
 
-- **Public library** - a browsable catalog of media synced from a Jellyfin server.
-- **Personal library** - your private content, added via YouTube links.
-- **YouTube integration** - add a video, choose its source language, and pull subtitles from YouTube.
+- **Personal library** - your private YouTube videos. *(Adding new videos is disabled until the browser extension lands.)*
 - **Double subtitles** - original language and translation overlaid on the video, each independently toggleable.
-- **Flexible subtitle sources** - YouTube captions, Jellyfin subtitle files, or local generation with WhisperX.
-- **Flexible translation sources** - YouTube captions, LibreTranslate (self-hosted), or DeepL.
 - **Clickable words** - every word in the subtitles is interactive and opens a word panel with a contextual translation.
 - **AI word profiles** - part of speech, definition, verb/noun forms, lexical family, and collocations, generated on first access and cached.
 - **Flashcard decks** - save words to decks (up to 50 per user, enforced on both client and server).
 - **Spaced repetition** - SM-2 scheduling with Again / Hard / Good / Easy ratings.
-- **PlayPhrase-style search** - find any word or phrase across your entire library and jump to that exact moment in the video.
+- **PlayPhrase-style search** - find any word or phrase across your library and jump to that moment. *(The search UI is there; results return once search is rebuilt on PostgreSQL.)*
 - **Subtitle sidebar** - a collapsible list of all snippets, click to seek, with a local filter.
 
 ## Screenshots
@@ -63,19 +56,6 @@ Because every subtitle line is indexed in Meilisearch, you can also search for a
 | :---: | :---: |
 | ![Watch page with word panel](readme_screenshots/word-definitions.png) | ![Watch page with subtitle search](readme_screenshots/word-search.png) |
 | Click a word to get its translation, definition, lexical family, and collocations. | Filter every subtitle snippet in the video; matches are highlighted and clickable. |
-
-### Adding content
-
-| Configure subtitles |
-| :---: |
-| ![Configure subtitles dialog](readme_screenshots/upload-options.png) |
-| Choose the source language, where source subtitles come from (YouTube or WhisperX), and the translation provider (YouTube, LibreTranslate, or DeepL). |
-
-### Global search
-
-![Global phrase search](readme_screenshots/word-index-search.png)
-
-Search a word or phrase and get every occurrence across your library, with the original line, its translation, the video title, and the timestamp. Click a result to play that exact moment.
 
 ### Decks
 
@@ -88,12 +68,11 @@ Search a word or phrase and get every occurrence across your library, with the o
 
 | Page | Description |
 | --- | --- |
-| **Library** | List of Jellyfin content. Search by title and filter by source and translation language. |
-| **Personal** | Private library showing uploaded content only, with the same search and language filters. |
+| **Personal** | Your library (`/dashboard` redirects here), with search and source/translation language filters. |
 | **Decks** | All decks with name, card count, due count, and language breakdown. |
 | **Deck** | Deck detail with a list of all cards. Filter by source language and search by word. Each item expands to show translation, subtitle context, verb/noun forms, lexical family, collocations. |
 | **Study** | Step 1: pick a source language. Step 2: pick a deck (filtered to decks containing cards in that language). Flip the card to see the translation, subtitle context, clip button, and word profile, then rate your recall. SM-2 schedules the next review. |
-| **Watch** | Media player (Plyr or YouTube IFrame depending on content type) with a two-track subtitle overlay, a collapsible and searchable subtitle sidebar. A global search bar opens a full overlay (`Cmd/Ctrl + K`). |
+| **Watch** | YouTube IFrame player with a two-track subtitle overlay, a collapsible and searchable subtitle sidebar. A global search bar opens a full overlay (`Cmd/Ctrl + K`). |
 
 ## Tech stack
 
@@ -103,23 +82,20 @@ Search a word or phrase and get every occurrence across your library, with the o
 - Tailwind CSS + [shadcn/ui](https://ui.shadcn.com/)
 - [Zustand](https://zustand-demo.pmnd.rs/) for global state and session-level caches
 - [TanStack Query](https://tanstack.com/query) for server state and caching
-- [Plyr](https://plyr.io/) for Jellyfin and upload playback
+- [Plyr](https://plyr.io/) for uploaded videos (kept for when uploads return; no source at the moment)
 - YouTube IFrame API for YouTube content (with a custom subtitle overlay on top)
 
 ### Backend
-- Next.js API routes (no separate server)
+- Next.js API routes
+- [NestJS](https://nestjs.com/) API in `apps/api` (skeleton; routes move there later)
 - [Prisma](https://www.prisma.io/) ORM (v7)
 - [Zod](https://zod.dev/) for schema validation
 
 ### Data
 - PostgreSQL 17 (Docker Compose locally)
-- [Meilisearch](https://www.meilisearch.com/) for full-text subtitle phrase search (runs locally)
 - [Firebase Auth](https://firebase.google.com/docs/auth)
 
 ### Infrastructure and services
-- [Jellyfin](https://jellyfin.org/) as the local media server
-- [WhisperX](https://github.com/m-bain/whisperX) for local subtitle generation (fallback)
-- [LibreTranslate](https://libretranslate.com/) for self-hosted translation
 - Gemini API for word profile generation
 
 ### Testing
@@ -132,9 +108,7 @@ Search a word or phrase and get every occurrence across your library, with the o
 - Node.js 24+ and pnpm (`corepack enable` or `npm install -g pnpm`)
 - Docker (for the local PostgreSQL in `compose.yaml`)
 - A [Firebase](https://console.firebase.google.com/) project with Authentication enabled
-- A running [Jellyfin](https://jellyfin.org/) server with an API key
-- [Meilisearch](https://www.meilisearch.com/docs/learn/self_hosted/getting_started_with_self_hosted_meilisearch) running locally
-- Optional: WhisperX service, LibreTranslate instance
+- A [Gemini](https://ai.google.dev/) API key (word profiles)
 
 ### Installation
 
@@ -164,19 +138,15 @@ The repository is a pnpm + Turborepo monorepo: `apps/web` (Next.js), `apps/api` 
 
 ### First run checklist
 
-1. Sign in with Firebase Auth.
-2. Open **Library** and click **Sync Jellyfin** to import your Jellyfin titles.
-3. Click **Reindex Subtitles** to push subtitle lines into Meilisearch so global search works.
-4. Open **Personal**, click **Add Content**, and paste a YouTube link to try the YouTube flow.
-5. Open any video, click a word, and add it to a deck.
+1. Sign in with Firebase Auth. Your user and a default deck are created on first sign-in.
+2. The local database starts empty, and adding videos is disabled until the browser extension lands, so there is nothing to watch yet on a fresh setup.
 
 ## Environment variables
 
+All of them live in `apps/web/.env.local`; `apps/web/.env.example` lists them.
+
 | Variable | Required | Description |
 | --- | :---: | --- |
-| `JELLYFIN_URL` | Yes | Public URL of your Jellyfin server. |
-| `JELLYFIN_API_KEY` | Yes | API key created in Jellyfin under **Dashboard > API Keys**. |
-| `JELLYFIN_USER_ID` | Yes | ID of the Jellyfin user whose library is synced. |
 | `DATABASE_URL` | Yes | PostgreSQL connection string used by Prisma. Locally: `postgresql://linguastream:linguastream@localhost:5432/linguastream` (the `compose.yaml` database). |
 | `NEXT_PUBLIC_FIREBASE_API_KEY` | Yes | Firebase web app API key (from **Project settings > General**). |
 | `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Yes | Firebase auth domain. |
@@ -187,41 +157,14 @@ The repository is a pnpm + Turborepo monorepo: `apps/web` (Next.js), `apps/api` 
 | `FIREBASE_ADMIN_PROJECT_ID` | Yes | Project ID from your Firebase service account JSON. |
 | `FIREBASE_ADMIN_CLIENT_EMAIL` | Yes | `client_email` from your Firebase service account JSON. |
 | `FIREBASE_ADMIN_PRIVATE_KEY` | Yes | `private_key` from your service account JSON. Wrap it in double quotes and keep the `\n` escapes. |
-| `MEILISEARCH_URL` | Yes | URL of your Meilisearch instance. |
-| `MEILISEARCH_MASTER_KEY` | Yes | Master key your Meilisearch instance was started with. |
-| `WHISPER_SERVICE_URL` | No | URL of your WhisperX service. Needed only for **Generate with WhisperX**. |
-| `LIBRETRANSLATE_URL` | No | URL of your LibreTranslate instance. Needed only for the LibreTranslate provider. |
 | `GEMINI_API_KEY` | Yes | API key for the LLM that generates word profiles. |
-
-## Running the supporting services
-
-Only the services you plan to use are required.
-
-**Meilisearch**
-
-```bash
-docker run -d --name meilisearch -p 7700:7700 \
-  -e MEILI_MASTER_KEY=<your-master-key> \
-  -v meili_data:/meili_data \
-  getmeili/meilisearch:latest
-```
-
-**LibreTranslate**
-
-```bash
-docker run -d --name libretranslate -p 5000:5000 libretranslate/libretranslate
-```
-
-**WhisperX**
-
-Run a WhisperX HTTP service locally and point `WHISPER_SERVICE_URL` at it. It is used as a fallback when a video has no usable subtitles.
 
 ## Testing
 
 ```bash
-# Run unit tests
-npm test
+# Run all tests (every workspace, via Turborepo)
+pnpm test
 
-# Run with coverage (thresholds are enforced)
-npm run test:coverage
+# Run with coverage (web app thresholds are enforced)
+pnpm test:coverage
 ```
