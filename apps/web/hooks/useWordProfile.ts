@@ -1,7 +1,7 @@
 "use client";
 
 import { ActiveWord } from "@/lib/initializations/store";
-import type { WordProfile } from "@prisma/client";
+import type { WordProfile } from "@linguastream/db";
 import { useQuery } from "@tanstack/react-query";
 
 async function fetchWordProfile(

@@ -1,4 +1,4 @@
-import type { User } from "@prisma/client";
+import type { User } from "@linguastream/db";
 import { useQuery } from "@tanstack/react-query";
 
 export function useUser() {

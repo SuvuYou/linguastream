@@ -1,5 +1,5 @@
 import { vi } from "vitest";
-import type { MediaContent } from "@prisma/client";
+import type { MediaContent } from "@linguastream/db";
 import { db } from "@/lib/initializations/db";
 import { JOB_STATUS, YOUTUBE_CONTENT_TYPE } from "@/helpers/const";
 

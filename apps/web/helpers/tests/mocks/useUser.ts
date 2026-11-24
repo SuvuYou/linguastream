@@ -1,6 +1,6 @@
 import { vi } from "vitest";
 import { useUser } from "@/hooks/useUser";
-import type { User } from "@prisma/client";
+import type { User } from "@linguastream/db";
 import type { UseQueryResult } from "@tanstack/react-query";
 
 const createBaseUser = () => ({

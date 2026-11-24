@@ -5,7 +5,7 @@ import {
   fetchAvailableTranslationLanguages,
 } from "./languages";
 import { UNKNOWN_SOURCE_LANGUAGE } from "@/helpers/const";
-import type { MediaContent, SubtitleTrack } from "@prisma/client";
+import type { MediaContent, SubtitleTrack } from "@linguastream/db";
 
 vi.mock("@/lib/initializations/db", () => ({
   db: {

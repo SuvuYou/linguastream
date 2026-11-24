@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
-import type { User } from "@prisma/client";
+import type { User } from "@linguastream/db";
 
 import { GET } from "./route";
 import { db } from "@/lib/initializations/db";

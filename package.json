@@ -12,8 +12,8 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "test:coverage": "turbo run test:coverage",
-    "db:migrate": "pnpm --filter @linguastream/web db:migrate",
-    "db:studio": "pnpm --filter @linguastream/web db:studio"
+    "db:migrate": "pnpm --filter @linguastream/db db:migrate",
+    "db:studio": "pnpm --filter @linguastream/db db:studio"
   },
   "devDependencies": {
     "turbo": "^2.11.13"

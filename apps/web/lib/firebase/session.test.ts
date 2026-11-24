@@ -4,7 +4,7 @@ import { db } from "@/lib/initializations/db";
 import { adminAuth } from "@/lib/initializations/firebase/firebase-admin";
 import { cookies } from "next/headers";
 import { DecodedIdToken } from "firebase-admin/auth";
-import { User } from "@prisma/client";
+import type { User } from "@linguastream/db";
 
 vi.mock("next/headers", () => ({
   cookies: vi.fn(),

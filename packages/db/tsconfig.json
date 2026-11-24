@@ -3,7 +3,9 @@
   "compilerOptions": {
     "module": "nodenext",
     "moduleResolution": "nodenext",
-    "noEmit": true
+    "rootDir": "src",
+    "outDir": "dist",
+    "types": ["node"]
   },
   "include": ["src"]
 }

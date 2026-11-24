@@ -1,4 +1,4 @@
-import type { WordProfile } from "@prisma/client";
+import type { WordProfile } from "@linguastream/db";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 

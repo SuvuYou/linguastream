@@ -1,5 +1,5 @@
 import { vi } from "vitest";
-import type { User } from "@prisma/client";
+import type { User } from "@linguastream/db";
 
 import { getCurrentUser } from "@/lib/firebase/session";
 

@@ -1,20 +1,4 @@
-import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "@prisma/client";
-
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-};
-
-function createPrismaClient() {
-  const adapter = new PrismaPg({
-    connectionString: process.env.DATABASE_URL!,
-  });
-
-  return new PrismaClient({ adapter });
-}
-
-export const db = globalForPrisma.prisma ?? createPrismaClient();
-
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = db;
-}
+// The web app's single entry to the database. The client lives in packages/db;
+// tests mock this path (`vi.mock("@/lib/initializations/db")`). Goes away in B0,
+// when the web app's data calls move to the API.
+export { db } from "@linguastream/db";

@@ -1,5 +1,5 @@
 import { vi } from "vitest";
-import type { SubtitleLine } from "@prisma/client";
+import type { SubtitleLine } from "@linguastream/db";
 import { db } from "@/lib/initializations/db";
 
 const createBaseSubtitleLine = (): SubtitleLine => ({

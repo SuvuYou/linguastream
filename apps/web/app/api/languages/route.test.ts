@@ -5,7 +5,7 @@ import {
   fetchAvailableSourceLanguages,
   fetchAvailableTranslationLanguages,
 } from "@/lib/db-helpers/languages";
-import type { User } from "@prisma/client";
+import type { User } from "@linguastream/db";
 
 vi.mock("@/lib/firebase/session", () => ({
   getCurrentUser: vi.fn(),

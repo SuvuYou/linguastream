@@ -1,4 +1,4 @@
-import type { MediaContent, SubtitleTrack } from "@prisma/client";
+import type { MediaContent, SubtitleTrack } from "@linguastream/db";
 
 export interface MergedContentItem extends MediaContent {
   thumbnailUrl: string;
