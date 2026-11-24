@@ -69,13 +69,11 @@ export default function YouTubePlayer({
     let destroyed = false;
 
     async function init() {
-      const container = iframeContainerRef.current;
-
       await loadYouTubeAPI();
 
       if (destroyed || !iframeContainerRef.current) return;
 
-      playerRef.current = new window.YT.Player(container, {
+      playerRef.current = new window.YT.Player(iframeContainerRef.current, {
         videoId,
         playerVars: {
           autoplay: 0,

@@ -7,6 +7,7 @@ import { useAppStore } from "@/lib/initializations/store";
 import type { SubtitleLine } from "@/hooks/useSubtitleTrack";
 import { useAnimationTick } from "@/hooks/useAnimationTick";
 import Events from "@/events";
+import type Plyr from "plyr";
 
 interface PlayerProps {
   initialTimeMs?: number;

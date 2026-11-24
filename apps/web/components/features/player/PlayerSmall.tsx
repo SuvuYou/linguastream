@@ -6,6 +6,7 @@ import { useAppStore } from "@/lib/initializations/store";
 import { useAnimationTick } from "@/hooks/useAnimationTick";
 import { Button } from "@/components/ui/button";
 import { RotateCcw } from "lucide-react";
+import type Plyr from "plyr";
 
 export interface PlayableMediaItem {
   source_text: string;
