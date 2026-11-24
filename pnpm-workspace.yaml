@@ -1,0 +1,10 @@
+packages:
+  - apps/*
+  - packages/*
+allowBuilds:
+  '@firebase/util': false
+  '@prisma/engines': true
+  '@swc/core': false
+  plyr: false
+  prisma: true
+  protobufjs: false

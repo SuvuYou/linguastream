@@ -6,13 +6,10 @@ on:
 
 jobs:
   test:
-    name: Run tests
+    name: Lint, typecheck and test
     runs-on: ubuntu-latest
 
     env:
-      JELLYFIN_URL: http://localhost
-      JELLYFIN_API_KEY: test
-      JELLYFIN_USER_ID: test
       DATABASE_URL: postgres://test
       FIREBASE_ADMIN_PROJECT_ID: test
       FIREBASE_ADMIN_CLIENT_EMAIL: test
@@ -22,20 +19,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: npm
+          node-version: 24
+          cache: pnpm
 
+      # postinstall in apps/web runs `prisma generate`
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
-      - name: Lint
-        run: npm run lint
-      - name: Generate DB types
-        run: npx prisma generate
-      - name: Typecheck
-        run: npm run typecheck
-      - name: Coverage
-        run: npm run test:coverage
+      - name: Lint and typecheck
+        run: pnpm turbo run lint typecheck
+
+      - name: Test (web with coverage thresholds)
+        run: pnpm turbo run test:coverage --filter=@linguastream/web
+
+      - name: Test (other workspaces)
+        run: pnpm turbo run test --filter=!@linguastream/web
