@@ -9,11 +9,27 @@ jobs:
     name: Lint, typecheck and test
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: linguastream_user
+          POSTGRES_PASSWORD: linguastream_pass
+          POSTGRES_DB: linguastream_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U linguastream_user -d linguastream_db"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
     env:
       DATABASE_URL: postgres://test
       FIREBASE_ADMIN_PROJECT_ID: test
       FIREBASE_ADMIN_CLIENT_EMAIL: test
       FIREBASE_ADMIN_PRIVATE_KEY: test
+      TEST_DATABASE_URL: postgresql://linguastream_user:linguastream_pass@localhost:5432/linguastream_db_test
 
     steps:
       - name: Checkout
@@ -40,3 +56,6 @@ jobs:
 
       - name: Test (other workspaces)
         run: pnpm turbo run test --filter=!@linguastream/web
+
+      - name: Integration tests (real Postgres)
+        run: pnpm test:integration

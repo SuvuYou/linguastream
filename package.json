@@ -12,6 +12,7 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "test:coverage": "turbo run test:coverage",
+    "test:integration": "turbo run test:integration",
     "db:migrate": "pnpm --filter @linguastream/db db:migrate",
     "db:studio": "pnpm --filter @linguastream/db db:studio"
   },

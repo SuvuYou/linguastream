@@ -2,15 +2,15 @@ services:
   postgres:
     image: postgres:17
     environment:
-      POSTGRES_USER: linguastream
-      POSTGRES_PASSWORD: linguastream
-      POSTGRES_DB: linguastream
+      POSTGRES_USER: linguastream_user
+      POSTGRES_PASSWORD: linguastream_pass
+      POSTGRES_DB: linguastream_db
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U linguastream -d linguastream"]
+      test: ["CMD-SHELL", "pg_isready -U linguastream_user -d linguastream_db"]
       interval: 5s
       timeout: 5s
       retries: 10

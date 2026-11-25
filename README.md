@@ -148,7 +148,7 @@ The repository is a pnpm + Turborepo monorepo: `apps/web` (Next.js), `apps/api` 
 
 | Variable | Required | Description |
 | --- | :---: | --- |
-| `DATABASE_URL` | Yes | PostgreSQL connection string used by Prisma. Locally: `postgresql://linguastream:linguastream@localhost:5432/linguastream` (the `compose.yaml` database). |
+| `DATABASE_URL` | Yes | PostgreSQL connection string used by Prisma. Locally: `postgresql://linguastream_user:linguastream_pass@localhost:5432/linguastream_db` (the `compose.yaml` database). |
 | `NEXT_PUBLIC_FIREBASE_API_KEY` | Yes | Firebase web app API key (from **Project settings > General**). |
 | `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Yes | Firebase auth domain. |
 | `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | Yes | Firebase project ID. |
