@@ -48,10 +48,7 @@ export default function SaveToDeck({
       ) : (
         <div className="flex items-center gap-2">
           <Select value={selectedDeckId} onValueChange={onSelectDeckId}>
-            <SelectTrigger
-              className="flex-1 text-sm p-2 h-auto"
-              variant="outline"
-            >
+            <SelectTrigger className="flex-1 text-sm p-2 h-auto">
               <SelectValue placeholder="Select deck" />
             </SelectTrigger>
             <SelectContent>

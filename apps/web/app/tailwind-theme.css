@@ -1,9 +1,11 @@
 @theme inline {
+  --color-panel: var(--panel);
   --color-raised: var(--raised);
   --color-raised-2: var(--raised-2);
   --color-inset: var(--inset);
   --color-text-2: var(--text-2);
   --color-text-3: var(--text-3);
+  --color-control-off: var(--control-off);
   --color-unknown: var(--unknown);
   --color-unknown-ink: var(--unknown-ink);
   --color-learning: var(--learning);
@@ -34,6 +36,8 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);

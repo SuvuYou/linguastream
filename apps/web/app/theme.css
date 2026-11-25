@@ -4,7 +4,7 @@
   --background: #141416;
   --foreground: #f4f4f5;
 
-  --card: #1a1a1d;
+  --card: #1e1e22;
   --card-foreground: #f4f4f5;
 
   --popover: #1a1a1d;
@@ -25,6 +25,9 @@
   --destructive: #ff8a80;
   --destructive-foreground: #141416;
 
+  --warning: #f2b880;
+  --warning-foreground: #141416;
+
   --border: #26262b;
   --input: #26262b;
   --ring: #83bae7;
@@ -38,11 +41,13 @@
   --sidebar-border: #26262b;
   --sidebar-ring: #83bae7;
 
+  --panel: #1a1a1d;
   --raised: #1e1e22;
   --raised-2: #2a2a2f;
   --inset: #111113;
   --text-2: #b4b4bb;
   --text-3: #9a9aa3;
+  --control-off: #3a3a40;
 
   --unknown: #ffb4a3;
   --unknown-ink: #2e201d;
