@@ -107,7 +107,9 @@ Language-learning web app plus a Chrome extension: YouTube videos with dual subt
 - Queries Prisma can't express well (lemma arrays, full-text search, bulk imports) use raw SQL, kept in one place per module (D-085).
 - Every API route: authenticate (→ 401), validate input with Zod, keep DB queries in the data layer (`apps/web/lib/db-helpers/` today).
 - Await route `params` (Next 16).
-- New code needs tests; keep coverage thresholds passing.
+- New code needs tests; keep coverage thresholds passing. New and changed tests must type-check (`tsc -p tsconfig.json`), even though the old ones don't yet.
+- Frontend calls to the API go through `apiRequest` (`apps/web/lib/api/client.ts`) with a route contract from `@linguastream/contracts`, never a raw `fetch`. Write the contract before the screen (D-087).
+- Mocks: `mockRoute(contract, fixture)` in `apps/web/mocks/handlers/`, one group per area, registered in `handlers/index.ts`. Fixtures are invented data; real spike data goes in the gitignored `mocks/fixtures/local/` only.
 - Never put API keys in URLs or responses sent to the browser.
 - Don't run `npm audit fix --force` or `pnpm audit --fix`.
 - Don't restyle components unless the task is about styling (a redesign is planned).

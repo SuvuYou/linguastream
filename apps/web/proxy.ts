@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isGroupMocked } from "@/mocks/config";
 
 export async function proxy(req: NextRequest) {
   const session = req.cookies.get("session")?.value;
   const isAuthPage = req.nextUrl.pathname.startsWith("/auth");
 
-  if (!session && !isAuthPage) {
+  const isMockSignedIn = isGroupMocked("user");
+
+  if (!session && !isAuthPage && !isMockSignedIn) {
     return NextResponse.redirect(new URL("/auth/signin", req.url));
   }
 

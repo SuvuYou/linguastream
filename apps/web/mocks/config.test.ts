@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isMockingEnabled, parseMockSetting } from "./config";
+import { isGroupMocked, isMockingEnabled, parseMockSetting } from "./config";
 
 describe("parseMockSetting", () => {
   it("is empty when unset", () => {
@@ -30,5 +30,20 @@ describe("isMockingEnabled", () => {
   it("is never on outside development", () => {
     expect(isMockingEnabled("production", "all")).toBe(false);
     expect(isMockingEnabled("test", "all")).toBe(false);
+  });
+});
+
+describe("isGroupMocked", () => {
+  it("is on for a listed group or all, in development", () => {
+    expect(isGroupMocked("user", "development", "user,watch")).toBe(true);
+    expect(isGroupMocked("user", "development", "all")).toBe(true);
+  });
+
+  it("is off for groups that aren't listed", () => {
+    expect(isGroupMocked("user", "development", "watch")).toBe(false);
+  });
+
+  it("is never on outside development", () => {
+    expect(isGroupMocked("user", "production", "all")).toBe(false);
   });
 });
