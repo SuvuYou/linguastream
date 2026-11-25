@@ -11,8 +11,8 @@ export async function GET() {
   return NextResponse.json({
     id: user.id,
     email: user.email,
-    display_name: user.display_name,
-    native_language: user.native_language,
-    is_admin: user.is_admin,
+    display_name: user.displayName,
+    native_language: user.nativeLanguage,
+    is_admin: user.isAdmin,
   } satisfies CurrentUser);
 }

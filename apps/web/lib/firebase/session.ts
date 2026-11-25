@@ -12,7 +12,7 @@ export async function getCurrentUser(): Promise<User | null> {
   try {
     const decoded = await adminAuth.verifySessionCookie(token, true);
     const user = await db.user.findUnique({
-      where: { firebase_uid: decoded.uid },
+      where: { firebaseUid: decoded.uid },
     });
     return user;
   } catch {

@@ -1,7 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
+// Target data model: docs/changes/006-data-model/spec.md (D-092–D-096).
+// Models and fields in camelCase, tables and columns in snake_case (D-096).
 
 generator client {
   provider = "prisma-client-js"
@@ -11,180 +9,303 @@ datasource db {
   provider = "postgresql"
 }
 
-enum JobStatus {
-  pending
-  running
-  done
-  error
-}
-
-enum AcquisitionMethod {
-  upload
-  whisperx
-  youtube
-}
+// ── Users and videos ────────────────────────────────────────────────
 
 model User {
-  id              String   @id @default(uuid())
-  firebase_uid    String   @unique
-  email           String   @unique
-  display_name    String?
-  native_language String
-  is_admin        Boolean  @default(false)
-  created_at      DateTime @default(now())
+  id               String   @id @default(uuid(7)) @db.Uuid
+  firebaseUid      String   @unique @map("firebase_uid")
+  email            String   @unique
+  displayName      String?  @map("display_name")
+  nativeLanguage   String   @map("native_language")
+  learningLanguage String   @map("learning_language")
+  isAdmin          Boolean  @default(false) @map("is_admin")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  media_content MediaContent[]
-  decks         Deck[]
-  cards         Card[]
-  study_sessions StudySession[]
+  videos          Video[]
+  vocabularyWords VocabularyWord[]
+  decks           Deck[]
+
+  @@map("users")
 }
 
-model MediaContent {
-  id               String   @id @default(uuid())
-  user_id          String
-  title            String
-  type             String
-  source_language  String
-  source_subtitle_acquisition_method  AcquisitionMethod?
-  jellyfin_id      String?
-  file_path        String?
-  youtube_video_id String?
-  job_status       JobStatus?
-  job_progress     Int?     // 0-100
-  job_logs         String?  // absolute path to log file on disk
-  created_at       DateTime @default(now())
+model Video {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  youtubeVideoId String   @map("youtube_video_id")
+  title          String
+  channelName    String?  @map("channel_name")
+  durationMs     Int?     @map("duration_ms")
+  language       String
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  user             User           @relation(fields: [user_id], references: [id])
-  subtitle_tracks  SubtitleTrack[]
-  subtitle_lines   SubtitleLine[]
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tracks      Track[]
+  lemmaCounts VideoLemmaCount[]
+  connections Connection[]
+
+  @@unique([userId, youtubeVideoId])
+  @@map("videos")
 }
 
-model SubtitleTrack {
-  id               String   @id @default(uuid())
-  media_content_id String
-  language         String
-  is_source        Boolean
-  created_at       DateTime @default(now())
+enum ProcessingStatus {
+  pending
+  processing
+  ready
+  failed
 
-  media_content  MediaContent   @relation(fields: [media_content_id], references: [id], onDelete: Cascade)
-  subtitle_lines SubtitleLine[]
-
-  @@unique([media_content_id, language])
+  @@map("processing_status")
 }
 
-model SubtitleLine {
-  id                String @id @default(uuid())
-  media_content_id  String
-  subtitle_track_id String
-  index             Int
-  start_ms          Int
-  end_ms            Int
-  text              String
+model Track {
+  id                String           @id @default(uuid(7)) @db.Uuid
+  videoId           String           @map("video_id") @db.Uuid
+  youtubeTrackId    String           @map("youtube_track_id")
+  language          String
+  isAutoCaptions    Boolean          @map("is_auto_captions")
+  rawJson3          Bytes            @map("raw_json3")
+  contentHash       String           @map("content_hash")
+  processingVersion Int              @map("processing_version")
+  status            ProcessingStatus @default(pending)
+  progress          Int              @default(0)
+  errorCode         String?          @map("error_code")
+  createdAt         DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  processedAt       DateTime?        @map("processed_at") @db.Timestamptz(6)
 
-  media_content  MediaContent  @relation(fields: [media_content_id], references: [id], onDelete: Cascade)
-  subtitle_track SubtitleTrack @relation(fields: [subtitle_track_id], references: [id], onDelete: Cascade)
+  video        Video              @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  lines        Line[]
+  translations TrackTranslation[]
+
+  @@unique([videoId, youtubeTrackId, contentHash, processingVersion])
+  @@map("tracks")
+}
+
+model Line {
+  id      String   @id @default(uuid(7)) @db.Uuid
+  trackId String   @map("track_id") @db.Uuid
+  index   Int
+  startMs Int      @map("start_ms")
+  endMs   Int      @map("end_ms")
+  text    String
+  rawText String   @map("raw_text")
+  words   Json
+  lemmas  String[] @default([])
+
+  track        Track             @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  translations LineTranslation[]
+  connections  Connection[]
+
+  @@unique([trackId, index])
+  @@map("lines")
+}
+
+model TrackTranslation {
+  id        String           @id @default(uuid(7)) @db.Uuid
+  trackId   String           @map("track_id") @db.Uuid
+  language  String
+  status    ProcessingStatus @default(pending)
+  progress  Int              @default(0)
+  errorCode String?          @map("error_code")
+  createdAt DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  track Track             @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  lines LineTranslation[]
+
+  @@unique([trackId, language])
+  @@map("track_translations")
+}
+
+model LineTranslation {
+  translationId String @map("translation_id") @db.Uuid
+  lineId        String @map("line_id") @db.Uuid
+  text          String
+
+  translation TrackTranslation @relation(fields: [translationId], references: [id], onDelete: Cascade)
+  line        Line             @relation(fields: [lineId], references: [id], onDelete: Cascade)
+
+  @@id([translationId, lineId])
+  @@map("line_translations")
+}
+
+model VideoLemmaCount {
+  videoId String @map("video_id") @db.Uuid
+  lemma   String
+  count   Int
+
+  video Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@id([videoId, lemma])
+  @@map("video_lemma_counts")
+}
+
+// ── Vocabulary and review ───────────────────────────────────────────
+
+enum WordStatus {
+  unknown
+  learning
+  known
+  ignored
+
+  @@map("word_status")
+}
+
+enum StatusSource {
+  manual
+  placement
+  save
+
+  @@map("status_source")
+}
+
+model VocabularyWord {
+  id             String       @id @default(uuid(7)) @db.Uuid
+  userId         String       @map("user_id") @db.Uuid
+  language       String
+  lemma          String
+  status         WordStatus
+  statusSource   StatusSource @map("status_source")
+  savedAt        DateTime?    @map("saved_at") @db.Timestamptz(6)
+  ownTranslation String?      @map("own_translation")
+  note           String?
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  connections Connection[]
+  card        Card?
+  decks       DeckWord[]
+
+  @@unique([userId, language, lemma])
+  @@map("vocabulary_words")
+}
+
+model Connection {
+  id             String   @id @default(uuid(7)) @db.Uuid
+  wordId         String   @map("word_id") @db.Uuid
+  videoId        String?  @map("video_id") @db.Uuid
+  lineId         String?  @map("line_id") @db.Uuid
+  youtubeVideoId String   @map("youtube_video_id")
+  videoTitle     String   @map("video_title")
+  startMs        Int      @map("start_ms")
+  endMs          Int      @map("end_ms")
+  sentence       String
+  translation    String?
+  pos            String?
+  meaning        Json?
+  grammar        Json     @default("{}")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  word  VocabularyWord @relation(fields: [wordId], references: [id], onDelete: Cascade)
+  video Video?         @relation(fields: [videoId], references: [id], onDelete: SetNull)
+  line  Line?          @relation(fields: [lineId], references: [id], onDelete: SetNull)
+
+  @@map("connections")
 }
 
 model Deck {
-  id         String   @id @default(uuid())
-  user_id    String
-  name       String
-  is_default Boolean  @default(false)
-  created_at DateTime @default(now())
+  id          String   @id @default(uuid(7)) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  name        String
+  description String?
+  icon        String?
+  color       String?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  user  User   @relation(fields: [user_id], references: [id])
-  cards Card[]
-  study_sessions StudySession[]
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  words DeckWord[]
+
+  @@unique([userId, name])
+  @@map("decks")
 }
 
-model WordProfile {
-  id              String   @id @default(uuid())
-  word            String
-  lemma           String
-  source_language String
+model DeckWord {
+  deckId  String   @map("deck_id") @db.Uuid
+  wordId  String   @map("word_id") @db.Uuid
+  addedAt DateTime @default(now()) @map("added_at") @db.Timestamptz(6)
 
-  part_of_speech  String
-  forms           Json
+  deck Deck           @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  word VocabularyWord @relation(fields: [wordId], references: [id], onDelete: Cascade)
 
-  lexical_family  Json
-  collocations    Json
+  @@id([deckId, wordId])
+  @@map("deck_words")
+}
 
-  generated_at    DateTime @default(now())
+enum CardState {
+  new
+  learning
+  review
+  relearning
 
-  cards Card[]
-
-  @@unique([word, source_language])
+  @@map("card_state")
 }
 
 model Card {
-  id                      String   @id @default(uuid())
-  user_id                 String
-  deck_id                 String
-  word                    String
-  lemma                   String
-  source_language         String
-  translation_language    String
-  word_translation        String
-  context_text            String
-  context_translation     String?
-  media_content_id        String
-  start_ms                Int
-  end_ms                  Int
-  contextual_definition   String?
-  next_review             DateTime @default(now())
-  interval_days           Int      @default(1)
-  ease_factor             Float    @default(2.5)
-  repetitions             Int      @default(0)
-  word_profile_id         String?
-  created_at              DateTime @default(now())
+  id            String    @id @default(uuid(7)) @db.Uuid
+  wordId        String    @unique @map("word_id") @db.Uuid
+  due           DateTime  @default(now()) @db.Timestamptz(6)
+  stability     Float     @default(0)
+  difficulty    Float     @default(0)
+  scheduledDays Int       @default(0) @map("scheduled_days")
+  learningSteps Int       @default(0) @map("learning_steps")
+  reps          Int       @default(0)
+  lapses        Int       @default(0)
+  state         CardState @default(new)
+  lastReview    DateTime? @map("last_review") @db.Timestamptz(6)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  user         User         @relation(fields: [user_id], references: [id])
-  deck         Deck         @relation(fields: [deck_id], references: [id])
-  word_profile WordProfile? @relation(fields: [word_profile_id], references: [id])
-  study_session_cards StudySessionCard[]
+  word       VocabularyWord @relation(fields: [wordId], references: [id], onDelete: Cascade)
+  reviewLogs ReviewLog[]
+
+  @@map("cards")
 }
 
-model StudySession {
-  id         String   @id @default(uuid())
+model ReviewLog {
+  id          String   @id @default(uuid(7)) @db.Uuid
+  cardId      String   @map("card_id") @db.Uuid
+  rating      Int      @db.SmallInt
+  stateBefore Json     @map("state_before")
+  reviewedAt  DateTime @default(now()) @map("reviewed_at") @db.Timestamptz(6)
+  durationMs  Int?     @map("duration_ms")
 
-  user_id    String
-  deck_id    String
-  source_language  String
+  card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
 
-  total_cards Int
-  created_at DateTime @default(now())
-  expires_at DateTime
-  completed_at DateTime?
-
-  reviewed_cards Int @default(0)
-
-  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  deck Deck @relation(fields: [deck_id], references: [id], onDelete: Cascade)
-
-  cards StudySessionCard[]
-
-  @@index([user_id])
-  @@index([deck_id])
-  @@index([created_at])
-  @@index([expires_at])
+  @@map("review_logs")
 }
 
-model StudySessionCard {
-  id String @id @default(uuid())
+// ── Dictionary (shared, imported in B3; spike 004) ──────────────────
+// No relations to user data: words are lemma strings, and some lemmas
+// are not in the dictionary (Q-40).
 
-  session_id String
-  card_id    String
+model DictionaryEntry {
+  id         Int      @id @default(autoincrement())
+  language   String
+  word       String
+  pos        String
+  gender     String?
+  plural     String?
+  flags      String[] @default([])
+  senses     Json
+  senseCount Int      @map("sense_count")
 
-  position Int
+  @@map("dictionary_entries")
+}
 
-  reviewed Boolean @default(false)
+model DictionaryForm {
+  id       Int      @id @default(autoincrement())
+  language String
+  form     String
+  lemma    String
+  pos      String
+  tags     String[] @default([])
 
-  session StudySession @relation(fields: [session_id], references: [id], onDelete: Cascade)
-  card    Card         @relation(fields: [card_id], references: [id], onDelete: Cascade)
+  @@map("dictionary_forms")
+}
 
-  @@unique([session_id, position])
-  @@unique([session_id, card_id])
+model LemmaFrequency {
+  language String
+  word     String
+  count    BigInt
+  rank     Int
 
-  @@index([session_id, position])
-  @@index([card_id])
+  @@id([language, word])
+  @@map("lemma_frequencies")
 }

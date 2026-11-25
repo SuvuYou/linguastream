@@ -5,12 +5,13 @@ import { getCurrentUser } from "@/lib/firebase/session";
 
 const createBaseUser = () => ({
   id: "id",
-  firebase_uid: "fuid",
+  firebaseUid: "fuid",
   email: "email@gmail.com",
-  display_name: "Name",
-  native_language: "en",
-  is_admin: false,
-  created_at: new Date(),
+  displayName: "Name",
+  nativeLanguage: "en",
+  learningLanguage: "de",
+  isAdmin: false,
+  createdAt: new Date(),
 });
 
 const createBaseUserResponse = () =>
@@ -21,7 +22,7 @@ const createBaseUserResponse = () =>
 const createAdminUserResponse = () =>
   ({
     ...createBaseUser(),
-    is_admin: true,
+    isAdmin: true,
   }) as User;
 
 const mockedGetCurrentUser = vi.mocked(getCurrentUser);

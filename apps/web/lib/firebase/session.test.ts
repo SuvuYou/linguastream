@@ -76,14 +76,14 @@ describe("getCurrentUser", () => {
 
     mockedDb.user.findUnique.mockResolvedValue({
       id: "user-1",
-      firebase_uid: "firebase-123",
+      firebaseUid: "firebase-123",
     } as User);
 
     const result = await getCurrentUser();
 
     expect(result).toEqual({
       id: "user-1",
-      firebase_uid: "firebase-123",
+      firebaseUid: "firebase-123",
     });
   });
 });

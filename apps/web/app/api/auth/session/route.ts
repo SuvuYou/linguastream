@@ -8,28 +8,16 @@ export async function POST(req: NextRequest) {
 
     const decoded = await adminAuth.verifyIdToken(idToken);
 
-    const user = await db.user.upsert({
-      where: { firebase_uid: decoded.uid },
+    await db.user.upsert({
+      where: { firebaseUid: decoded.uid },
       update: { email: decoded.email ?? "" },
       create: {
-        firebase_uid: decoded.uid,
+        firebaseUid: decoded.uid,
         email: decoded.email ?? "",
-        native_language: "en",
+        nativeLanguage: "en",
+        learningLanguage: "de",
       },
-      select: { id: true, is_admin: true },
     });
-
-    const deckCount = await db.deck.count({ where: { user_id: user.id } });
-
-    if (deckCount === 0) {
-      await db.deck.create({
-        data: {
-          user_id: user.id,
-          name: "Default",
-          is_default: true,
-        },
-      });
-    }
 
     const expiresIn = 60 * 60 * 24 * 14 * 1000;
     const sessionCookie = await adminAuth.createSessionCookie(idToken, {

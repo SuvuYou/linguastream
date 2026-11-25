@@ -1,4 +1,4 @@
-import type { WordProfile } from "@linguastream/db";
+import type { WordProfile } from "@/types";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 

@@ -26,9 +26,9 @@ describe("GET api/user", () => {
     mockedGetCurrentUser.mockResolvedValue({
       id: "u1",
       email: "test@example.com",
-      display_name: "John",
-      native_language: "en",
-      is_admin: true,
+      displayName: "John",
+      nativeLanguage: "en",
+      isAdmin: true,
     } as User);
 
     const res = await GET();
