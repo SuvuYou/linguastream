@@ -78,6 +78,16 @@ import {
 } from "@/components/ui/item";
 import { Kbd } from "@/components/ui/kbd";
 import { Label } from "@/components/ui/label";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationSummary,
+} from "@/components/ui/pagination";
 import { Progress } from "@/components/ui/progress";
 import {
   Select,
@@ -154,6 +164,7 @@ const SECTIONS = [
   ["choices", "Choice controls"],
   ["tabs", "Tabs"],
   ["badges", "Badges"],
+  ["pagination", "Pagination"],
   ["surfaces", "Surfaces"],
   ["floating", "Floating layers"],
 ] as const;
@@ -172,6 +183,58 @@ const SWATCHES = [
   ["bg-destructive", "destructive"],
   ["bg-warning", "warning"],
 ] as const;
+
+function PagerDemo() {
+  const [page, setPage] = React.useState(2);
+  const pageCount = 6;
+  const pages: (number | "…")[] = [1, 2, 3, "…", 6];
+  const from = (page - 1) * 25 + 1;
+  const to = Math.min(page * 25, 128);
+
+  return (
+    <Pagination aria-label="Pages">
+      <PaginationSummary>
+        <b>
+          {from}–{to}
+        </b>{" "}
+        of <b>128</b> words
+      </PaginationSummary>
+      <PaginationContent>
+        <PaginationItem>
+          <PaginationPrevious
+            href="#pagination"
+            aria-disabled={page === 1}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+          />
+        </PaginationItem>
+        {pages.map((p, i) =>
+          p === "…" ? (
+            <PaginationItem key={`gap-${i}`}>
+              <PaginationEllipsis />
+            </PaginationItem>
+          ) : (
+            <PaginationItem key={p}>
+              <PaginationLink
+                href="#pagination"
+                isActive={p === page}
+                onClick={() => setPage(p)}
+              >
+                {p}
+              </PaginationLink>
+            </PaginationItem>
+          ),
+        )}
+        <PaginationItem>
+          <PaginationNext
+            href="#pagination"
+            aria-disabled={page === pageCount}
+            onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
+          />
+        </PaginationItem>
+      </PaginationContent>
+    </Pagination>
+  );
+}
 
 export default function ComponentShowcase() {
   const [volume, setVolume] = React.useState([80]);
@@ -495,6 +558,27 @@ export default function ComponentShowcase() {
             <Kbd>⌘K</Kbd>
             <Kbd>Esc</Kbd>
           </Row>
+        </Section>
+
+        <Section id="pagination" title="Pagination">
+          <PagerDemo />
+          <Separator />
+          <div className="max-w-xs">
+            <Pagination aria-label="Pages, phone width">
+              <PaginationContent className="w-full justify-between">
+                <PaginationItem>
+                  <PaginationPrevious href="#pagination" />
+                </PaginationItem>
+                <PaginationItem className="text-[13px] text-text-2">
+                  Page <b className="font-mono font-normal">2</b>{" "}
+                  of <b className="font-mono font-normal">6</b>
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationNext href="#pagination" />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
         </Section>
 
         <Section id="surfaces" title="Surfaces">
