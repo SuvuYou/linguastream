@@ -58,3 +58,7 @@ apps/web/lib/generated/prisma
 
 # Knowledge base lives on its own branch (feature/docs)
 /docs
+
+#Impeccable
+PRODUCT.md
+design/
