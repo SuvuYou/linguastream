@@ -55,7 +55,7 @@ export default function PersonalCard({ item }: { item: PersonalItem }) {
         </div>
         <div className="w-full pb-2">
           <div
-            className="h-0.5 bg-vibrant transition-all duration-500"
+            className="h-0.5 bg-primary transition-all duration-500"
             style={{ width: `${jobState.progress}%` }}
           />
         </div>

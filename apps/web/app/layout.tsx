@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { JetBrains_Mono, Onest } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/layout/Providers";
 import { cn } from "@/lib/utils";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const onest = Onest({
+  variable: "--font-onest",
+  subsets: ["latin", "cyrillic"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
+  subsets: ["latin", "cyrillic"],
 });
 
 export const metadata: Metadata = {
@@ -31,8 +31,8 @@ export default function RootLayout({
         "dark",
         "h-full",
         "antialiased",
-        geistSans.variable,
-        geistMono.variable,
+        onest.variable,
+        jetbrainsMono.variable,
       )}
     >
       <body>

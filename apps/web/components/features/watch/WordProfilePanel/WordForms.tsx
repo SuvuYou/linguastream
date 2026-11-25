@@ -8,7 +8,7 @@ export default function WordForms({ wordForms }: Props) {
   return (
     <>
       {Object.keys(wordForms).length > 0 && (
-        <div className="pl-4 border-l-2 border-vibrant">
+        <div className="pl-4 border-l-2 border-border">
           <div className="text-base text-primary-foreground uppercase tracking-wider mb-2">
             Forms
           </div>

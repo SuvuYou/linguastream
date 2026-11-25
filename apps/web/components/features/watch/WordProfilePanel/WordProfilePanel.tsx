@@ -80,7 +80,7 @@ export default function WordProfilePanel() {
         />
 
         {wordProfile.isLoading ? (
-          <div className="text-sm text-primary-foreground animate-pulse pl-4 border-l-2 border-contrast">
+          <div className="text-sm text-primary-foreground animate-pulse pl-4 border-l-2 border-border">
             Loading profile...
           </div>
         ) : wordProfile.data ? (

@@ -150,7 +150,7 @@ export default function CardAccordionItem({ card, cardSelection }: Props) {
           )}
 
           <div className="flex flex-col gap-3 ">
-            <div className="border-l-2 border-contrast pl-4">
+            <div className="border-l-2 border-border pl-4">
               <div className="text-base text-primary-foreground uppercase tracking-wider mb-2">
                 Context
               </div>
@@ -167,7 +167,7 @@ export default function CardAccordionItem({ card, cardSelection }: Props) {
             </div>
 
             {card.streamUrl && (
-              <div className="border-l-2 border-contrast pl-4">
+              <div className="border-l-2 border-border pl-4">
                 <div className="w-full bg-black aspect-video">
                   <PlayerSmall
                     streamUrl={card.streamUrl}
@@ -177,7 +177,7 @@ export default function CardAccordionItem({ card, cardSelection }: Props) {
               </div>
             )}
             {card.videoId && (
-              <div className="border-l-2 border-contrast pl-4">
+              <div className="border-l-2 border-border pl-4">
                 <div className="w-full bg-black aspect-video">
                   <YouTubePlayerSmall
                     videoId={card.videoId}
@@ -203,7 +203,7 @@ function highlightWord(text: string, word: string) {
     regex.test(part) ? (
       <mark
         key={index}
-        className="bg-vibrant/75 text-primary-foreground rounded px-1"
+        className="bg-primary text-primary-foreground rounded-xs px-1"
       >
         {part}
       </mark>

@@ -26,7 +26,7 @@ function highlight(text: string, q: string) {
   return (
     <span>
       {text.slice(0, idx)}
-      <mark className="bg-highlight/50 p-1 rounded-[6px] text-primary-foreground">
+      <mark className="bg-primary/35 px-0.5 rounded-xs text-foreground">
         {text.slice(idx, idx + q.length)}
       </mark>
       {text.slice(idx + q.length)}

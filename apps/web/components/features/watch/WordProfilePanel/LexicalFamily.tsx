@@ -11,7 +11,7 @@ export default function LexicalFamily({ lexicalFamily }: Props) {
   return (
     <>
       {lexicalFamily.length > 0 && (
-        <div className="pl-4 border-l-2 border-contrast">
+        <div className="pl-4 border-l-2 border-border">
           <div className="text-base text-primary-foreground uppercase tracking-wider mb-2">
             Lexical Family
           </div>
