@@ -19,26 +19,51 @@ import type {
 import { MOCK_VIDEO_IDS, mockVideos } from "@/mocks/fixtures/watch";
 import WatchScreen from "./WatchScreen";
 
+const api = {
+  preferences: {
+    subtitle_visibility: { original: "show", translation: "show" },
+  },
+  failPreferences: false,
+};
+
 function stubApi() {
-  const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
-    const url = new URL(String(input), "http://localhost");
-    const match = /^\/api\/videos\/([^/]+)(\/lines)?$/.exec(url.pathname);
-    const entry = match ? mockVideos[match[1]!] : undefined;
-    if (!entry)
-      return new Response(JSON.stringify({ error: "Not found" }), {
-        status: 404,
+  const fetchMock = vi.fn(
+    async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = new URL(String(input), "http://localhost");
+      if (url.pathname === "/api/preferences") {
+        if (init?.method === "PATCH") {
+          if (api.failPreferences)
+            return new Response(JSON.stringify({ error: "boom" }), {
+              status: 500,
+            });
+          const change = JSON.parse(String(init.body));
+          api.preferences = {
+            subtitle_visibility: {
+              ...api.preferences.subtitle_visibility,
+              ...change.subtitle_visibility,
+            },
+          };
+        }
+        return new Response(JSON.stringify(api.preferences), { status: 200 });
+      }
+      const match = /^\/api\/videos\/([^/]+)(\/lines)?$/.exec(url.pathname);
+      const entry = match ? mockVideos[match[1]!] : undefined;
+      if (!entry)
+        return new Response(JSON.stringify({ error: "Not found" }), {
+          status: 404,
+        });
+      if (!match![2])
+        return new Response(JSON.stringify(entry.video), { status: 200 });
+      const from = Number(url.searchParams.get("from_ms"));
+      const to = Number(url.searchParams.get("to_ms"));
+      const lines = entry.lines.filter(
+        (l) => l.start_ms >= from && l.start_ms < to,
+      );
+      return new Response(JSON.stringify({ from_ms: from, to_ms: to, lines }), {
+        status: 200,
       });
-    if (!match![2])
-      return new Response(JSON.stringify(entry.video), { status: 200 });
-    const from = Number(url.searchParams.get("from_ms"));
-    const to = Number(url.searchParams.get("to_ms"));
-    const lines = entry.lines.filter(
-      (l) => l.start_ms >= from && l.start_ms < to,
-    );
-    return new Response(JSON.stringify({ from_ms: from, to_ms: to, lines }), {
-      status: 200,
-    });
-  });
+    },
+  );
   vi.stubGlobal("fetch", fetchMock);
   return fetchMock;
 }
@@ -88,6 +113,10 @@ const firstLine = async (text: string) =>
   (await (await transcript()).findAllByText(text))[0]!;
 
 beforeEach(() => {
+  api.preferences = {
+    subtitle_visibility: { original: "show", translation: "show" },
+  };
+  api.failPreferences = false;
   Element.prototype.scrollIntoView = vi.fn();
   vi.stubGlobal(
     "ResizeObserver",
@@ -451,6 +480,124 @@ describe("WatchScreen", () => {
           panel.queryByRole("button", { name: "Back to current line" }),
         ).toBeNull(),
       );
+    });
+  });
+
+  describe("subtitle visibility", () => {
+    const first = mockVideos[MOCK_VIDEO_IDS.normal]!.lines[0]!;
+    const video = () => screen.getByRole("region", { name: "Video" });
+
+    async function openMenu() {
+      renderWatch(MOCK_VIDEO_IDS.normal, fakePlayer(), first.start_ms + 100);
+      await firstLine(first.text);
+      const trigger = screen.getByRole("button", {
+        name: "Subtitles: show, blur or hide each track",
+      });
+      await waitFor(() => expect(trigger).toBeEnabled());
+      const user = userEvent.setup();
+      await user.click(trigger);
+      return {
+        user,
+        menu: within(
+          await screen.findByRole("dialog", { name: "Subtitle visibility" }),
+        ),
+      };
+    }
+
+    it("hides a track on the video and in the transcript and saves it", async () => {
+      const { user, menu } = await openMenu();
+      expect(
+        menu.getByRole("radiogroup", { name: "German" }),
+      ).toBeInTheDocument();
+      expect(
+        menu.getByRole("radiogroup", { name: "English" }),
+      ).toBeInTheDocument();
+
+      await user.click(
+        within(menu.getByRole("radiogroup", { name: "German" })).getByRole(
+          "radio",
+          { name: "Hide" },
+        ),
+      );
+
+      expect(within(video()).queryByText(first.text)).toBeNull();
+      expect(within(video()).getByText(first.translation!)).toBeInTheDocument();
+      expect((await transcript()).queryByText(first.text)).toBeNull();
+      await waitFor(() =>
+        expect(api.preferences.subtitle_visibility).toEqual({
+          original: "hide",
+          translation: "show",
+        }),
+      );
+    });
+
+    it("blurs a track until hover", async () => {
+      const { user, menu } = await openMenu();
+      await user.click(
+        within(menu.getByRole("radiogroup", { name: "English" })).getByRole(
+          "radio",
+          { name: "Blur" },
+        ),
+      );
+
+      const onVideo = within(video()).getByText(first.translation!);
+      expect(onVideo).toHaveAttribute("data-blurred");
+      expect(onVideo.className).toContain("blur-[6px]");
+      expect(onVideo.parentElement).toHaveAttribute("tabindex", "0");
+      expect((await firstLine(first.translation!)).className).toContain(
+        "blur-[5px]",
+      );
+    });
+
+    it("shows a placeholder in the transcript when both tracks are hidden", async () => {
+      api.preferences = {
+        subtitle_visibility: { original: "hide", translation: "hide" },
+      };
+      renderWatch(MOCK_VIDEO_IDS.normal, fakePlayer(), first.start_ms + 100);
+      const panel = await transcript();
+      expect((await panel.findAllByText("Hidden")).length).toBeGreaterThan(0);
+      expect(within(video()).queryByText(first.text)).toBeNull();
+      expect(within(video()).queryByText(first.translation!)).toBeNull();
+    });
+
+    it("rolls back when saving fails", async () => {
+      api.failPreferences = true;
+      const { user, menu } = await openMenu();
+      await user.click(
+        within(menu.getByRole("radiogroup", { name: "German" })).getByRole(
+          "radio",
+          { name: "Hide" },
+        ),
+      );
+
+      await waitFor(() =>
+        expect(
+          within(menu.getByRole("radiogroup", { name: "German" })).getByRole(
+            "radio",
+            { name: "Show" },
+          ),
+        ).toBeChecked(),
+      );
+      expect(
+        await screen.findByText("Couldn't save the subtitle setting"),
+      ).toBeInTheDocument();
+      expect(within(video()).getByText(first.text)).toBeInTheDocument();
+    });
+
+    it("offers only the original track without a translation", async () => {
+      renderWatch(MOCK_VIDEO_IDS.noTranslation);
+      const trigger = await screen.findByRole("button", {
+        name: "Subtitles: show, blur or hide each track",
+      });
+      await waitFor(() => expect(trigger).toBeEnabled());
+      await userEvent.setup().click(trigger);
+      const menu = within(
+        await screen.findByRole("dialog", { name: "Subtitle visibility" }),
+      );
+      expect(
+        menu.getByRole("radiogroup", { name: "German" }),
+      ).toBeInTheDocument();
+      expect(menu.queryByRole("radiogroup", { name: "English" })).toBeNull();
     });
   });
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import type { Line } from "@linguastream/contracts";
+import type { Line, SubtitleVisibility } from "@linguastream/contracts";
 import type { RefObject } from "react";
 import type { PlayerStatus } from "@/hooks/useVideoPlayer";
 import type { PlaybackClock } from "@/lib/watch/playback-clock";
@@ -13,6 +13,7 @@ export default function VideoStage({
   clock,
   language,
   translationLanguage,
+  visibility,
   onToggle,
 }: {
   hostRef: RefObject<HTMLDivElement | null>;
@@ -21,6 +22,7 @@ export default function VideoStage({
   clock: PlaybackClock;
   language: string;
   translationLanguage: string | null;
+  visibility: SubtitleVisibility;
   onToggle(): void;
 }) {
   return (
@@ -49,6 +51,7 @@ export default function VideoStage({
         clock={clock}
         language={language}
         translationLanguage={translationLanguage}
+        visibility={visibility}
       />
     </div>
   );

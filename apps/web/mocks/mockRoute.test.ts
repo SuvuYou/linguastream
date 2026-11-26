@@ -3,6 +3,8 @@ import {
   defineRoute,
   getCurrentUserRoute,
   getLineWindowRoute,
+  getPreferencesRoute,
+  updatePreferencesRoute,
   getVideoRoute,
   getWordDefinitionRoute,
 } from "@linguastream/contracts";
@@ -13,6 +15,7 @@ import { mockWordDefinition } from "./fixtures/definition";
 import { mockUser } from "./fixtures/user";
 import { MOCK_VIDEO_IDS, mockVideos } from "./fixtures/watch";
 import { selectHandlers } from "./handlers";
+import { resetMockPreferences } from "./handlers/preferences";
 
 const server = setupServer();
 const BASE = "http://localhost";
@@ -44,7 +47,9 @@ describe("mockRoute", () => {
     });
     server.use(
       mockRoute(route, ({ params, url }) =>
-        params.id === "known" ? { id: params.id, q: url.searchParams.get("q") ?? "" } : undefined,
+        params.id === "known"
+          ? { id: params.id, q: url.searchParams.get("q") ?? "" }
+          : undefined,
       ),
     );
 
@@ -56,13 +61,37 @@ describe("mockRoute", () => {
     expect(await missing.json()).toEqual({ error: "Not found" });
   });
 
+  it("passes the validated body to a fixture function and answers 400 for an invalid one", async () => {
+    const route = defineRoute({
+      method: "POST",
+      path: `${BASE}/api/echo`,
+      body: z.object({ n: z.number() }),
+      response: z.object({ n: z.number() }),
+    });
+    server.use(mockRoute(route, ({ body }) => body as { n: number }));
+
+    const ok = await fetch(`${BASE}/api/echo`, {
+      method: "POST",
+      body: JSON.stringify({ n: 2 }),
+    });
+    const bad = await fetch(`${BASE}/api/echo`, {
+      method: "POST",
+      body: JSON.stringify({ n: "x" }),
+    });
+
+    expect(await ok.json()).toEqual({ n: 2 });
+    expect(bad.status).toBe(400);
+  });
+
   it("answers 500 when the fixture breaks the contract", async () => {
     const route = defineRoute({
       method: "POST",
       path: `${BASE}/api/things`,
       response: z.object({ id: z.string() }),
     });
-    server.use(mockRoute(route, () => ({ id: 1 }) as unknown as { id: string }));
+    server.use(
+      mockRoute(route, () => ({ id: 1 }) as unknown as { id: string }),
+    );
 
     const res = await fetch(`${BASE}/api/things`, { method: "POST" });
 
@@ -87,7 +116,11 @@ describe("handler groups", () => {
     server.use(...selectHandlers("definition"));
 
     const url = new URL(getWordDefinitionRoute.path, location.origin);
-    url.search = new URLSearchParams({ word: "Haus", lang: "de", context: "Das Haus" }).toString();
+    url.search = new URLSearchParams({
+      word: "Haus",
+      lang: "de",
+      context: "Das Haus",
+    }).toString();
     const res = await fetch(url);
 
     expect(await res.json()).toEqual(mockWordDefinition);
@@ -102,18 +135,50 @@ describe("handler groups", () => {
     server.use(...selectHandlers("watch"));
     const id = MOCK_VIDEO_IDS.normal;
 
-    const video = await fetch(new URL(getVideoRoute.path.replace(":videoId", id), location.origin));
+    const video = await fetch(
+      new URL(getVideoRoute.path.replace(":videoId", id), location.origin),
+    );
     const window = await fetch(
-      new URL(`${getLineWindowRoute.path.replace(":videoId", id)}?from_ms=60000&to_ms=120000`, location.origin),
+      new URL(
+        `${getLineWindowRoute.path.replace(":videoId", id)}?from_ms=60000&to_ms=120000`,
+        location.origin,
+      ),
     );
     const missing = await fetch(
-      new URL(getVideoRoute.path.replace(":videoId", "0190f3c2-7d1a-7c00-8a00-00000000dead"), location.origin),
+      new URL(
+        getVideoRoute.path.replace(
+          ":videoId",
+          "0190f3c2-7d1a-7c00-8a00-00000000dead",
+        ),
+        location.origin,
+      ),
     );
 
     expect(await video.json()).toEqual(mockVideos[id]!.video);
     const body = await window.json();
     expect(body.lines.length).toBeGreaterThan(0);
-    expect(body.lines.every((l: { start_ms: number }) => l.start_ms >= 60000 && l.start_ms < 120000)).toBe(true);
+    expect(
+      body.lines.every(
+        (l: { start_ms: number }) => l.start_ms >= 60000 && l.start_ms < 120000,
+      ),
+    ).toBe(true);
     expect(missing.status).toBe(404);
+  });
+
+  it("the preferences group keeps changes in memory", async () => {
+    resetMockPreferences();
+    server.use(...selectHandlers("preferences"));
+    const url = new URL(getPreferencesRoute.path, location.origin);
+
+    expect(await (await fetch(url)).json()).toEqual({
+      subtitle_visibility: { original: "show", translation: "show" },
+    });
+    await fetch(new URL(updatePreferencesRoute.path, location.origin), {
+      method: "PATCH",
+      body: JSON.stringify({ subtitle_visibility: { translation: "blur" } }),
+    });
+    expect(await (await fetch(url)).json()).toEqual({
+      subtitle_visibility: { original: "show", translation: "blur" },
+    });
   });
 });

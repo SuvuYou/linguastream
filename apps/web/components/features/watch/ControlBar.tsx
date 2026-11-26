@@ -1,6 +1,6 @@
 "use client";
 
-import type { Line } from "@linguastream/contracts";
+import type { Line, SubtitleVisibility } from "@linguastream/contracts";
 import {
   Pause,
   Play,
@@ -27,6 +27,7 @@ import type { VideoPlayerControls } from "@/hooks/useVideoPlayer";
 import { formatTime, lineTargets, type LineTargets } from "@/lib/watch/lines";
 import { useClockValue, type PlaybackClock } from "@/lib/watch/playback-clock";
 import SeekBar from "./SeekBar";
+import SubtitleVisibilityMenu from "./SubtitleVisibilityMenu";
 
 export const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5] as const;
 
@@ -89,12 +90,19 @@ export default function ControlBar({
   fallbackDurationMs,
   lines,
   onJumpToLine,
+  subtitles,
 }: {
   player: VideoPlayerControls;
   clock: PlaybackClock;
   fallbackDurationMs: number | null;
   lines: readonly Line[] | null;
   onJumpToLine(target: keyof LineTargets): void;
+  subtitles: {
+    visibility: SubtitleVisibility;
+    language: string;
+    translationLanguage: string | null;
+    onChange(change: Partial<SubtitleVisibility>): void;
+  };
 }) {
   const ready = player.status === "ready";
   const durationMs = player.durationMs ?? fallbackDurationMs ?? 0;
@@ -176,7 +184,12 @@ export default function ControlBar({
         onChange={(event) => player.setVolume(Number(event.target.value))}
         disabled={!ready}
         aria-label="Volume"
-        className="mr-2 h-1 w-20 cursor-pointer accent-primary disabled:opacity-45 @max-[600px]:hidden"
+        className="mx-1 h-1 w-20 cursor-pointer accent-primary disabled:opacity-45 @max-[600px]:hidden"
+      />
+      <SubtitleVisibilityMenu
+        {...subtitles}
+        disabled={!ready}
+        triggerClassName={iconButton}
       />
     </div>
   );

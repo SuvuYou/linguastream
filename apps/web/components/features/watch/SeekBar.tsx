@@ -34,7 +34,8 @@ export default function SeekBar({
   };
 
   const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    if (disabled || !event.currentTarget.hasPointerCapture(event.pointerId)) return;
+    if (disabled || !event.currentTarget.hasPointerCapture(event.pointerId))
+      return;
     onSeek(msAt(event.clientX));
   };
 
@@ -69,7 +70,10 @@ export default function SeekBar({
       className="group relative mx-2 mt-0.5 flex h-5 basis-full cursor-pointer touch-none items-center rounded-sm outline-none focus-visible:outline-2 focus-visible:outline-ring aria-disabled:cursor-default"
     >
       <span className="absolute inset-x-0 h-1 rounded-full bg-foreground/12" />
-      <span className="absolute left-0 h-1 rounded-full bg-primary" style={{ width: `${share * 100}%` }} />
+      <span
+        className="absolute left-0 h-1 rounded-full bg-primary"
+        style={{ width: `${share * 100}%` }}
+      />
       <span
         className="absolute size-3 -translate-x-1/2 rounded-full bg-primary opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
         style={{ left: `${share * 100}%` }}

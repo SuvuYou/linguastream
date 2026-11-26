@@ -2,6 +2,7 @@ import type { RequestHandler } from "msw";
 import { parseMockSetting } from "../config";
 import { definitionHandlers } from "./definition";
 import { extensionHandlers } from "./extension";
+import { preferencesHandlers } from "./preferences";
 import { userHandlers } from "./user";
 import { watchHandlers } from "./watch";
 
@@ -10,6 +11,7 @@ export const handlerGroups: Record<string, RequestHandler[]> = {
   definition: definitionHandlers,
   extension: extensionHandlers,
   watch: watchHandlers,
+  preferences: preferencesHandlers,
 };
 
 export function selectHandlers(setting: string | undefined): RequestHandler[] {

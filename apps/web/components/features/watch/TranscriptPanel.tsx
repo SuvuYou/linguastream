@@ -1,6 +1,10 @@
 "use client";
 
-import type { Line, VideoDetail } from "@linguastream/contracts";
+import type {
+  Line,
+  SubtitleVisibility,
+  VideoDetail,
+} from "@linguastream/contracts";
 import { ArrowDownToLine, Search, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -52,6 +56,7 @@ export default function TranscriptPanel({
   state,
   clock,
   followKey,
+  visibility,
   onSeek,
 }: {
   video: VideoDetail;
@@ -59,6 +64,7 @@ export default function TranscriptPanel({
   state: TrackState;
   clock: PlaybackClock;
   followKey: number;
+  visibility: SubtitleVisibility;
   onSeek(ms: number): void;
 }) {
   const [query, setQuery] = useState("");
@@ -299,6 +305,8 @@ export default function TranscriptPanel({
                     }
                     language={video.language}
                     translationLanguage={video.translation_language}
+                    originalVisibility={visibility.original}
+                    translationVisibility={visibility.translation}
                     onSeek={seekTo}
                     setRef={setRef}
                   />

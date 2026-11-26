@@ -4,13 +4,15 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Sonner } from "@/components/ui/sonner";
 import { useLineWindows } from "@/hooks/useLineWindows";
+import { usePreferences, useUpdatePreferences } from "@/hooks/usePreferences";
 import { useVideo } from "@/hooks/useVideo";
 import { useVideoPlayer } from "@/hooks/useVideoPlayer";
 import { ApiRequestError } from "@/lib/api/client";
 import { lineTargets, type LineTargets } from "@/lib/watch/lines";
 import { createPlaybackClock } from "@/lib/watch/playback-clock";
-import type { VideoDetail } from "@linguastream/contracts";
+import type { SubtitleVisibility, VideoDetail } from "@linguastream/contracts";
 import ControlBar from "./ControlBar";
 import TranscriptPanel, { trackState } from "./TranscriptPanel";
 import VideoStage from "./VideoStage";
@@ -68,6 +70,7 @@ function Layout({
           </div>
         </div>
       </div>
+      <Sonner position="bottom-center" />
     </div>
   );
 }
@@ -120,6 +123,13 @@ function Watch({ video, startMs }: { video: VideoDetail; startMs: number }) {
   const state = trackState(video, lines);
   const { toggle, jump } = player;
   const [followKey, setFollowKey] = useState(0);
+  const visibility = usePreferences().subtitle_visibility;
+  const { mutate: updatePreferences } = useUpdatePreferences();
+  const setVisibility = useCallback(
+    (change: Partial<SubtitleVisibility>) =>
+      updatePreferences({ subtitle_visibility: change }),
+    [updatePreferences],
+  );
   const navigable = state === "ready" && player.status === "ready";
   const lineList = lines.lines;
 
@@ -178,6 +188,7 @@ function Watch({ video, startMs }: { video: VideoDetail; startMs: number }) {
             hostRef={hostRef}
             status={player.status}
             onToggle={toggle}
+            visibility={visibility}
             lines={lines.lines}
             clock={clock}
             language={video.language}
@@ -189,6 +200,12 @@ function Watch({ video, startMs }: { video: VideoDetail; startMs: number }) {
             fallbackDurationMs={video.duration_ms}
             lines={navigable ? lineList : null}
             onJumpToLine={jumpToLine}
+            subtitles={{
+              visibility,
+              language: video.language,
+              translationLanguage: video.translation_language,
+              onChange: setVisibility,
+            }}
           />
         </>
       }
@@ -199,6 +216,7 @@ function Watch({ video, startMs }: { video: VideoDetail; startMs: number }) {
           state={state}
           clock={clock}
           followKey={followKey}
+          visibility={visibility}
           onSeek={player.seek}
         />
       }
