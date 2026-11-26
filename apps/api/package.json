@@ -2,7 +2,7 @@
   "name": "@linguastream/api",
   "version": "0.0.0",
   "private": true,
-  "description": "NestJS API and worker (D-049, D-054). Empty skeleton until Core step B0.",
+  "description": "NestJS API and worker (D-049, D-054).",
   "scripts": {
     "build": "nest build",
     "dev": "nest start --watch",
@@ -15,9 +15,12 @@
   },
   "dependencies": {
     "@linguastream/contracts": "workspace:*",
+    "@linguastream/db": "workspace:*",
     "@nestjs/common": "^12.6.0",
     "@nestjs/core": "^12.6.0",
     "@nestjs/platform-express": "^12.6.0",
+    "cookie": "^2.0.2",
+    "firebase-admin": "^13.8.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2"
   },
