@@ -3,10 +3,19 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import ConnectExtension from "./ConnectExtension";
 
+const replaceMock = vi.fn();
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ replace: replaceMock }),
+}));
+
 const EXTENSION_ID = "kboemeffohobecdiilicpinijpchenbf";
 
 function mockCodeRoute(status = 201) {
-  const body = status === 201 ? { code: "one-time-code", expires_at: "2026-11-26T12:02:00.000Z" } : { error: "Unauthorized" };
+  const body =
+    status === 201
+      ? { code: "one-time-code", expires_at: "2026-11-26T12:02:00.000Z" }
+      : { error: status === 401 ? "Unauthorized" : "Internal server error" };
   const fetchMock = vi.fn(async () => new Response(JSON.stringify(body), { status }));
   vi.stubGlobal("fetch", fetchMock);
   return fetchMock;
@@ -25,6 +34,7 @@ function mockExtension(response: unknown, lastError?: { message: string }) {
 }
 
 beforeEach(() => {
+  replaceMock.mockReset();
   vi.stubEnv("NEXT_PUBLIC_EXTENSION_ID", EXTENSION_ID);
 });
 
@@ -79,13 +89,36 @@ describe("ConnectExtension", () => {
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
   });
 
-  it("shows a failure when the code can't be issued", async () => {
-    mockCodeRoute(401);
+  it("clears a dead session and signs in again, coming back here", async () => {
+    const fetchMock = mockCodeRoute(401);
     const runtime = mockExtension({ ok: true });
 
     render(<ConnectExtension />);
 
-    expect(await screen.findByText(/couldn't connect/i)).toBeInTheDocument();
+    await waitFor(() =>
+      expect(replaceMock).toHaveBeenCalledWith("/auth/signin?next=%2Fextension%2Fconnect"),
+    );
+    expect(fetchMock).toHaveBeenCalledWith("/api/auth/session", { method: "DELETE" });
     expect(runtime.sendMessage).not.toHaveBeenCalled();
+  });
+
+  it("says the server isn't reachable when the API fails", async () => {
+    mockCodeRoute(500);
+    mockExtension({ ok: true });
+
+    render(<ConnectExtension />);
+
+    expect(await screen.findByText(/server isn't reachable/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
+    expect(replaceMock).not.toHaveBeenCalled();
+  });
+
+  it("says the server isn't reachable when the request can't be sent", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => Promise.reject(new TypeError("Failed to fetch"))));
+    mockExtension({ ok: true });
+
+    render(<ConnectExtension />);
+
+    expect(await screen.findByText(/server isn't reachable/i)).toBeInTheDocument();
   });
 });

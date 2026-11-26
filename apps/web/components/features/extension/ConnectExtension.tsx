@@ -1,21 +1,25 @@
 "use client";
 
 import { createExtensionCodeRoute } from "@linguastream/contracts";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
-import { apiRequest } from "@/lib/api/client";
+import { ApiRequestError, apiRequest } from "@/lib/api/client";
 import { ExtensionUnavailableError, sendToExtension } from "@/lib/extension/send-to-extension";
 
-type State = "connecting" | "connected" | "not-installed" | "failed";
+type State = "connecting" | "connected" | "not-installed" | "server-unreachable" | "failed";
+
+const SIGN_IN_AND_RETURN = `/auth/signin?next=${encodeURIComponent("/extension/connect")}`;
 
 function isOk(response: unknown) {
   return typeof response === "object" && response !== null && (response as { ok?: unknown }).ok === true;
 }
 
 export default function ConnectExtension() {
+  const router = useRouter();
   const [state, setState] = useState<State>("connecting");
   const started = useRef(false);
 
@@ -25,9 +29,17 @@ export default function ConnectExtension() {
       const response = await sendToExtension({ type: "connect", code });
       setState(isOk(response) ? "connected" : "failed");
     } catch (err) {
-      setState(err instanceof ExtensionUnavailableError ? "not-installed" : "failed");
+      if (err instanceof ApiRequestError && err.status === 401) {
+        await fetch("/api/auth/session", { method: "DELETE" }).catch(() => undefined);
+        router.replace(SIGN_IN_AND_RETURN);
+        return;
+      }
+      if (err instanceof ExtensionUnavailableError) setState("not-installed");
+      else if ((err instanceof ApiRequestError && err.status >= 500) || err instanceof TypeError) {
+        setState("server-unreachable");
+      } else setState("failed");
     }
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     if (started.current) return;
@@ -59,10 +71,14 @@ export default function ConnectExtension() {
               <AlertDescription>The extension isn&apos;t installed in this browser.</AlertDescription>
             </Alert>
           )}
-          {state === "failed" && (
+          {(state === "failed" || state === "server-unreachable") && (
             <>
               <Alert variant="destructive" role="alert">
-                <AlertDescription>Couldn&apos;t connect the extension.</AlertDescription>
+                <AlertDescription>
+                  {state === "failed"
+                    ? "Couldn't connect the extension."
+                    : "The server isn't reachable right now."}
+                </AlertDescription>
               </Alert>
               <Button onClick={retry}>Try again</Button>
             </>
