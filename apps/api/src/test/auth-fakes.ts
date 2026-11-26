@@ -7,9 +7,10 @@ import { AppModule } from "../app.module";
 import { FIREBASE_AUTH, type FirebaseAuth } from "../auth/firebase-auth.provider";
 import { UsersRepository } from "../users/users.repository";
 import { configureApp } from "../http/configure-app";
-import { WEB_ORIGIN } from "../http/origin.guard";
+import { EXTENSION_ORIGIN, WEB_ORIGIN } from "../http/origin.guard";
 
 export const TEST_WEB_ORIGIN = "http://localhost:3000";
+export const TEST_EXTENSION_ORIGIN = "chrome-extension://testextensionid";
 
 export type FakeFirebaseAuth = { [K in keyof FirebaseAuth]: Mock<FirebaseAuth[K]> };
 
@@ -34,6 +35,7 @@ export function fakeFirebaseAuth(uid = "firebase-uid-1"): FakeFirebaseAuth {
       throw Object.assign(new Error("invalid"), { code: "auth/argument-error" });
     }),
     getUser: vi.fn(async () => userRecord()),
+    createCustomToken: vi.fn(async (forUid: string) => `custom-token-for-${forUid}`),
   };
 }
 
@@ -67,7 +69,9 @@ export async function createTestApp(
     .overrideProvider(UsersRepository)
     .useValue(fakeUsersRepository(options.users))
     .overrideProvider(WEB_ORIGIN)
-    .useValue(TEST_WEB_ORIGIN);
+    .useValue(TEST_WEB_ORIGIN)
+    .overrideProvider(EXTENSION_ORIGIN)
+    .useValue(TEST_EXTENSION_ORIGIN);
   for (const { token, value } of options.providers ?? []) {
     builder.overrideProvider(token).useValue(value);
   }

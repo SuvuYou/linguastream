@@ -2,7 +2,10 @@ import type { Provider } from "@nestjs/common";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getAuth, type Auth } from "firebase-admin/auth";
 
-export type FirebaseAuth = Pick<Auth, "verifyIdToken" | "verifySessionCookie" | "getUser">;
+export type FirebaseAuth = Pick<
+  Auth,
+  "verifyIdToken" | "verifySessionCookie" | "getUser" | "createCustomToken"
+>;
 
 export const FIREBASE_AUTH = Symbol("FIREBASE_AUTH");
 

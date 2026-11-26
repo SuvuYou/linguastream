@@ -162,6 +162,7 @@ The repository is a pnpm + Turborepo monorepo: `apps/web` (Next.js), `apps/api` 
 | `API_URL` | No | Where Next.js forwards `/api/*` in development. Default `http://localhost:3001`. |
 | `GEMINI_API_KEY` | Yes | In `apps/api/.env`. API key for the LLM behind `/api/definition`. |
 | `WEB_ORIGIN` | Yes | In `apps/api/.env`. The web app's origin, e.g. `http://localhost:3000` (CSRF check). |
+| `EXTENSION_ID` | Yes | In `apps/api/.env`. The extension's fixed ID; only `chrome-extension://<id>` may exchange sign-in codes. |
 
 ## Testing
 

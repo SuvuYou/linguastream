@@ -41,7 +41,16 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function DELETE() {
+export async function DELETE(req: NextRequest) {
+  const session = req.cookies.get("session")?.value;
+
+  if (session) {
+    await adminAuth
+      .verifySessionCookie(session)
+      .then((decoded) => adminAuth.revokeRefreshTokens(decoded.uid))
+      .catch(() => undefined);
+  }
+
   const res = NextResponse.json({ ok: true });
   res.cookies.delete("session");
   return res;

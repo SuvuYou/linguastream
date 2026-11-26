@@ -2,13 +2,15 @@ import { POST, DELETE } from "./route";
 import { adminAuth } from "@/lib/initializations/firebase/firebase-admin";
 import { db } from "@/lib/initializations/db";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { NextRequest } from "next/server";
+import { NextRequest } from "next/server";
 import type { DecodedIdToken } from "firebase-admin/auth";
 
 vi.mock("@/lib/initializations/firebase/firebase-admin", () => ({
   adminAuth: {
     verifyIdToken: vi.fn(),
     createSessionCookie: vi.fn(),
+    verifySessionCookie: vi.fn(),
+    revokeRefreshTokens: vi.fn(),
   },
 }));
 
@@ -81,11 +83,38 @@ describe("POST api/auth/session", () => {
 });
 
 describe("DELETE api/auth/session", () => {
-  it("clears session cookie", async () => {
-    const res = await DELETE();
+  function logout(cookie?: string) {
+    const req = new NextRequest("http://localhost/api/auth/session", {
+      method: "DELETE",
+      headers: cookie ? { cookie: `session=${cookie}` } : {},
+    });
+    return DELETE(req);
+  }
 
-    const cookie = res.cookies.get("session");
-    expect(cookie).toBeDefined();
-    expect(cookie?.value).toBe("");
+  it("revokes the user's Firebase sessions, signing the extension out too", async () => {
+    mockedAdminAuth.verifySessionCookie.mockResolvedValue({ uid: "123" } as DecodedIdToken);
+
+    const res = await logout("valid-cookie");
+
+    expect(mockedAdminAuth.verifySessionCookie).toHaveBeenCalledWith("valid-cookie");
+    expect(mockedAdminAuth.revokeRefreshTokens).toHaveBeenCalledWith("123");
+    expect(res.cookies.get("session")?.value).toBe("");
+  });
+
+  it("clears an invalid cookie without revoking anything", async () => {
+    mockedAdminAuth.verifySessionCookie.mockRejectedValue(new Error("expired"));
+
+    const res = await logout("expired-cookie");
+
+    expect(mockedAdminAuth.revokeRefreshTokens).not.toHaveBeenCalled();
+    expect(res.status).toBe(200);
+    expect(res.cookies.get("session")?.value).toBe("");
+  });
+
+  it("clears the cookie when there is none to revoke", async () => {
+    const res = await logout();
+
+    expect(mockedAdminAuth.verifySessionCookie).not.toHaveBeenCalled();
+    expect(res.cookies.get("session")).toBeDefined();
   });
 });

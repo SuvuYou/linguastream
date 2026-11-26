@@ -1,7 +1,7 @@
 import { Module } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
 import { AuthGuard } from "./auth.guard";
-import { firebaseAuthProvider } from "./firebase-auth.provider";
+import { FIREBASE_AUTH, firebaseAuthProvider } from "./firebase-auth.provider";
 import { RevocationCache } from "./revocation-cache";
 import { UsersModule } from "../users/users.module";
 
@@ -12,6 +12,6 @@ import { UsersModule } from "../users/users.module";
     RevocationCache,
     { provide: APP_GUARD, useClass: AuthGuard },
   ],
-  exports: [RevocationCache],
+  exports: [RevocationCache, FIREBASE_AUTH],
 })
 export class AuthModule {}
