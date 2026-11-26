@@ -7,6 +7,7 @@ import {
 } from "firebase/auth";
 import { auth } from "@/lib/initializations/firebase/firebase";
 import { useRouter } from "next/navigation";
+import { safeNextPath } from "@/helpers/safe-next-path";
 import {
   Card,
   CardContent,
@@ -45,7 +46,7 @@ export default function SignIn() {
           body: JSON.stringify({ idToken }),
         });
 
-        router.push("/");
+        router.push(safeNextPath(new URLSearchParams(window.location.search).get("next")));
         router.refresh();
       } catch (err: Error | unknown) {
         if (err instanceof Error) {

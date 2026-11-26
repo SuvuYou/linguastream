@@ -13,12 +13,40 @@ function redirectTarget(res: Response) {
   return location ? new URL(location).pathname : null;
 }
 
+function redirectUrl(res: Response) {
+  const location = res.headers.get("location");
+  return location ? new URL(location) : null;
+}
+
 afterEach(() => vi.unstubAllEnvs());
 
 describe("proxy", () => {
   it("sends signed-out users to sign-in", async () => {
     const res = await proxy(request("/dashboard/decks"));
     expect(redirectTarget(res)).toBe("/auth/signin");
+  });
+
+  it("remembers where signed-out users were going", async () => {
+    const res = await proxy(request("/extension/connect?x=1"));
+    const url = redirectUrl(res)!;
+    expect(url.pathname).toBe("/auth/signin");
+    expect(url.searchParams.get("next")).toBe("/extension/connect?x=1");
+  });
+
+  it("adds no next for the home page", async () => {
+    const res = await proxy(request("/"));
+    expect(redirectUrl(res)!.search).toBe("");
+  });
+
+  it("sends signed-in users on to a same-site next", async () => {
+    const res = await proxy(request("/auth/signin?next=/extension/connect", "cookie"));
+    expect(redirectTarget(res)).toBe("/extension/connect");
+  });
+
+  it("ignores an off-site next", async () => {
+    const res = await proxy(request("/auth/signin?next=//evil.example", "cookie"));
+    expect(redirectUrl(res)!.origin).toBe("http://localhost:3000");
+    expect(redirectTarget(res)).toBe("/");
   });
 
   it("lets signed-in users through", async () => {

@@ -118,6 +118,34 @@ describe("SignIn", () => {
     expect(refreshMock).toHaveBeenCalled();
   });
 
+  it("returns to the page in next after signing in", async () => {
+    window.history.pushState({}, "", "/auth/signin?next=%2Fextension%2Fconnect");
+    const user = userEvent.setup();
+    mockedSignIn.mockResolvedValue(mockCredential());
+
+    render(<SignIn />);
+    await user.type(screen.getByPlaceholderText("you@example.com"), "test@test.com");
+    await user.type(screen.getByPlaceholderText("••••••••"), "password");
+    await user.click(screen.getByRole("button", { name: "Sign in" }));
+
+    await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/extension/connect"));
+    window.history.pushState({}, "", "/");
+  });
+
+  it("ignores an off-site next", async () => {
+    window.history.pushState({}, "", "/auth/signin?next=https%3A%2F%2Fevil.example");
+    const user = userEvent.setup();
+    mockedSignIn.mockResolvedValue(mockCredential());
+
+    render(<SignIn />);
+    await user.type(screen.getByPlaceholderText("you@example.com"), "test@test.com");
+    await user.type(screen.getByPlaceholderText("••••••••"), "password");
+    await user.click(screen.getByRole("button", { name: "Sign in" }));
+
+    await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/"));
+    window.history.pushState({}, "", "/");
+  });
+
   it("creates account successfully", async () => {
     const user = userEvent.setup();
 

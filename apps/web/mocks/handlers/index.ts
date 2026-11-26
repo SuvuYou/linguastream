@@ -1,11 +1,13 @@
 import type { RequestHandler } from "msw";
 import { parseMockSetting } from "../config";
 import { definitionHandlers } from "./definition";
+import { extensionHandlers } from "./extension";
 import { userHandlers } from "./user";
 
 export const handlerGroups: Record<string, RequestHandler[]> = {
   user: userHandlers,
   definition: definitionHandlers,
+  extension: extensionHandlers,
 };
 
 export function selectHandlers(setting: string | undefined): RequestHandler[] {
