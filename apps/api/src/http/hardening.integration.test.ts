@@ -17,7 +17,7 @@ import { ValidBody, ValidParams, ValidQuery } from "./valid-input.decorators";
 
 const echoRoute = defineRoute({
   method: "POST",
-  path: "/test-hardening/echo/:id",
+  path: "/api/test-hardening/echo/:id",
   params: z.object({ id: z.string().max(10) }),
   query: z.object({ n: z.coerce.number().int().default(1) }),
   body: z.object({ note: z.string().max(1_000_000) }),
@@ -86,7 +86,7 @@ describe("request hardening through the whole app", () => {
   let app: INestApplication;
 
   beforeEach(async () => {
-    app = await newApp({ "/test-hardening/big": "200kb" });
+    app = await newApp({ "/api/test-hardening/big": "200kb" });
   });
 
   afterEach(async () => {
@@ -98,7 +98,7 @@ describe("request hardening through the whole app", () => {
 
   describe("validation", () => {
     it("hands the handler parsed input: coerced, defaulted, unknown keys stripped", async () => {
-      const res = await post("/test-hardening/echo/abc?n=5")
+      const res = await post("/api/test-hardening/echo/abc?n=5")
         .send({ note: "hallo", isAdmin: true })
         .expect(201);
       expect(res.body).toMatchObject({
@@ -109,24 +109,24 @@ describe("request hardening through the whole app", () => {
       });
       expect(res.body.body).not.toHaveProperty("isAdmin");
 
-      const withDefault = await post("/test-hardening/echo/abc").send({ note: "x" }).expect(201);
+      const withDefault = await post("/api/test-hardening/echo/abc").send({ note: "x" }).expect(201);
       expect(withDefault.body.query).toEqual({ n: 1 });
     });
 
     it("answers 400 naming the fields", async () => {
-      const res = await post("/test-hardening/echo/abc?n=lots").send({ note: "x" }).expect(400);
+      const res = await post("/api/test-hardening/echo/abc?n=lots").send({ note: "x" }).expect(400);
       const { error } = ApiError.parse(res.body);
       expect(error).toContain("query.n");
     });
 
     it("names a missing body field", async () => {
-      const res = await post("/test-hardening/echo/abc").send({ text: "x" }).expect(400);
+      const res = await post("/api/test-hardening/echo/abc").send({ text: "x" }).expect(400);
       expect(ApiError.parse(res.body).error).toContain("body.note");
     });
 
     it("never echoes the value it rejected", async () => {
       const secret = "Ich-heiße-Privat";
-      const res = await post(`/test-hardening/echo/${secret}`).send({ note: "x" }).expect(400);
+      const res = await post(`/api/test-hardening/echo/${secret}`).send({ note: "x" }).expect(400);
       const { error } = ApiError.parse(res.body);
       expect(error).toContain("params.id");
       expect(JSON.stringify(res.body)).not.toContain("Privat");
@@ -137,12 +137,12 @@ describe("request hardening through the whole app", () => {
     const note = (kb: number) => "a".repeat(kb * 1024);
 
     it("answers 413 above 100 KB", async () => {
-      const res = await post("/test-hardening/echo/abc").send({ note: note(101) }).expect(413);
+      const res = await post("/api/test-hardening/echo/abc").send({ note: note(101) }).expect(413);
       expect(ApiError.parse(res.body)).toEqual({ error: "Request body too large" });
     });
 
     it("answers 400 to malformed JSON", async () => {
-      const res = await post("/test-hardening/echo/abc")
+      const res = await post("/api/test-hardening/echo/abc")
         .set("Content-Type", "application/json")
         .send('{"note": ')
         .expect(400);
@@ -150,19 +150,19 @@ describe("request hardening through the whole app", () => {
     });
 
     it("accepts a larger body on a route with a raised limit", async () => {
-      const res = await post("/test-hardening/big").send({ note: note(150) }).expect(201);
+      const res = await post("/api/test-hardening/big").send({ note: note(150) }).expect(201);
       expect(res.body.noteLength).toBe(150 * 1024);
     });
   });
 
   describe("CSRF (Origin check, D-098)", () => {
     it("lets a cookie POST from our origin through", async () => {
-      await post("/test-hardening/echo/abc").send({ note: "x" }).expect(201);
+      await post("/api/test-hardening/echo/abc").send({ note: "x" }).expect(201);
     });
 
     it("refuses a cookie POST from another origin or without one", async () => {
       const wrong = await request(app.getHttpServer())
-        .post("/test-hardening/echo/abc")
+        .post("/api/test-hardening/echo/abc")
         .set("Cookie", COOKIE)
         .set("Origin", "https://evil.example")
         .send({ note: "x" })
@@ -170,19 +170,19 @@ describe("request hardening through the whole app", () => {
       expect(ApiError.parse(wrong.body)).toEqual({ error: "Forbidden" });
 
       await request(app.getHttpServer())
-        .post("/test-hardening/echo/abc")
+        .post("/api/test-hardening/echo/abc")
         .set("Cookie", COOKIE)
         .send({ note: "x" })
         .expect(403);
     });
 
     it("lets a GET through without Origin", async () => {
-      await request(app.getHttpServer()).get("/test-hardening/read").set("Cookie", COOKIE).expect(200);
+      await request(app.getHttpServer()).get("/api/test-hardening/read").set("Cookie", COOKIE).expect(200);
     });
 
     it("lets a bearer POST through without Origin (the extension)", async () => {
       await request(app.getHttpServer())
-        .post("/test-hardening/echo/abc")
+        .post("/api/test-hardening/echo/abc")
         .set("Authorization", "Bearer token-1")
         .send({ note: "x" })
         .expect(201);
@@ -191,7 +191,7 @@ describe("request hardening through the whole app", () => {
 
   describe("rate limits", () => {
     const expensive = (token: string) =>
-      request(app.getHttpServer()).post("/test-hardening/expensive").set("Authorization", `Bearer ${token}`);
+      request(app.getHttpServer()).post("/api/test-hardening/expensive").set("Authorization", `Bearer ${token}`);
 
     it("answers 429 with Retry-After once @RateLimit() is used up", async () => {
       await expensive("token-1").expect(201);
@@ -209,7 +209,7 @@ describe("request hardening through the whole app", () => {
     });
 
     it("counts public routes per IP", async () => {
-      const get = () => request(app.getHttpServer()).get("/test-hardening/public");
+      const get = () => request(app.getHttpServer()).get("/api/test-hardening/public");
       await get().expect(200);
       await get().expect(200);
       await get().expect(429);
@@ -218,9 +218,9 @@ describe("request hardening through the whole app", () => {
     it("limits every route by default", async () => {
       const server = app.getHttpServer();
       for (let i = 0; i < DEFAULT_RATE_LIMIT.limit; i++) {
-        await request(server).get("/test-hardening/read").set("Cookie", COOKIE).expect(200);
+        await request(server).get("/api/test-hardening/read").set("Cookie", COOKIE).expect(200);
       }
-      await request(server).get("/test-hardening/read").set("Cookie", COOKIE).expect(429);
+      await request(server).get("/api/test-hardening/read").set("Cookie", COOKIE).expect(429);
     });
   });
 });

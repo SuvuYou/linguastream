@@ -1,9 +1,11 @@
 import type { RequestHandler } from "msw";
 import { parseMockSetting } from "../config";
+import { definitionHandlers } from "./definition";
 import { userHandlers } from "./user";
 
 export const handlerGroups: Record<string, RequestHandler[]> = {
   user: userHandlers,
+  definition: definitionHandlers,
 };
 
 export function selectHandlers(setting: string | undefined): RequestHandler[] {

@@ -1,29 +1,17 @@
 "use client";
 
-import { ActiveWord } from "@/lib/initializations/store";
+import { getWordDefinitionRoute } from "@linguastream/contracts";
 import { useQuery } from "@tanstack/react-query";
-
-async function fetchDefinition(word?: string, lang?: string, context?: string) {
-  if (!word || !lang || !context) return;
-
-  const res = await fetch(
-    `/api/definition?word=${encodeURIComponent(word)}&lang=${lang}&context=${encodeURIComponent(context)}`,
-  );
-  if (!res.ok) throw new Error("Failed to fetch definition");
-
-  return res.json();
-}
+import { apiRequest } from "@/lib/api/client";
+import { ActiveWord } from "@/lib/initializations/store";
 
 export function useWordDefinition(word: ActiveWord | null) {
-  const query = useQuery<{
-    translation: string;
-    definition: string;
-    context_sentence: string;
-  }>({
+  return useQuery({
     queryKey: ["word-definition", word?.word, word?.lang],
-    queryFn: async () => fetchDefinition(word?.word, word?.lang, word?.context),
+    queryFn: () =>
+      apiRequest(getWordDefinitionRoute, {
+        query: { word: word!.word, lang: word!.lang, context: word!.context },
+      }),
     enabled: !!word && !!word?.word && !!word?.lang && !!word?.context,
   });
-
-  return query;
 }

@@ -191,6 +191,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@google/generative-ai':
+        specifier: ^0.24.1
+        version: 0.24.1
       '@linguastream/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
@@ -279,9 +282,6 @@ importers:
       '@base-ui/react':
         specifier: ^1.4.1
         version: 1.9.0(@types/react@19.3.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      '@google/generative-ai':
-        specifier: ^0.24.1
-        version: 0.24.1
       '@linguastream/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts

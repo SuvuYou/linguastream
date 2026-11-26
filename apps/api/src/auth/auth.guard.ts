@@ -15,7 +15,7 @@ import type { AuthUser } from "./auth-user";
 import { FIREBASE_AUTH, type FirebaseAuth } from "./firebase-auth.provider";
 import { IS_PUBLIC } from "./public.decorator";
 import { RevocationCache, type SessionProblem } from "./revocation-cache";
-import { UsersRepository } from "./users.repository";
+import { UsersRepository } from "../users/users.repository";
 
 type RejectReason = "missing" | "invalid" | SessionProblem;
 

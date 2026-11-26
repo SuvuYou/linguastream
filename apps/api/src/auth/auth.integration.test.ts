@@ -25,13 +25,13 @@ describe("auth through the whole app", () => {
   });
 
   it("protects routes by default", async () => {
-    const res = await request(app.getHttpServer()).get("/test-me").expect(401);
+    const res = await request(app.getHttpServer()).get("/api/test-me").expect(401);
     expect(ApiError.parse(res.body)).toEqual({ error: "Unauthorized" });
   });
 
   it("returns the user for a valid session cookie", async () => {
     const res = await request(app.getHttpServer())
-      .get("/test-me")
+      .get("/api/test-me")
       .set("Cookie", "session=valid-session-cookie")
       .expect(200);
     expect(res.body).toEqual({ id: "user-1", firebaseUid: "firebase-uid-1" });
@@ -39,7 +39,7 @@ describe("auth through the whole app", () => {
 
   it("returns the user for a valid bearer ID token", async () => {
     const res = await request(app.getHttpServer())
-      .get("/test-me")
+      .get("/api/test-me")
       .set("Authorization", "Bearer valid-id-token")
       .expect(200);
     expect(res.body).toEqual({ id: "user-1", firebaseUid: "firebase-uid-1" });
@@ -47,13 +47,13 @@ describe("auth through the whole app", () => {
 
   it("answers 401 with the ApiError body for a forged token", async () => {
     const res = await request(app.getHttpServer())
-      .get("/test-me")
+      .get("/api/test-me")
       .set("Authorization", "Bearer forged")
       .expect(401);
     expect(ApiError.parse(res.body)).toEqual({ error: "Unauthorized" });
   });
 
-  it("keeps /health public", async () => {
-    await request(app.getHttpServer()).get("/health").expect(200);
+  it("keeps /api/health public", async () => {
+    await request(app.getHttpServer()).get("/api/health").expect(200);
   });
 });

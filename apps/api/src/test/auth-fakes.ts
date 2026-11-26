@@ -5,8 +5,8 @@ import type { DecodedIdToken, UserRecord } from "firebase-admin/auth";
 import type { Mock } from "vitest";
 import { AppModule } from "../app.module";
 import { FIREBASE_AUTH, type FirebaseAuth } from "../auth/firebase-auth.provider";
-import { UsersRepository } from "../auth/users.repository";
-import { applyBodyLimits } from "../http/body-limits";
+import { UsersRepository } from "../users/users.repository";
+import { configureApp } from "../http/configure-app";
 import { WEB_ORIGIN } from "../http/origin.guard";
 
 export const TEST_WEB_ORIGIN = "http://localhost:3000";
@@ -38,8 +38,14 @@ export function fakeFirebaseAuth(uid = "firebase-uid-1"): FakeFirebaseAuth {
 }
 
 export function fakeUsersRepository(users: Record<string, string> = { "firebase-uid-1": "user-1" }) {
+  const ids = new Set(Object.values(users));
   return {
     findIdByFirebaseUid: vi.fn(async (firebaseUid: string) => users[firebaseUid] ?? null),
+    findProfile: vi.fn(async (id: string) =>
+      ids.has(id)
+        ? { id, email: `${id}@linguastream.test`, displayName: null, nativeLanguage: "uk", isAdmin: false }
+        : null,
+    ),
   };
 }
 
@@ -48,10 +54,11 @@ export async function createTestApp(
     auth?: FakeFirebaseAuth;
     users?: Record<string, string>;
     controllers?: Type[];
+    providers?: { token: unknown; value: unknown }[];
     largerBodyLimits?: Record<string, string>;
   } = {},
 ): Promise<NestExpressApplication> {
-  const moduleRef = await Test.createTestingModule({
+  const builder = Test.createTestingModule({
     imports: [AppModule],
     controllers: options.controllers ?? [],
   })
@@ -60,11 +67,14 @@ export async function createTestApp(
     .overrideProvider(UsersRepository)
     .useValue(fakeUsersRepository(options.users))
     .overrideProvider(WEB_ORIGIN)
-    .useValue(TEST_WEB_ORIGIN)
-    .compile();
+    .useValue(TEST_WEB_ORIGIN);
+  for (const { token, value } of options.providers ?? []) {
+    builder.overrideProvider(token).useValue(value);
+  }
+  const moduleRef = await builder.compile();
 
   const app = moduleRef.createNestApplication<NestExpressApplication>({ bodyParser: false });
-  applyBodyLimits(app, options.largerBodyLimits);
+  configureApp(app, options.largerBodyLimits);
   await app.init();
   return app;
 }

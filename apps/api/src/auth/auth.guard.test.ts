@@ -11,7 +11,7 @@ import {
 import type { AuthUser } from "./auth-user";
 import { AuthGuard } from "./auth.guard";
 import { RevocationCache } from "./revocation-cache";
-import type { UsersRepository } from "./users.repository";
+import type { UsersRepository } from "../users/users.repository";
 
 type FakeRequest = { headers: Record<string, string>; user?: AuthUser };
 

@@ -14,7 +14,6 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
-    "@google/generative-ai": "^0.24.1",
     "@linguastream/contracts": "workspace:*",
     "@linguastream/db": "workspace:*",
     "@tanstack/react-query": "^5.96.2",

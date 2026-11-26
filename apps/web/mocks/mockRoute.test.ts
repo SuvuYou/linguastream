@@ -1,8 +1,9 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
-import { defineRoute, getCurrentUserRoute } from "@linguastream/contracts";
+import { defineRoute, getCurrentUserRoute, getWordDefinitionRoute } from "@linguastream/contracts";
 import { setupServer } from "msw/node";
 import { z } from "zod";
 import { mockRoute } from "./mockRoute";
+import { mockWordDefinition } from "./fixtures/definition";
 import { mockUser } from "./fixtures/user";
 import { selectHandlers } from "./handlers";
 
@@ -53,6 +54,16 @@ describe("handler groups", () => {
     const res = await fetch(new URL(getCurrentUserRoute.path, location.origin));
 
     expect(await res.json()).toEqual(mockUser);
+  });
+
+  it("the definition group serves the mock definition for GET /api/definition", async () => {
+    server.use(...selectHandlers("definition"));
+
+    const url = new URL(getWordDefinitionRoute.path, location.origin);
+    url.search = new URLSearchParams({ word: "Haus", lang: "de", context: "Das Haus" }).toString();
+    const res = await fetch(url);
+
+    expect(await res.json()).toEqual(mockWordDefinition);
   });
 
   it("selects every group for all, and nothing for unknown names", () => {
