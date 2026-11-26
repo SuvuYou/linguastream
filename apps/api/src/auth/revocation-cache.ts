@@ -17,7 +17,6 @@ export class RevocationCache {
 
   constructor(@Inject(FIREBASE_AUTH) private readonly auth: FirebaseAuth) {}
 
-  /** Returns what is wrong with a token issued at `authTimeSec`, or null if it is still valid. */
   async check(uid: string, authTimeSec: number): Promise<SessionProblem | null> {
     const entry = await this.lookup(uid);
     if (!entry) return "unknown-user";
@@ -26,7 +25,6 @@ export class RevocationCache {
     return null;
   }
 
-  /** Drops the cached answer, so our own logout and account deletion take effect at once. */
   forget(uid: string): void {
     this.entries.delete(uid);
   }

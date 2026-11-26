@@ -65,7 +65,6 @@ export class AuthGuard implements CanActivate {
     return this.auth.verifySessionCookie(cookie, false).catch(() => this.reject("invalid"));
   }
 
-  /** Only the reason is logged, never the token, cookie or user (security.md). */
   private reject(reason: RejectReason): never {
     this.logger.debug(`401 ${reason}`);
     throw new UnauthorizedException({ error: "Unauthorized" } satisfies ApiError);

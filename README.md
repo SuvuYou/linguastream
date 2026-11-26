@@ -87,7 +87,7 @@ LinguaStream is a language-learning platform. You watch YouTube videos with the 
 
 ### Backend
 - Next.js API routes
-- [NestJS](https://nestjs.com/) API in `apps/api` (skeleton; routes move there later)
+- [NestJS](https://nestjs.com/) API in `apps/api`, served under `/api` (Next.js forwards `/api/*` to it in development)
 - [Prisma](https://www.prisma.io/) ORM (v7)
 - [Zod](https://zod.dev/) for schema validation
 
@@ -126,6 +126,7 @@ docker compose up -d
 # 4. Create the environment files
 cp .env.example .env                              # DATABASE_URL (shared)
 cp apps/web/.env.example apps/web/.env.local      # web app variables
+cp apps/api/.env.example apps/api/.env            # API variables
 # ...then fill in the values (see the next section)
 
 # 5. Apply migrations
@@ -144,7 +145,7 @@ The repository is a pnpm + Turborepo monorepo: `apps/web` (Next.js), `apps/api` 
 
 ## Environment variables
 
-`DATABASE_URL` lives in the repo-root `.env` (shared by `packages/db` and the web app; see `/.env.example`). All others live in `apps/web/.env.local` (see `apps/web/.env.example`).
+`DATABASE_URL` lives in the repo-root `.env` (shared by `packages/db` and the web app; see `/.env.example`). The web app's live in `apps/web/.env.local` (see `apps/web/.env.example`), the API's in `apps/api/.env` (see `apps/api/.env.example`).
 
 | Variable | Required | Description |
 | --- | :---: | --- |
@@ -157,8 +158,10 @@ The repository is a pnpm + Turborepo monorepo: `apps/web` (Next.js), `apps/api` 
 | `NEXT_PUBLIC_FIREBASE_APP_ID` | Yes | Firebase web app ID. |
 | `FIREBASE_ADMIN_PROJECT_ID` | Yes | Project ID from your Firebase service account JSON. |
 | `FIREBASE_ADMIN_CLIENT_EMAIL` | Yes | `client_email` from your Firebase service account JSON. |
-| `FIREBASE_ADMIN_PRIVATE_KEY` | Yes | `private_key` from your service account JSON. Wrap it in double quotes and keep the `\n` escapes. |
-| `GEMINI_API_KEY` | Yes | API key for the LLM that generates word profiles. |
+| `FIREBASE_ADMIN_PRIVATE_KEY` | Yes | `private_key` from your service account JSON. Wrap it in double quotes and keep the `\n` escapes. Also needed in `apps/api/.env`. |
+| `API_URL` | No | Where Next.js forwards `/api/*` in development. Default `http://localhost:3001`. |
+| `GEMINI_API_KEY` | Yes | In `apps/api/.env`. API key for the LLM behind `/api/definition`. |
+| `WEB_ORIGIN` | Yes | In `apps/api/.env`. The web app's origin, e.g. `http://localhost:3000` (CSRF check). |
 
 ## Testing
 

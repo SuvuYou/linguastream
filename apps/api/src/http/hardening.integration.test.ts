@@ -60,7 +60,6 @@ class HardeningController {
   }
 }
 
-/** Bearer tokens "token-1" and "token-2" for two users; the session cookie is user-1's. */
 function twoUserAuth() {
   const auth = fakeFirebaseAuth("firebase-uid-1");
   auth.verifyIdToken.mockImplementation(async (token: string) => {
