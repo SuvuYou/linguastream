@@ -28,6 +28,7 @@ describe("GET /api/user", () => {
       email: "user-1@linguastream.test",
       display_name: null,
       native_language: "uk",
+      learning_language: "de",
       is_admin: false,
     });
   });

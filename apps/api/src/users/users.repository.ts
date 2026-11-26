@@ -11,7 +11,7 @@ export class UsersRepository {
   async findProfile(id: string) {
     return db.user.findUnique({
       where: { id },
-      select: { id: true, email: true, displayName: true, nativeLanguage: true, isAdmin: true },
+      select: { id: true, email: true, displayName: true, nativeLanguage: true, learningLanguage: true, isAdmin: true },
     });
   }
 }

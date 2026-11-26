@@ -8,6 +8,7 @@ const createBaseUser = (): CurrentUser => ({
   email: "",
   display_name: "",
   native_language: "",
+  learning_language: "",
   is_admin: false,
 });
 

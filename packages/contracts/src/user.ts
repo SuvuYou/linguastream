@@ -6,6 +6,7 @@ export const CurrentUser = z.object({
   email: z.email(),
   display_name: z.string().nullable(),
   native_language: z.string(),
+  learning_language: z.string(),
   is_admin: z.boolean(),
 });
 

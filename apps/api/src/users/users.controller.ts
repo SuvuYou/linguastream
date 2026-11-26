@@ -19,6 +19,7 @@ export class UsersController {
       email: profile.email,
       display_name: profile.displayName,
       native_language: profile.nativeLanguage,
+      learning_language: profile.learningLanguage,
       is_admin: profile.isAdmin,
     };
   }

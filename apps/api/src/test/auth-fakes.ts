@@ -45,7 +45,7 @@ export function fakeUsersRepository(users: Record<string, string> = { "firebase-
     findIdByFirebaseUid: vi.fn(async (firebaseUid: string) => users[firebaseUid] ?? null),
     findProfile: vi.fn(async (id: string) =>
       ids.has(id)
-        ? { id, email: `${id}@linguastream.test`, displayName: null, nativeLanguage: "uk", isAdmin: false }
+        ? { id, email: `${id}@linguastream.test`, displayName: null, nativeLanguage: "uk", learningLanguage: "de", isAdmin: false }
         : null,
     ),
   };

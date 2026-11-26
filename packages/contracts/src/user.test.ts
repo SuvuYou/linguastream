@@ -6,6 +6,7 @@ const valid = {
   email: "learner@example.com",
   display_name: null,
   native_language: "uk",
+  learning_language: "de",
   is_admin: false,
 };
 

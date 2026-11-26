@@ -5,5 +5,6 @@ export const mockUser: CurrentUser = {
   email: "learner@linguastream.test",
   display_name: "Test Learner",
   native_language: "uk",
+  learning_language: "de",
   is_admin: false,
 };
