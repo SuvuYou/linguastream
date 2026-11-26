@@ -23,17 +23,20 @@ export default function WatchHeader({
         <ArrowLeft className="size-5" />
       </Link>
       <div className="flex min-w-0 flex-1 flex-col">
-        <h1
-          lang={language}
-          className="line-clamp-2 text-base font-semibold text-balance"
-        >
-          {title}
+        <h1 lang={language} title={title} className="text-base font-semibold">
+          <span className="block truncate">{title}</span>
         </h1>
-        <p className="text-[13px] text-text-3">
-          {channelName}
-          {channelName && durationMs !== null && " · "}
+        <p className="flex min-w-0 gap-1 text-[13px] text-text-3">
+          {channelName && (
+            <span title={channelName} className="truncate">
+              {channelName}
+            </span>
+          )}
+          {channelName && durationMs !== null && (
+            <span aria-hidden="true">·</span>
+          )}
           {durationMs !== null && (
-            <span className="font-mono">{formatTime(durationMs)}</span>
+            <span className="shrink-0 font-mono">{formatTime(durationMs)}</span>
           )}
         </p>
       </div>

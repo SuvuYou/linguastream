@@ -127,52 +127,85 @@ export default function TranscriptPanel({
         <h2 className="flex h-[34px] items-center rounded-md bg-tab-on px-2 text-[13px] font-semibold text-accent-text">
           Transcript
         </h2>
-        <span className="flex-1" />
-        {state === "ready" && (
-          <button
-            type="button"
-            aria-label={filterOpen ? "Close filter" : "Filter lines"}
-            aria-expanded={filterOpen}
-            onClick={() => {
-              if (filterOpen) closeFilter();
-              else {
-                setFilterOpen(true);
-                requestAnimationFrame(() => inputRef.current?.focus());
-              }
-            }}
-            className="flex h-[34px] w-[30px] items-center justify-center rounded-md text-text-3 transition-colors hover:bg-raised hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
-          >
-            {filterOpen ? (
-              <X className="size-4" />
-            ) : (
-              <Search className="size-4" />
-            )}
-          </button>
-        )}
-      </div>
-
-      {filterOpen && (
-        <div className="px-3 pb-2">
-          <input
-            ref={inputRef}
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            onKeyDown={(event) => event.key === "Escape" && closeFilter()}
-            placeholder="Filter lines"
-            aria-label="Filter lines"
-            className="h-9 w-full rounded-md bg-inset px-3 text-[13px] text-foreground placeholder:text-text-3 focus-visible:outline-2 focus-visible:outline-ring"
-          />
-          {filtering && (
-            <p
-              className="px-1 pt-1.5 font-mono text-[11px] text-text-3"
-              aria-live="polite"
-            >
-              {shown.length} of {lines.length} lines
-            </p>
+        <div className="flex min-w-0 flex-1 items-center justify-end gap-1">
+          {state === "ready" && (
+            <>
+              <div className="relative h-[34px] min-w-0 flex-1 overflow-hidden">
+                <div
+                  inert={!filterOpen}
+                  className={cn(
+                    "absolute inset-0 transition-[translate,opacity] duration-200 ease-out motion-reduce:transition-none",
+                    filterOpen
+                      ? "translate-x-0 opacity-100"
+                      : "translate-x-full opacity-0",
+                  )}
+                >
+                  <input
+                    ref={inputRef}
+                    type="search"
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                    onKeyDown={(event) =>
+                      event.key === "Escape" && closeFilter()
+                    }
+                    placeholder="Filter lines"
+                    aria-label="Filter lines"
+                    className={cn(
+                      "h-[34px] w-full rounded-md bg-inset pl-3 text-[13px] text-foreground placeholder:text-text-3 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring [&::-webkit-search-cancel-button]:hidden",
+                      filtering ? "pr-[4.5rem]" : "pr-3",
+                    )}
+                  />
+                  {filtering && (
+                    <span
+                      aria-live="polite"
+                      className="pointer-events-none absolute inset-y-0 right-2.5 flex items-center font-mono text-[11px] text-text-3"
+                    >
+                      <span className="sr-only">
+                        {shown.length} of {lines.length} lines
+                      </span>
+                      <span aria-hidden="true">
+                        {shown.length}/{lines.length}
+                      </span>
+                    </span>
+                  )}
+                </div>
+              </div>
+              <button
+                type="button"
+                aria-label={filterOpen ? "Close filter" : "Filter lines"}
+                aria-expanded={filterOpen}
+                onClick={() => {
+                  if (filterOpen) closeFilter();
+                  else {
+                    setFilterOpen(true);
+                    requestAnimationFrame(() =>
+                      inputRef.current?.focus({ preventScroll: true }),
+                    );
+                  }
+                }}
+                className="relative flex h-[34px] w-[30px] shrink-0 items-center justify-center rounded-md text-text-3 transition-colors hover:bg-raised hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+              >
+                <Search
+                  aria-hidden="true"
+                  className={cn(
+                    "absolute size-4 transition-[opacity,rotate] duration-200 motion-reduce:transition-none",
+                    filterOpen ? "rotate-90 opacity-0" : "rotate-0 opacity-100",
+                  )}
+                />
+                <X
+                  aria-hidden="true"
+                  className={cn(
+                    "absolute size-4 transition-[opacity,rotate] duration-200 motion-reduce:transition-none",
+                    filterOpen
+                      ? "rotate-0 opacity-100"
+                      : "-rotate-90 opacity-0",
+                  )}
+                />
+              </button>
+            </>
           )}
         </div>
-      )}
+      </div>
 
       <div
         ref={listRef}
