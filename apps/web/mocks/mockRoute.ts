@@ -8,19 +8,40 @@ import type { z } from "zod";
  * and the fixture is checked against the contract's response schema on every call,
  * so a mock can never return a shape the real API wouldn't.
  */
+export interface MockRequest {
+  params: Record<string, string>;
+  url: URL;
+}
+
 export function mockRoute<TResponse extends z.ZodType>(
   route: RouteContract<TResponse>,
-  fixture: z.input<TResponse> | (() => z.input<TResponse>),
+  fixture:
+    | z.input<TResponse>
+    | ((request: MockRequest) => z.input<TResponse> | undefined),
 ) {
-  const method = route.method.toLowerCase() as Lowercase<RouteContract<TResponse>["method"]>;
+  const method = route.method.toLowerCase() as Lowercase<
+    RouteContract<TResponse>["method"]
+  >;
 
-  return http[method](route.path, () => {
-    const data = typeof fixture === "function" ? (fixture as () => z.input<TResponse>)() : fixture;
+  return http[method](route.path, ({ params, request }) => {
+    const data =
+      typeof fixture === "function"
+        ? (fixture as (request: MockRequest) => z.input<TResponse> | undefined)(
+            {
+              params: params as Record<string, string>,
+              url: new URL(request.url),
+            },
+          )
+        : fixture;
+    if (data === undefined)
+      return HttpResponse.json({ error: "Not found" }, { status: 404 });
     const parsed = route.response.safeParse(data);
 
     if (!parsed.success) {
       return HttpResponse.json(
-        { error: `Mock fixture for ${route.method} ${route.path} breaks its contract` },
+        {
+          error: `Mock fixture for ${route.method} ${route.path} breaks its contract`,
+        },
         { status: 500 },
       );
     }

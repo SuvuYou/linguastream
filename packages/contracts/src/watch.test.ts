@@ -1,0 +1,38 @@
+import { describe, expect, it } from "vitest";
+import { MAX_LINE_WINDOW_MS, VideoDetail, getLineWindowRoute, getVideoRoute } from "./watch.js";
+
+const video = {
+  id: "0190f3c2-7d1a-7c00-8a00-000000000001",
+  youtube_video_id: "abc123",
+  title: "Ein Tag in Hamburg",
+  channel_name: "Nordlicht Reisen",
+  duration_ms: 768_000,
+  language: "de",
+  track: { id: "t1", language: "de", is_auto_captions: true, status: "ready", line_count: 212 },
+  translation_language: "en",
+};
+
+describe("watch contracts", () => {
+  it("are GET routes under /api/videos", () => {
+    expect([getVideoRoute.method, getVideoRoute.path]).toEqual(["GET", "/api/videos/:videoId"]);
+    expect([getLineWindowRoute.method, getLineWindowRoute.path]).toEqual(["GET", "/api/videos/:videoId/lines"]);
+  });
+
+  it("accept a video with or without a track and translation", () => {
+    expect(VideoDetail.parse(video)).toEqual(video);
+    expect(VideoDetail.safeParse({ ...video, track: null, translation_language: null }).success).toBe(true);
+    expect(VideoDetail.safeParse({ ...video, track: { ...video.track, status: "done" } }).success).toBe(false);
+  });
+
+  it("need a uuid video id", () => {
+    expect(getVideoRoute.params!.safeParse({ videoId: video.id }).success).toBe(true);
+    expect(getVideoRoute.params!.safeParse({ videoId: "123" }).success).toBe(false);
+  });
+
+  it("cap a line window at ten minutes", () => {
+    const query = getLineWindowRoute.query!;
+    expect(query.parse({ from_ms: "0", to_ms: String(MAX_LINE_WINDOW_MS) })).toEqual({ from_ms: 0, to_ms: MAX_LINE_WINDOW_MS });
+    expect(query.safeParse({ from_ms: 0, to_ms: MAX_LINE_WINDOW_MS + 1 }).success).toBe(false);
+    expect(query.safeParse({ from_ms: 5000, to_ms: 5000 }).success).toBe(false);
+  });
+});

@@ -51,6 +51,9 @@ apps/web/lib/generated/prisma
 # logs
 *.log
 
+# Real spike data for mocks stays local
+apps/web/mocks/fixtures/local/
+
 # Claude Code: personal settings stay local
 .claude/settings.local.json
 .claude/settings.json
