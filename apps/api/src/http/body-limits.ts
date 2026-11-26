@@ -4,7 +4,7 @@ import { json, type NextFunction, type Request, type Response } from "express";
 
 export const DEFAULT_BODY_LIMIT = "100kb";
 
-export const LARGER_BODY_LIMITS: Record<string, string> = {};
+export const LARGER_BODY_LIMITS: Record<string, string> = { "/api/captures": "8mb" };
 
 export function applyBodyLimits(
   app: NestExpressApplication,

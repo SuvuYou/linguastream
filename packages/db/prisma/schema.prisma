@@ -140,6 +140,16 @@ model VideoLemmaCount {
   @@map("video_lemma_counts")
 }
 
+// ── Compliance ──────────────────────────────────────────────────────
+
+model BlockedVideo {
+  youtubeVideoId String   @id @map("youtube_video_id")
+  reason         String?
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("blocked_videos")
+}
+
 // ── Vocabulary and review ───────────────────────────────────────────
 
 enum WordStatus {
