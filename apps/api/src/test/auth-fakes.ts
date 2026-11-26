@@ -1,10 +1,15 @@
-import type { INestApplication, Type } from "@nestjs/common";
+import type { Type } from "@nestjs/common";
+import type { NestExpressApplication } from "@nestjs/platform-express";
 import { Test } from "@nestjs/testing";
 import type { DecodedIdToken, UserRecord } from "firebase-admin/auth";
 import type { Mock } from "vitest";
 import { AppModule } from "../app.module";
 import { FIREBASE_AUTH, type FirebaseAuth } from "../auth/firebase-auth.provider";
 import { UsersRepository } from "../auth/users.repository";
+import { applyBodyLimits } from "../http/body-limits";
+import { WEB_ORIGIN } from "../http/origin.guard";
+
+export const TEST_WEB_ORIGIN = "http://localhost:3000";
 
 export type FakeFirebaseAuth = { [K in keyof FirebaseAuth]: Mock<FirebaseAuth[K]> };
 
@@ -18,10 +23,6 @@ export function userRecord(fields: Partial<UserRecord> = {}): UserRecord {
   return { disabled: false, ...fields } as UserRecord;
 }
 
-/**
- * Firebase that knows one ID token and one session cookie, both for `uid`, and a user
- * whose sessions were never revoked.
- */
 export function fakeFirebaseAuth(uid = "firebase-uid-1"): FakeFirebaseAuth {
   return {
     verifyIdToken: vi.fn(async (token: string) => {
@@ -42,10 +43,14 @@ export function fakeUsersRepository(users: Record<string, string> = { "firebase-
   };
 }
 
-/** The real AppModule (guard included) with Firebase and the users table faked. */
 export async function createTestApp(
-  options: { auth?: FakeFirebaseAuth; controllers?: Type[] } = {},
-): Promise<INestApplication> {
+  options: {
+    auth?: FakeFirebaseAuth;
+    users?: Record<string, string>;
+    controllers?: Type[];
+    largerBodyLimits?: Record<string, string>;
+  } = {},
+): Promise<NestExpressApplication> {
   const moduleRef = await Test.createTestingModule({
     imports: [AppModule],
     controllers: options.controllers ?? [],
@@ -53,10 +58,13 @@ export async function createTestApp(
     .overrideProvider(FIREBASE_AUTH)
     .useValue(options.auth ?? fakeFirebaseAuth())
     .overrideProvider(UsersRepository)
-    .useValue(fakeUsersRepository())
+    .useValue(fakeUsersRepository(options.users))
+    .overrideProvider(WEB_ORIGIN)
+    .useValue(TEST_WEB_ORIGIN)
     .compile();
 
-  const app = moduleRef.createNestApplication();
+  const app = moduleRef.createNestApplication<NestExpressApplication>({ bodyParser: false });
+  applyBodyLimits(app, options.largerBodyLimits);
   await app.init();
   return app;
 }
