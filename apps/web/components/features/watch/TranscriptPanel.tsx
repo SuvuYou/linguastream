@@ -51,17 +51,24 @@ export default function TranscriptPanel({
   lines,
   state,
   clock,
+  followKey,
   onSeek,
 }: {
   video: VideoDetail;
   lines: Line[];
   state: TrackState;
   clock: PlaybackClock;
+  followKey: number;
   onSeek(ms: number): void;
 }) {
   const [query, setQuery] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
   const [pausedUntil, setPausedUntil] = useState(0);
+  const [seenFollowKey, setSeenFollowKey] = useState(followKey);
+  if (followKey !== seenFollowKey) {
+    setSeenFollowKey(followKey);
+    setPausedUntil(0);
+  }
   const listRef = useRef<HTMLDivElement>(null);
   const lineRefs = useRef(new Map<number, HTMLButtonElement>());
   const inputRef = useRef<HTMLInputElement>(null);

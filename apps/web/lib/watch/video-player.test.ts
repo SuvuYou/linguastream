@@ -1,7 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { youtubePlayerFactory } from "./video-player";
 
-type Options = { videoId: string; playerVars: Record<string, number>; events: Record<string, (e: { data: number }) => void> };
+type Options = {
+  videoId: string;
+  playerVars: Record<string, number>;
+  events: Record<string, (e: { data: number }) => void>;
+};
 
 function installFakeYT() {
   const instance = {
@@ -21,7 +25,10 @@ function installFakeYT() {
     options = o;
     return instance;
   });
-  window.YT = { Player, PlayerState: { PLAYING: 1, PAUSED: 2 } } as unknown as typeof YT;
+  window.YT = {
+    Player,
+    PlayerState: { ENDED: 0, PLAYING: 1, PAUSED: 2, BUFFERING: 3 },
+  } as unknown as typeof YT;
   return { instance, Player, options: () => options! };
 }
 
@@ -32,19 +39,32 @@ afterEach(() => {
 describe("youtubePlayerFactory", () => {
   it("creates a player without YouTube's controls or captions, starting at the given second", async () => {
     const yt = installFakeYT();
-    await youtubePlayerFactory(document.createElement("div"), { youtubeVideoId: "abc", startSeconds: 42.9 }, {
-      onReady: vi.fn(),
-      onPlayingChange: vi.fn(),
-      onError: vi.fn(),
-    });
+    await youtubePlayerFactory(
+      document.createElement("div"),
+      { youtubeVideoId: "abc", startSeconds: 42.9 },
+      {
+        onReady: vi.fn(),
+        onPlayingChange: vi.fn(),
+        onError: vi.fn(),
+      },
+    );
 
     expect(yt.options().videoId).toBe("abc");
-    expect(yt.options().playerVars).toMatchObject({ controls: 0, disablekb: 1, cc_load_policy: 0, start: 42 });
+    expect(yt.options().playerVars).toMatchObject({
+      controls: 0,
+      disablekb: 1,
+      cc_load_policy: 0,
+      start: 42,
+    });
   });
 
   it("forwards player events and commands", async () => {
     const yt = installFakeYT();
-    const events = { onReady: vi.fn(), onPlayingChange: vi.fn(), onError: vi.fn() };
+    const events = {
+      onReady: vi.fn(),
+      onPlayingChange: vi.fn(),
+      onError: vi.fn(),
+    };
     const player = await youtubePlayerFactory(
       document.createElement("div"),
       { youtubeVideoId: "abc", startSeconds: 0 },
@@ -53,10 +73,16 @@ describe("youtubePlayerFactory", () => {
 
     yt.options().events.onReady!({ data: 0 });
     yt.options().events.onStateChange!({ data: 1 });
+    yt.options().events.onStateChange!({ data: 3 });
     yt.options().events.onStateChange!({ data: 2 });
+    yt.options().events.onStateChange!({ data: 0 });
     yt.options().events.onError!({ data: 150 });
     expect(events.onReady).toHaveBeenCalled();
-    expect(events.onPlayingChange.mock.calls).toEqual([[true], [false]]);
+    expect(events.onPlayingChange.mock.calls).toEqual([
+      [true],
+      [false],
+      [false],
+    ]);
     expect(events.onError).toHaveBeenCalledWith(150);
 
     player.play();
@@ -85,7 +111,9 @@ describe("youtubePlayerFactory", () => {
       { youtubeVideoId: "abc", startSeconds: 0 },
       { onReady: vi.fn(), onPlayingChange: vi.fn(), onError: vi.fn() },
     );
-    const scripts = document.head.querySelectorAll('script[src="https://www.youtube.com/iframe_api"]');
+    const scripts = document.head.querySelectorAll(
+      'script[src="https://www.youtube.com/iframe_api"]',
+    );
     expect(scripts).toHaveLength(1);
 
     const yt = installFakeYT();

@@ -24,6 +24,23 @@ export function activeIndex(lines: readonly Line[], ms: number): number {
   return i >= 0 && ms < lines[i]!.end_ms ? i : -1;
 }
 
+export const LINE_SNAP_MS = 250;
+
+export interface LineTargets {
+  previous: number | null;
+  repeat: number | null;
+  next: number | null;
+}
+
+export function lineTargets(lines: readonly Line[], ms: number): LineTargets {
+  const i = lastStartedIndex(lines, ms + LINE_SNAP_MS);
+  return {
+    previous: i > 0 ? lines[i - 1]!.start_ms : null,
+    repeat: i >= 0 ? lines[i]!.start_ms : null,
+    next: i + 1 < lines.length ? lines[i + 1]!.start_ms : null,
+  };
+}
+
 export interface MarkerGroup {
   markerMs: number;
   lines: Line[];

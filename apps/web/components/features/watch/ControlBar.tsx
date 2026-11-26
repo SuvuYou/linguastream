@@ -1,6 +1,15 @@
 "use client";
 
-import { Pause, Play, Volume2, VolumeX } from "lucide-react";
+import type { Line } from "@linguastream/contracts";
+import {
+  Pause,
+  Play,
+  RotateCcw,
+  SkipBack,
+  SkipForward,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,8 +17,14 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Kbd } from "@/components/ui/kbd";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { VideoPlayerControls } from "@/hooks/useVideoPlayer";
-import { formatTime } from "@/lib/watch/lines";
+import { formatTime, lineTargets, type LineTargets } from "@/lib/watch/lines";
 import { useClockValue, type PlaybackClock } from "@/lib/watch/playback-clock";
 import SeekBar from "./SeekBar";
 
@@ -23,10 +38,63 @@ function CurrentTime({ clock }: { clock: PlaybackClock }) {
   return <>{formatTime(seconds * 1000)}</>;
 }
 
-export default function ControlBar({ player, clock, fallbackDurationMs }: {
+const LINE_BUTTONS = [
+  { target: "previous", label: "Previous line", key: "A", Icon: SkipBack },
+  { target: "repeat", label: "Repeat line", key: "S", Icon: RotateCcw },
+  { target: "next", label: "Next line", key: "D", Icon: SkipForward },
+] as const;
+
+function LineButtons({
+  lines,
+  clock,
+  onJump,
+}: {
+  lines: readonly Line[] | null;
+  clock: PlaybackClock;
+  onJump(target: keyof LineTargets): void;
+}) {
+  const available = useClockValue(clock, (ms) => {
+    if (!lines) return "";
+    const targets = lineTargets(lines, ms);
+    return LINE_BUTTONS.map((b) =>
+      targets[b.target] === null ? "0" : "1",
+    ).join("");
+  });
+
+  return LINE_BUTTONS.map(({ target, label, key, Icon }, i) => (
+    <Tooltip key={target}>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          onClick={() => onJump(target)}
+          disabled={available[i] !== "1"}
+          aria-label={`${label} (${key})`}
+          aria-keyshortcuts={key}
+          className={iconButton}
+        >
+          <Icon className="size-5" />
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="top" sideOffset={6}>
+        {label}
+        <Kbd>{key}</Kbd>
+      </TooltipContent>
+    </Tooltip>
+  ));
+}
+
+export default function ControlBar({
+  player,
+  clock,
+  fallbackDurationMs,
+  lines,
+  onJumpToLine,
+}: {
   player: VideoPlayerControls;
   clock: PlaybackClock;
   fallbackDurationMs: number | null;
+  lines: readonly Line[] | null;
+  onJumpToLine(target: keyof LineTargets): void;
 }) {
   const ready = player.status === "ready";
   const durationMs = player.durationMs ?? fallbackDurationMs ?? 0;
@@ -38,7 +106,12 @@ export default function ControlBar({ player, clock, fallbackDurationMs }: {
       role="group"
       className="flex flex-wrap items-center gap-1 rounded-2xl bg-raised p-1.5 @max-[600px]:rounded-none"
     >
-      <SeekBar clock={clock} durationMs={durationMs} disabled={!ready} onSeek={player.seek} />
+      <SeekBar
+        clock={clock}
+        durationMs={durationMs}
+        disabled={!ready}
+        onSeek={player.seek}
+      />
       <button
         type="button"
         onClick={player.toggle}
@@ -46,8 +119,13 @@ export default function ControlBar({ player, clock, fallbackDurationMs }: {
         aria-label={player.playing ? "Pause (Space)" : "Play (Space)"}
         className="flex size-11 items-center justify-center rounded-lg bg-play text-play-ink transition-[filter] hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-45"
       >
-        {player.playing ? <Pause className="size-5 fill-current" /> : <Play className="size-5 fill-current" />}
+        {player.playing ? (
+          <Pause className="size-5 fill-current" />
+        ) : (
+          <Play className="size-5 fill-current" />
+        )}
       </button>
+      <LineButtons lines={lines} clock={clock} onJump={onJumpToLine} />
       <span className="px-2 font-mono text-xs text-text-3 tabular-nums">
         <CurrentTime clock={clock} /> / {formatTime(durationMs)}
       </span>
@@ -61,9 +139,16 @@ export default function ControlBar({ player, clock, fallbackDurationMs }: {
           {player.rate}×
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuRadioGroup value={String(player.rate)} onValueChange={(v) => player.setRate(Number(v))}>
+          <DropdownMenuRadioGroup
+            value={String(player.rate)}
+            onValueChange={(v) => player.setRate(Number(v))}
+          >
             {SPEEDS.map((speed) => (
-              <DropdownMenuRadioItem key={speed} value={String(speed)} className="font-mono">
+              <DropdownMenuRadioItem
+                key={speed}
+                value={String(speed)}
+                className="font-mono"
+              >
                 {speed}×
               </DropdownMenuRadioItem>
             ))}
@@ -77,7 +162,11 @@ export default function ControlBar({ player, clock, fallbackDurationMs }: {
         aria-label={silent ? "Unmute" : "Mute"}
         className={iconButton}
       >
-        {silent ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
+        {silent ? (
+          <VolumeX className="size-5" />
+        ) : (
+          <Volume2 className="size-5" />
+        )}
       </button>
       <input
         type="range"

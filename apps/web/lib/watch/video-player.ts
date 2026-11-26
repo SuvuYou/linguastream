@@ -68,8 +68,12 @@ export const youtubePlayerFactory: VideoPlayerFactory = async (
     },
     events: {
       onReady: () => events.onReady(),
-      onStateChange: (event) =>
-        events.onPlayingChange(event.data === window.YT.PlayerState.PLAYING),
+      onStateChange: (event) => {
+        const { PLAYING, PAUSED, ENDED } = window.YT.PlayerState;
+        if (event.data === PLAYING) events.onPlayingChange(true);
+        else if (event.data === PAUSED || event.data === ENDED)
+          events.onPlayingChange(false);
+      },
       onError: (event) => events.onError(event.data),
     },
   });

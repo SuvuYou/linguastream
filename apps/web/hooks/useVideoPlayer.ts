@@ -19,6 +19,14 @@ import {
 export const VideoPlayerFactoryContext =
   createContext<VideoPlayerFactory>(youtubePlayerFactory);
 
+export const SEEK_SETTLE_MS = 2500;
+
+interface PendingSeek {
+  toMs: number;
+  fromMs: number;
+  at: number;
+}
+
 export type PlayerStatus = "loading" | "ready" | "error";
 
 export interface VideoPlayerControls {
@@ -30,6 +38,7 @@ export interface VideoPlayerControls {
   muted: boolean;
   toggle(): void;
   seek(ms: number): void;
+  jump(ms: number): void;
   setRate(rate: number): void;
   setVolume(volume: number): void;
   toggleMute(): void;
@@ -43,6 +52,7 @@ export function useVideoPlayer(
 ): VideoPlayerControls {
   const factory = useContext(VideoPlayerFactoryContext);
   const playerRef = useRef<VideoPlayer | null>(null);
+  const pendingSeekRef = useRef<PendingSeek | null>(null);
   const [status, setStatus] = useState<PlayerStatus>("loading");
   const [playing, setPlaying] = useState(false);
   const [durationMs, setDurationMs] = useState<number | null>(null);
@@ -63,6 +73,7 @@ export function useVideoPlayer(
       {
         onReady: () => {
           if (disposed) return;
+          host.querySelector("iframe")?.setAttribute("tabindex", "-1");
           const seconds = playerRef.current?.getDuration() ?? 0;
           setDurationMs(seconds > 0 ? Math.round(seconds * 1000) : null);
           setStatus("ready");
@@ -90,7 +101,18 @@ export function useVideoPlayer(
     let frame = 0;
     const tick = () => {
       const player = playerRef.current;
-      if (player) clock.set(Math.round(player.getCurrentTime() * 1000));
+      if (player) {
+        const ms = Math.round(player.getCurrentTime() * 1000);
+        const pending = pendingSeekRef.current;
+        if (pending) {
+          const now = performance.now();
+          const staleMs = pending.fromMs + (now - pending.at);
+          const landed = Math.abs(ms - pending.toMs) < Math.abs(ms - staleMs);
+          if (landed || now - pending.at > SEEK_SETTLE_MS)
+            pendingSeekRef.current = null;
+        }
+        if (!pendingSeekRef.current) clock.set(ms);
+      }
       frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
@@ -108,10 +130,31 @@ export function useVideoPlayer(
     (ms: number) => {
       const player = playerRef.current;
       if (!player || status !== "ready") return;
+      pendingSeekRef.current = {
+        toMs: ms,
+        fromMs: clock.get(),
+        at: performance.now(),
+      };
       player.seekTo(ms / 1000);
       clock.set(ms);
     },
     [clock, status],
+  );
+
+  const jump = useCallback(
+    (ms: number) => {
+      const player = playerRef.current;
+      if (!player || status !== "ready") return;
+      pendingSeekRef.current = {
+        toMs: ms,
+        fromMs: clock.get(),
+        at: performance.now(),
+      };
+      player.seekTo(ms / 1000);
+      clock.set(ms);
+      if (!playing) player.play();
+    },
+    [clock, playing, status],
   );
 
   const setRate = useCallback((next: number) => {
@@ -150,6 +193,7 @@ export function useVideoPlayer(
     muted,
     toggle,
     seek,
+    jump,
     setRate,
     setVolume,
     toggleMute,

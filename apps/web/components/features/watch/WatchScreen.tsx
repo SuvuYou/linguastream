@@ -2,12 +2,13 @@
 
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLineWindows } from "@/hooks/useLineWindows";
 import { useVideo } from "@/hooks/useVideo";
 import { useVideoPlayer } from "@/hooks/useVideoPlayer";
 import { ApiRequestError } from "@/lib/api/client";
+import { lineTargets, type LineTargets } from "@/lib/watch/lines";
 import { createPlaybackClock } from "@/lib/watch/playback-clock";
 import type { VideoDetail } from "@linguastream/contracts";
 import ControlBar from "./ControlBar";
@@ -15,11 +16,31 @@ import TranscriptPanel, { trackState } from "./TranscriptPanel";
 import VideoStage from "./VideoStage";
 import WatchHeader from "./WatchHeader";
 
-const TYPING = new Set(["INPUT", "TEXTAREA", "SELECT"]);
+const TYPING_INPUTS = new Set([
+  "text",
+  "search",
+  "email",
+  "number",
+  "password",
+  "url",
+  "tel",
+]);
+
+const LINE_KEYS: Record<string, keyof LineTargets> = {
+  KeyA: "previous",
+  KeyS: "repeat",
+  KeyD: "next",
+};
 
 function isTyping(target: EventTarget | null) {
   const el = target as HTMLElement | null;
-  return !!el && (TYPING.has(el.tagName) || el.isContentEditable);
+  if (!el) return false;
+  if (el instanceof HTMLInputElement) return TYPING_INPUTS.has(el.type);
+  return (
+    el instanceof HTMLTextAreaElement ||
+    el instanceof HTMLSelectElement ||
+    el.isContentEditable
+  );
 }
 
 function Layout({
@@ -97,7 +118,20 @@ function Watch({ video, startMs }: { video: VideoDetail; startMs: number }) {
   );
   const lines = useLineWindows(video, startMs);
   const state = trackState(video, lines);
-  const { toggle } = player;
+  const { toggle, jump } = player;
+  const [followKey, setFollowKey] = useState(0);
+  const navigable = state === "ready" && player.status === "ready";
+  const lineList = lines.lines;
+
+  const jumpToLine = useCallback(
+    (target: keyof LineTargets) => {
+      const ms = lineTargets(lineList, clock.get())[target];
+      if (ms === null) return;
+      jump(ms);
+      setFollowKey((key) => key + 1);
+    },
+    [clock, jump, lineList],
+  );
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -115,6 +149,19 @@ function Watch({ video, startMs }: { video: VideoDetail; startMs: number }) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [toggle]);
 
+  useEffect(() => {
+    if (!navigable) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = LINE_KEYS[event.code];
+      if (!target || event.repeat || isTyping(event.target)) return;
+      if (event.ctrlKey || event.metaKey || event.altKey) return;
+      event.preventDefault();
+      jumpToLine(target);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [navigable, jumpToLine]);
+
   return (
     <Layout
       header={
@@ -130,6 +177,7 @@ function Watch({ video, startMs }: { video: VideoDetail; startMs: number }) {
           <VideoStage
             hostRef={hostRef}
             status={player.status}
+            onToggle={toggle}
             lines={lines.lines}
             clock={clock}
             language={video.language}
@@ -139,6 +187,8 @@ function Watch({ video, startMs }: { video: VideoDetail; startMs: number }) {
             player={player}
             clock={clock}
             fallbackDurationMs={video.duration_ms}
+            lines={navigable ? lineList : null}
+            onJumpToLine={jumpToLine}
           />
         </>
       }
@@ -148,6 +198,7 @@ function Watch({ video, startMs }: { video: VideoDetail; startMs: number }) {
           lines={lines.lines}
           state={state}
           clock={clock}
+          followKey={followKey}
           onSeek={player.seek}
         />
       }

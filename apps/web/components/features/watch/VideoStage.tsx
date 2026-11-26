@@ -13,6 +13,7 @@ export default function VideoStage({
   clock,
   language,
   translationLanguage,
+  onToggle,
 }: {
   hostRef: RefObject<HTMLDivElement | null>;
   status: PlayerStatus;
@@ -20,10 +21,15 @@ export default function VideoStage({
   clock: PlaybackClock;
   language: string;
   translationLanguage: string | null;
+  onToggle(): void;
 }) {
   return (
     <div className="@container relative mx-auto aspect-video w-full max-w-[calc((100dvh-11rem)*16/9)] overflow-hidden rounded-3xl bg-inset @max-[600px]:max-w-none @max-[600px]:rounded-none">
-      <div ref={hostRef} className="absolute inset-0 [&_iframe]:size-full" />
+      <div
+        ref={hostRef}
+        onClick={onToggle}
+        className="absolute inset-0 [&_iframe]:pointer-events-none [&_iframe]:size-full"
+      />
       {status === "loading" && (
         <div
           className="absolute inset-0 animate-pulse bg-raised"

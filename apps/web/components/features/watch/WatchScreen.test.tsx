@@ -8,6 +8,7 @@ import {
 } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { createWrapper } from "@/helpers/tests/providers";
 import { VideoPlayerFactoryContext } from "@/hooks/useVideoPlayer";
 import type {
@@ -71,9 +72,11 @@ function renderWatch(videoId: string, fake = fakePlayer(), startMs = 0) {
   const Wrapper = createWrapper();
   render(
     <VideoPlayerFactoryContext.Provider value={fake.factory}>
-      <Wrapper>
-        <WatchScreen videoId={videoId} startMs={startMs} />
-      </Wrapper>
+      <TooltipProvider>
+        <Wrapper>
+          <WatchScreen videoId={videoId} startMs={startMs} />
+        </Wrapper>
+      </TooltipProvider>
     </VideoPlayerFactoryContext.Provider>,
   );
   return fake;
@@ -86,6 +89,14 @@ const firstLine = async (text: string) =>
 
 beforeEach(() => {
   Element.prototype.scrollIntoView = vi.fn();
+  vi.stubGlobal(
+    "ResizeObserver",
+    class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    },
+  );
   stubApi();
 });
 
@@ -176,6 +187,20 @@ describe("WatchScreen", () => {
     });
     fireEvent.keyDown(document.body, { code: "Space", key: " " });
     expect(fake.player.pause).toHaveBeenCalled();
+  });
+
+  it("plays and pauses when the video is clicked", async () => {
+    const fake = renderWatch(MOCK_VIDEO_IDS.normal);
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: "Play (Space)" }),
+      ).toBeEnabled(),
+    );
+    const host = screen
+      .getByRole("region", { name: "Video" })
+      .querySelector("[class*=pointer-events-none]")!;
+    await userEvent.setup().click(host);
+    expect(fake.player.play).toHaveBeenCalled();
   });
 
   it("seeks with the keyboard on the seek bar", async () => {
@@ -282,5 +307,150 @@ describe("WatchScreen", () => {
       "can't play here",
     );
     await firstLine("Guten Morgen aus Hamburg!");
+  });
+
+  describe("line navigation", () => {
+    const lines = mockVideos[MOCK_VIDEO_IDS.normal]!.lines;
+
+    async function ready(startMs = 0) {
+      const fake = renderWatch(MOCK_VIDEO_IDS.normal, fakePlayer(), startMs);
+      await firstLine(lines[0]!.text);
+      await waitFor(() =>
+        expect(
+          screen.getByRole("button", { name: "Next line (D)" }),
+        ).toBeEnabled(),
+      );
+      return fake;
+    }
+
+    it("jumps with the buttons and starts playback", async () => {
+      const fake = await ready(lines[3]!.start_ms + 200);
+      const user = userEvent.setup();
+
+      await user.click(screen.getByRole("button", { name: "Next line (D)" }));
+      expect(fake.player.seekTo).toHaveBeenLastCalledWith(
+        lines[4]!.start_ms / 1000,
+      );
+      expect(fake.player.play).toHaveBeenCalledTimes(1);
+
+      await user.click(screen.getByRole("button", { name: "Repeat line (S)" }));
+      expect(fake.player.seekTo).toHaveBeenLastCalledWith(
+        lines[4]!.start_ms / 1000,
+      );
+
+      await user.click(
+        screen.getByRole("button", { name: "Previous line (A)" }),
+      );
+      expect(fake.player.seekTo).toHaveBeenLastCalledWith(
+        lines[3]!.start_ms / 1000,
+      );
+      expect(fake.player.play).toHaveBeenCalledTimes(1);
+    });
+
+    it("jumps with A, S and D but not while typing or with a modifier", async () => {
+      const fake = await ready(lines[3]!.start_ms + 200);
+
+      fireEvent.keyDown(document.body, { code: "KeyD", key: "d" });
+      expect(fake.player.seekTo).toHaveBeenLastCalledWith(
+        lines[4]!.start_ms / 1000,
+      );
+      fireEvent.keyDown(document.body, { code: "KeyA", key: "a" });
+      expect(fake.player.seekTo).toHaveBeenLastCalledWith(
+        lines[3]!.start_ms / 1000,
+      );
+      fireEvent.keyDown(document.body, { code: "KeyS", key: "s" });
+      expect(fake.player.seekTo).toHaveBeenLastCalledWith(
+        lines[3]!.start_ms / 1000,
+      );
+      const calls = vi.mocked(fake.player.seekTo).mock.calls.length;
+
+      fireEvent.keyDown(document.body, {
+        code: "KeyS",
+        key: "s",
+        ctrlKey: true,
+      });
+      fireEvent.keyDown(document.body, {
+        code: "KeyD",
+        key: "d",
+        repeat: true,
+      });
+      const panel = await transcript();
+      await userEvent
+        .setup()
+        .click(panel.getByRole("button", { name: "Filter lines" }));
+      fireEvent.keyDown(
+        panel.getByRole("searchbox", { name: "Filter lines" }),
+        { code: "KeyD", key: "d" },
+      );
+      expect(fake.player.seekTo).toHaveBeenCalledTimes(calls);
+    });
+
+    it("still jumps with the volume slider focused", async () => {
+      const fake = await ready(lines[3]!.start_ms + 200);
+      const volume = screen.getByRole("slider", { name: "Volume" });
+      volume.focus();
+      fireEvent.keyDown(volume, { code: "KeyD", key: "d" });
+      expect(fake.player.seekTo).toHaveBeenLastCalledWith(
+        lines[4]!.start_ms / 1000,
+      );
+    });
+
+    it("disables previous and repeat before the first line", async () => {
+      await ready(0);
+      expect(
+        screen.getByRole("button", { name: "Previous line (A)" }),
+      ).toBeDisabled();
+      expect(
+        screen.getByRole("button", { name: "Repeat line (S)" }),
+      ).toBeDisabled();
+    });
+
+    it("disables next on the last line", async () => {
+      renderWatch(
+        MOCK_VIDEO_IDS.normal,
+        fakePlayer(),
+        lines.at(-1)!.start_ms + 100,
+      );
+      await waitFor(() =>
+        expect(
+          screen.getByRole("button", { name: "Repeat line (S)" }),
+        ).toBeEnabled(),
+      );
+      expect(
+        screen.getByRole("button", { name: "Next line (D)" }),
+      ).toBeDisabled();
+    });
+
+    it("stays disabled while the transcript is being prepared", async () => {
+      const fake = renderWatch(MOCK_VIDEO_IDS.preparing);
+      await waitFor(() =>
+        expect(
+          screen.getByRole("button", { name: "Play (Space)" }),
+        ).toBeEnabled(),
+      );
+      expect(
+        screen.getByRole("button", { name: "Next line (D)" }),
+      ).toBeDisabled();
+      fireEvent.keyDown(document.body, { code: "KeyD", key: "d" });
+      expect(fake.player.seekTo).not.toHaveBeenCalled();
+    });
+
+    it("brings the transcript back to the current line after a manual scroll", async () => {
+      await ready(lines[3]!.start_ms + 200);
+      const panel = await transcript();
+      fireEvent.wheel(
+        (await firstLine(lines[0]!.text)).closest("[class*=overflow-y-auto]")!,
+      );
+      expect(
+        await panel.findByRole("button", { name: "Back to current line" }),
+      ).toBeInTheDocument();
+
+      fireEvent.keyDown(document.body, { code: "KeyD", key: "d" });
+      await waitFor(() =>
+        expect(
+          panel.queryByRole("button", { name: "Back to current line" }),
+        ).toBeNull(),
+      );
+    });
   });
 });
