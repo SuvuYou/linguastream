@@ -1,4 +1,4 @@
-import { execFileSync } from "node:child_process";
+import { execSync } from "node:child_process";
 import path from "node:path";
 import { Client } from "pg";
 import { getTestDatabaseUrl } from "./helpers/test-database-url.js";
@@ -31,10 +31,9 @@ export default async function setup() {
 
   await createDatabaseIfMissing(url);
 
-  execFileSync("pnpm", ["exec", "prisma", "migrate", "reset", "--force"], {
+  execSync("pnpm exec prisma migrate reset --force", {
     cwd: path.resolve(__dirname, ".."),
     env: { ...process.env, DATABASE_URL: url },
     stdio: "inherit",
-    shell: process.platform === "win32",
   });
 }

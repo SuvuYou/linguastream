@@ -63,3 +63,6 @@ apps/web/lib/generated/prisma
 PRODUCT.md
 design/
 DESIGN.md
+
+# Index measurements (the record lives in docs/changes/007-indexes/)
+packages/db/perf/results.md

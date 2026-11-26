@@ -1,5 +1,6 @@
 // Target data model: docs/changes/006-data-model/spec.md (D-092–D-096).
 // Models and fields in camelCase, tables and columns in snake_case (D-096).
+// Indexes beyond keys are measured in docs/changes/007-indexes (D-097).
 
 generator client {
   provider = "prisma-client-js"
@@ -95,6 +96,7 @@ model Line {
   connections  Connection[]
 
   @@unique([trackId, index])
+  @@index([lemmas], type: Gin)
   @@map("lines")
 }
 
@@ -123,6 +125,7 @@ model LineTranslation {
   line        Line             @relation(fields: [lineId], references: [id], onDelete: Cascade)
 
   @@id([translationId, lineId])
+  @@index([lineId])
   @@map("line_translations")
 }
 
@@ -175,6 +178,7 @@ model VocabularyWord {
   decks       DeckWord[]
 
   @@unique([userId, language, lemma])
+  @@index([userId, savedAt(sort: Desc)])
   @@map("vocabulary_words")
 }
 
@@ -198,6 +202,9 @@ model Connection {
   video Video?         @relation(fields: [videoId], references: [id], onDelete: SetNull)
   line  Line?          @relation(fields: [lineId], references: [id], onDelete: SetNull)
 
+  @@index([wordId])
+  @@index([videoId])
+  @@index([lineId])
   @@map("connections")
 }
 
@@ -226,6 +233,7 @@ model DeckWord {
   word VocabularyWord @relation(fields: [wordId], references: [id], onDelete: Cascade)
 
   @@id([deckId, wordId])
+  @@index([wordId])
   @@map("deck_words")
 }
 
@@ -268,6 +276,7 @@ model ReviewLog {
 
   card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
 
+  @@index([cardId])
   @@map("review_logs")
 }
 
