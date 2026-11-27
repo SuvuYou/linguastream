@@ -95,6 +95,11 @@ describe("request hardening through the whole app", () => {
   const post = (path: string) =>
     request(app.getHttpServer()).post(path).set("Cookie", COOKIE).set("Origin", TEST_WEB_ORIGIN);
 
+  it("doesn't announce Express", async () => {
+    const res = await request(app.getHttpServer()).get("/api/test-hardening/public");
+    expect(res.headers["x-powered-by"]).toBeUndefined();
+  });
+
   describe("validation", () => {
     it("hands the handler parsed input: coerced, defaulted, unknown keys stripped", async () => {
       const res = await post("/api/test-hardening/echo/abc?n=5")
@@ -212,6 +217,15 @@ describe("request hardening through the whole app", () => {
       await get().expect(200);
       await get().expect(200);
       await get().expect(429);
+    });
+
+    it("counts public routes per client behind the local proxy, by X-Forwarded-For", async () => {
+      const get = (ip: string) =>
+        request(app.getHttpServer()).get("/api/test-hardening/public").set("X-Forwarded-For", ip);
+      await get("203.0.113.1").expect(200);
+      await get("203.0.113.1").expect(200);
+      await get("203.0.113.1").expect(429);
+      await get("203.0.113.2").expect(200);
     });
 
     it("limits every route by default", async () => {

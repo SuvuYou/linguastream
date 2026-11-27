@@ -40,6 +40,10 @@ export class ProcessingService {
     return { track_id: trackId, status: "pending" };
   }
 
+  async enqueueTranslation(trackId: string): Promise<void> {
+    await this.queue.enqueueTranslation(trackId);
+  }
+
   async currentEvents(userId: string): Promise<ProcessingEvent[]> {
     return (await this.repository.unfinishedTracks(userId)).map(currentState);
   }

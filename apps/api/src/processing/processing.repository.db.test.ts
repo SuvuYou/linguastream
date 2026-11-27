@@ -180,4 +180,82 @@ describe("ProcessingRepository (Postgres)", () => {
       (await db.line.findMany({ where: { trackId: track.id, lemmas: { has: "anfangen" } } })).map((l) => l.index),
     ).toEqual([0, 1]);
   });
+
+  it("keeps one translation per language and fills its lines, resuming where it stopped", async () => {
+    const track = await trackFor();
+    await repo.replaceLines(track.id, [
+      { index: 0, startMs: 0, endMs: 900, text: "Hallo zusammen" },
+      { index: 1, startMs: 900, endMs: 1800, text: "und willkommen" },
+    ]);
+    expect(await repo.translationTarget(track.id)).toEqual({ sourceLanguage: "de", targetLanguage: "uk" });
+    expect(await repo.translationTarget("0190f3c2-7d1a-7c00-8a00-000000000000")).toBeNull();
+
+    const id = await repo.startTranslation(track.id, "uk");
+    const lines = await repo.translationLines(track.id, id);
+    expect(lines.map(({ index, text, translated }) => ({ index, text, translated }))).toEqual([
+      { index: 0, text: "Hallo zusammen", translated: false },
+      { index: 1, text: "und willkommen", translated: false },
+    ]);
+
+    await repo.saveLineTranslations(id, [{ lineId: lines[0]!.lineId, text: "Привіт усім" }]);
+    await repo.saveLineTranslations(id, []);
+    await repo.finishTranslation(id, {
+      status: "failed",
+      errorCode: "spend_cap",
+      translatedLines: 1,
+      chunks: 1,
+      calls: 1,
+      costMicroUsd: 10,
+    });
+    expect(await db.trackTranslation.findUniqueOrThrow({ where: { id } })).toMatchObject({
+      language: "uk",
+      status: "failed",
+      errorCode: "spend_cap",
+      progress: 1,
+    });
+
+    expect(await repo.startTranslation(track.id, "uk")).toBe(id);
+    expect(await db.trackTranslation.findUniqueOrThrow({ where: { id } })).toMatchObject({
+      status: "processing",
+      errorCode: null,
+    });
+    expect((await repo.translationLines(track.id, id)).map((l) => l.translated)).toEqual([true, false]);
+
+    await repo.saveLineTranslations(id, [
+      { lineId: lines[0]!.lineId, text: "Привіт усім!" },
+      { lineId: lines[1]!.lineId, text: "і ласкаво просимо" },
+    ]);
+    const saved = await db.lineTranslation.findMany({
+      where: { translationId: id },
+      include: { line: { select: { index: true } } },
+      orderBy: { line: { index: "asc" } },
+    });
+    expect(saved.map((l) => l.text)).toEqual(["Привіт усім!", "і ласкаво просимо"]);
+
+    const en = await repo.startTranslation(track.id, "en");
+    expect(en).not.toBe(id);
+    expect((await repo.translationLines(track.id, en)).map((l) => l.translated)).toEqual([false, false]);
+  });
+
+  it("finds open translations of ready tracks for the start-up sweep, and fails them", async () => {
+    const ready = await trackFor(undefined, "ready");
+    const processing = await trackFor(undefined, "processing");
+    await db.trackTranslation.create({ data: { trackId: ready.id, language: "uk", status: "pending" } });
+    await db.trackTranslation.create({ data: { trackId: ready.id, language: "en", status: "processing" } });
+    await db.trackTranslation.create({ data: { trackId: processing.id, language: "uk", status: "pending" } });
+
+    const ids = await repo.pendingTranslationTrackIds();
+    expect(ids).toContain(ready.id);
+    expect(ids.filter((id) => id === ready.id)).toHaveLength(1);
+    expect(ids).not.toContain(processing.id);
+
+    await repo.failOpenTranslations(ready.id);
+    expect(
+      (await db.trackTranslation.findMany({ where: { trackId: ready.id } })).map((t) => [t.status, t.errorCode]),
+    ).toEqual([
+      ["failed", "internal"],
+      ["failed", "internal"],
+    ]);
+    expect(await repo.pendingTranslationTrackIds()).not.toContain(ready.id);
+  });
 });

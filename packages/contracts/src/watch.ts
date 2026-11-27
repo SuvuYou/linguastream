@@ -12,6 +12,22 @@ export const ProcessingStatus = z.enum([
 
 export type ProcessingStatus = z.infer<typeof ProcessingStatus>;
 
+export const TranslationStatus = z.enum([
+  "none",
+  "pending",
+  "processing",
+  "ready",
+  "failed",
+]);
+
+export type TranslationStatus = z.infer<typeof TranslationStatus>;
+
+export const VideoTranslation = z
+  .object({ language: z.string(), status: TranslationStatus })
+  .nullable();
+
+export type VideoTranslation = z.infer<typeof VideoTranslation>;
+
 export const VideoDetail = z.object({
   id: z.string(),
   youtube_video_id: z.string(),
@@ -29,6 +45,7 @@ export const VideoDetail = z.object({
     })
     .nullable(),
   translation_language: z.string().nullable(),
+  translation: VideoTranslation,
 });
 
 export type VideoDetail = z.infer<typeof VideoDetail>;
@@ -38,6 +55,34 @@ export const getVideoRoute = defineRoute({
   path: "/api/videos/:videoId",
   params: z.object({ videoId: z.uuid() }),
   response: VideoDetail,
+});
+
+export const TranslationRequested = z.object({
+  video_id: z.uuid(),
+  translation: z.object({ language: z.string(), status: z.literal("pending") }),
+});
+
+export type TranslationRequested = z.infer<typeof TranslationRequested>;
+
+export const translateVideoRoute = defineRoute({
+  method: "POST",
+  path: "/api/videos/:videoId/translation",
+  params: z.object({ videoId: z.uuid() }),
+  response: TranslationRequested,
+});
+
+export const VideoDeleted = z.object({
+  video_id: z.uuid(),
+  deleted: z.literal(true),
+});
+
+export type VideoDeleted = z.infer<typeof VideoDeleted>;
+
+export const deleteVideoRoute = defineRoute({
+  method: "DELETE",
+  path: "/api/videos/:videoId",
+  params: z.object({ videoId: z.uuid() }),
+  response: VideoDeleted,
 });
 
 export const Line = z.object({

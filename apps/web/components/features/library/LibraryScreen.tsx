@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 import PaginationControls from "@/components/primitives/PaginationControls";
 import { useLibrary } from "@/hooks/useLibrary";
+import { useDeleteVideo, useTranslateVideo } from "@/hooks/useVideoActions";
 import { cardState } from "@/lib/library/card-state";
 import LibrarySearch from "./LibrarySearch";
 import VideoCard from "./VideoCard";
@@ -61,6 +62,8 @@ export default function LibraryScreen() {
   const page = readPage(searchParams.get("page"));
   const search = searchParams.get("q")?.trim() ?? "";
   const { videos, events, retry } = useLibrary(page, search);
+  const translate = useTranslateVideo();
+  const remove = useDeleteVideo();
 
   const navigate = useCallback(
     (next: { page?: number; q?: string }) => {
@@ -99,10 +102,23 @@ export default function LibraryScreen() {
         />
       </div>
 
+      {videos.isError && data && (
+        <p
+          role="status"
+          className="rounded-md border border-border bg-raised px-4 py-2.5 text-sm text-text-2"
+        >
+          Can&apos;t reach the server right now. The list below may be out of
+          date; it updates once the connection is back.
+        </p>
+      )}
+
       {videos.isPending ? (
         <SkeletonCards />
       ) : videos.isError && !data ? (
-        <Message title="Couldn't load your library">
+        <Message title="Couldn't reach the server">
+          <p className="max-w-md text-sm text-text-2">
+            The server didn&apos;t answer. Try again in a moment.
+          </p>
           <span className="mt-2 text-sm font-semibold">
             <button
               type="button"
@@ -150,6 +166,10 @@ export default function LibraryScreen() {
                   retrying={retry.isPending && retry.variables?.video.id === video.id}
                   retryFailed={retry.isError && retry.variables?.video.id === video.id}
                   onRetry={() => retryFor(video)}
+                  deleting={remove.isPending && remove.variables === video.id}
+                  deleteFailed={remove.isError && remove.variables === video.id}
+                  onTranslate={() => translate.mutate(video.id)}
+                  onDelete={() => remove.mutate(video.id)}
                 />
               ))}
             </Grid>

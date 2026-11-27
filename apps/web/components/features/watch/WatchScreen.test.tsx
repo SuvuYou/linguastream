@@ -9,6 +9,8 @@ import {
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { PROCESSING_EVENT_NAME } from "@linguastream/contracts";
+import { FakeEventSource } from "@/helpers/tests/fake-event-source";
 import { createWrapper } from "@/helpers/tests/providers";
 import { VideoPlayerFactoryContext } from "@/hooks/useVideoPlayer";
 import type {
@@ -24,6 +26,7 @@ const api = {
     subtitle_visibility: { original: "show", translation: "show" },
   },
   failPreferences: false,
+  translating: new Set<string>(),
 };
 
 function stubApi() {
@@ -46,14 +49,26 @@ function stubApi() {
         }
         return new Response(JSON.stringify(api.preferences), { status: 200 });
       }
+      const translate = /^\/api\/videos\/([^/]+)\/translation$/.exec(url.pathname);
+      if (translate && init?.method === "POST") {
+        api.translating.add(translate[1]!);
+        return new Response(
+          JSON.stringify({ video_id: translate[1], translation: { language: "en", status: "pending" } }),
+          { status: 202 },
+        );
+      }
       const match = /^\/api\/videos\/([^/]+)(\/lines)?$/.exec(url.pathname);
       const entry = match ? mockVideos[match[1]!] : undefined;
       if (!entry)
         return new Response(JSON.stringify({ error: "Not found" }), {
           status: 404,
         });
-      if (!match![2])
-        return new Response(JSON.stringify(entry.video), { status: 200 });
+      if (!match![2]) {
+        const video = api.translating.has(match![1]!)
+          ? { ...entry.video, translation: { language: "en", status: "pending" } }
+          : entry.video;
+        return new Response(JSON.stringify(video), { status: 200 });
+      }
       const from = Number(url.searchParams.get("from_ms"));
       const to = Number(url.searchParams.get("to_ms"));
       const lines = entry.lines.filter(
@@ -117,6 +132,7 @@ beforeEach(() => {
     subtitle_visibility: { original: "show", translation: "show" },
   };
   api.failPreferences = false;
+  api.translating.clear();
   Element.prototype.scrollIntoView = vi.fn();
   vi.stubGlobal(
     "ResizeObserver",
@@ -311,6 +327,47 @@ describe("WatchScreen", () => {
     expect(
       (await transcript()).queryByText("Good morning from Hamburg!"),
     ).toBeNull();
+  });
+
+  it("offers to translate a video without a translation and shows it's on the way", async () => {
+    const fetchMock = stubApi();
+    renderWatch(MOCK_VIDEO_IDS.noTranslation);
+    await userEvent.click(await screen.findByRole("button", { name: "Translate into English" }));
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      `/api/videos/${MOCK_VIDEO_IDS.noTranslation}/translation`,
+      expect.objectContaining({ method: "POST" }),
+    );
+    expect(await screen.findByRole("button", { name: "Translating…" })).toBeDisabled();
+  });
+
+  it("offers no translate button for a translated or unfinished video", async () => {
+    renderWatch(MOCK_VIDEO_IDS.normal);
+    await firstLine("Guten Morgen aus Hamburg!");
+    expect(screen.queryByRole("button", { name: /Translat/ })).toBeNull();
+  });
+
+  it("reloads the video and its lines when its processing finishes", async () => {
+    const fetchMock = stubApi();
+    renderWatch(MOCK_VIDEO_IDS.noTranslation);
+    await firstLine("Guten Morgen aus Hamburg!");
+    const videoCalls = () =>
+      fetchMock.mock.calls.filter(([url]) => String(url) === `/api/videos/${MOCK_VIDEO_IDS.noTranslation}`).length;
+    const before = videoCalls();
+    const ids = { track_id: "0190f3c2-7d1a-7c00-8b00-000000000009", title: "x" };
+
+    act(() =>
+      FakeEventSource.latest().emit(PROCESSING_EVENT_NAME, { type: "ready", video_id: "0190f3c2-7d1a-7c00-8b00-00000000ffff", ...ids }),
+    );
+    act(() =>
+      FakeEventSource.latest().emit(PROCESSING_EVENT_NAME, { type: "step", video_id: MOCK_VIDEO_IDS.noTranslation, step: "translate", step_index: 3, step_count: 5, ...ids }),
+    );
+    expect(videoCalls()).toBe(before);
+
+    act(() =>
+      FakeEventSource.latest().emit(PROCESSING_EVENT_NAME, { type: "ready", video_id: MOCK_VIDEO_IDS.noTranslation, ...ids }),
+    );
+    await waitFor(() => expect(videoCalls()).toBe(before + 1));
   });
 
   it("says so when the video isn't in the library", async () => {

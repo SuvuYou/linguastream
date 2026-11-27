@@ -1,5 +1,5 @@
-import { listVideosRoute } from "@linguastream/contracts";
-import { libraryPage } from "../fixtures/library";
+import { deleteVideoRoute, listVideosRoute, translateVideoRoute } from "@linguastream/contracts";
+import { deleteMockVideo, libraryPage, translateMockVideo } from "../fixtures/library";
 import { mockRoute } from "../mockRoute";
 
 export const libraryHandlers = [
@@ -10,4 +10,6 @@ export const libraryHandlers = [
     if (!query.success) return undefined;
     return libraryPage(query.data.page, query.data.q);
   }),
+  mockRoute(translateVideoRoute, ({ params }) => translateMockVideo(params.videoId!)),
+  mockRoute(deleteVideoRoute, ({ params }) => deleteMockVideo(params.videoId!)),
 ];

@@ -4,7 +4,9 @@ import {
   ProcessingErrorCode,
   type LibraryPage,
   type Line,
+  type ProcessingStatus,
   type VideoDetail,
+  type VideoTranslation,
 } from "@linguastream/contracts";
 import { db } from "@linguastream/db";
 
@@ -12,6 +14,17 @@ export interface VideoView {
   detail: VideoDetail;
   trackId: string | null;
   translationId: string | null;
+}
+
+const baseLanguage = (code: string) => code.toLowerCase().split("-")[0];
+
+export function translationState(
+  track: { status: ProcessingStatus; language: string; translations: { status: ProcessingStatus }[] } | null,
+  nativeLanguage: string,
+): VideoTranslation {
+  if (!track || track.status !== "ready") return null;
+  if (baseLanguage(track.language) === baseLanguage(nativeLanguage)) return null;
+  return { language: nativeLanguage, status: track.translations[0]?.status ?? "none" };
 }
 
 @Injectable()
@@ -26,6 +39,8 @@ export class VideosRepository {
         ],
       }),
     };
+    const owner = await db.user.findUnique({ where: { id: userId }, select: { nativeLanguage: true } });
+    const nativeLanguage = owner?.nativeLanguage ?? "";
     const [total, videos] = await db.$transaction([
       db.video.count({ where }),
       db.video.findMany({
@@ -42,7 +57,14 @@ export class VideosRepository {
           createdAt: true,
           tracks: {
             orderBy: { createdAt: "desc" },
-            select: { id: true, status: true, progress: true, errorCode: true },
+            select: {
+              id: true,
+              status: true,
+              progress: true,
+              errorCode: true,
+              language: true,
+              translations: { where: { language: nativeLanguage }, select: { status: true } },
+            },
           },
         },
       }),
@@ -68,6 +90,7 @@ export class VideosRepository {
             error_code:
               track.status === "failed" ? (ProcessingErrorCode.safeParse(track.errorCode).data ?? "internal") : null,
           },
+          translation: translationState(track, nativeLanguage),
         };
       }),
     };
@@ -92,6 +115,7 @@ export class VideosRepository {
             isAutoCaptions: true,
             status: true,
             _count: { select: { lines: true } },
+            translations: { select: { id: true, language: true, status: true } },
           },
         },
       },
@@ -99,12 +123,8 @@ export class VideosRepository {
     if (!video) return null;
 
     const track = video.tracks.find((t) => t.status === "ready") ?? video.tracks[0] ?? null;
-    const translation = track
-      ? await db.trackTranslation.findFirst({
-          where: { trackId: track.id, language: video.user.nativeLanguage, status: "ready" },
-          select: { id: true, language: true },
-        })
-      : null;
+    const native = track?.translations.filter((t) => t.language === video.user.nativeLanguage) ?? [];
+    const translation = native.find((t) => t.status === "ready") ?? null;
 
     return {
       trackId: track?.id ?? null,
@@ -124,8 +144,22 @@ export class VideosRepository {
           line_count: track._count.lines,
         },
         translation_language: translation?.language ?? null,
+        translation: translationState(track && { ...track, translations: native }, video.user.nativeLanguage),
       },
     };
+  }
+
+  async markTranslationPending(trackId: string, language: string): Promise<void> {
+    await db.trackTranslation.upsert({
+      where: { trackId_language: { trackId, language } },
+      create: { trackId, language, status: "pending" },
+      update: { status: "pending", errorCode: null },
+    });
+  }
+
+  async deleteVideo(userId: string, videoId: string): Promise<boolean> {
+    const { count } = await db.video.deleteMany({ where: { id: videoId, userId } });
+    return count > 0;
   }
 
   async linesInWindow(trackId: string, translationId: string | null, fromMs: number, toMs: number): Promise<Line[]> {

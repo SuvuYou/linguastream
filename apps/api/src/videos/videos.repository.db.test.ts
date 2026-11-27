@@ -79,6 +79,7 @@ describe("VideosRepository (Postgres)", () => {
         language: "de",
         track: { id: ready.id, language: "de", is_auto_captions: true, status: "ready", line_count: 3 },
         translation_language: null,
+        translation: { language: "uk", status: "none" },
       },
     });
   });
@@ -116,6 +117,7 @@ describe("VideosRepository (Postgres)", () => {
     await db.lineTranslation.create({ data: { translationId: uk.id, lineId: second!.id, text: "Рядок 1" } });
     const view = (await repo.findVideo(u.id, v.id))!;
     expect(view.detail.translation_language).toBe("uk");
+    expect(view.detail.translation).toEqual({ language: "uk", status: "ready" });
 
     const window = await repo.linesInWindow(t.id, view.translationId, 0, 2000);
     expect(window.map((l) => l.translation)).toEqual([null, "Рядок 1"]);
@@ -156,6 +158,7 @@ describe("VideosRepository (Postgres)", () => {
         duration_ms: 768_000,
         added_at: "2026-11-20T00:00:00.000Z",
         track: { id: failed.id, status: "failed", progress: 1, error_code: "empty_track" },
+        translation: null,
       });
       expect(page.items[1]!.track).toMatchObject({ status: "ready", error_code: null });
     });
@@ -186,6 +189,59 @@ describe("VideosRepository (Postgres)", () => {
       expect((await repo.listVideos(u.id, 0, "hamburger")).items.map((v) => v.title)).toEqual(["Hamburger Hafen"]);
       expect((await repo.listVideos(u.id, 0, "NORDLICHT")).total).toBe(26);
       expect((await repo.listVideos(u.id, 5)).items).toEqual([]);
+    });
+  });
+
+  describe("translation state and requests", () => {
+    it("says whether a ready video needs, has or is getting a translation into the owner's language", async () => {
+      const u = await user("uk");
+      const v = await video(u.id);
+      const t = await track(v.id, "processing", new Date());
+      expect((await repo.findVideo(u.id, v.id))!.detail.translation).toBeNull();
+
+      await db.track.update({ where: { id: t.id }, data: { status: "ready" } });
+      expect((await repo.findVideo(u.id, v.id))!.detail.translation).toEqual({ language: "uk", status: "none" });
+      expect((await repo.listVideos(u.id, 0)).items[0]!.translation).toEqual({ language: "uk", status: "none" });
+
+      await repo.markTranslationPending(t.id, "uk");
+      expect((await repo.findVideo(u.id, v.id))!.detail.translation).toEqual({ language: "uk", status: "pending" });
+      await db.trackTranslation.updateMany({ where: { trackId: t.id }, data: { status: "failed", errorCode: "internal" } });
+      await repo.markTranslationPending(t.id, "uk");
+      expect(await db.trackTranslation.findFirst({ where: { trackId: t.id } })).toMatchObject({
+        status: "pending",
+        errorCode: null,
+      });
+      expect((await repo.listVideos(u.id, 0)).items[0]!.translation).toEqual({ language: "uk", status: "pending" });
+    });
+
+    it("needs no translation when the owner's language is the video's", async () => {
+      const u = await user("de");
+      const v = await video(u.id);
+      await track(v.id, "ready", new Date());
+      expect((await repo.findVideo(u.id, v.id))!.detail.translation).toBeNull();
+      expect((await repo.listVideos(u.id, 0)).items[0]!.translation).toBeNull();
+    });
+  });
+
+  describe("deleteVideo", () => {
+    it("deletes only the owner's video, with its tracks, lines and translations", async () => {
+      const owner = await user();
+      const other = await user();
+      const v = await video(owner.id);
+      const t = await track(v.id, "ready", new Date());
+      const [line] = await lines(t.id, [0]);
+      const tr = await db.trackTranslation.create({ data: { trackId: t.id, language: "uk", status: "ready" } });
+      await db.lineTranslation.create({ data: { translationId: tr.id, lineId: line!.id, text: "Рядок" } });
+
+      expect(await repo.deleteVideo(other.id, v.id)).toBe(false);
+      expect(await db.video.count({ where: { id: v.id } })).toBe(1);
+
+      expect(await repo.deleteVideo(owner.id, v.id)).toBe(true);
+      expect(await db.video.count({ where: { id: v.id } })).toBe(0);
+      expect(await db.track.count({ where: { id: t.id } })).toBe(0);
+      expect(await db.line.count({ where: { trackId: t.id } })).toBe(0);
+      expect(await db.lineTranslation.count({ where: { translationId: tr.id } })).toBe(0);
+      expect(await repo.deleteVideo(owner.id, v.id)).toBe(false);
     });
   });
 });

@@ -79,6 +79,13 @@ describe("GeminiClient", () => {
     expect(spend.record).toHaveBeenCalledWith(1000 * 0.25 + 400 * 1.5);
   });
 
+  it("reports the call's cost to the caller", async () => {
+    generateContent.mockResolvedValue(ok("{}", { promptTokenCount: 1000, totalTokenCount: 1400 }));
+    const onCost = vi.fn();
+    await client().generateText("prompt", { onCost });
+    expect(onCost).toHaveBeenCalledWith(1000 * 0.25 + 400 * 1.5);
+  });
+
   it("still answers when the cost can't be recorded", async () => {
     generateContent.mockResolvedValue(ok("{}", { promptTokenCount: 10, totalTokenCount: 20 }));
     spend.record.mockRejectedValueOnce(new Error("redis down"));

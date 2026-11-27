@@ -9,6 +9,7 @@ import { Sonner } from "@/components/ui/sonner";
 import { useLineWindows } from "@/hooks/useLineWindows";
 import { usePreferences, useUpdatePreferences } from "@/hooks/usePreferences";
 import { useVideo } from "@/hooks/useVideo";
+import { useRefreshOnProcessing } from "@/hooks/useVideoActions";
 import { useVideoPlayer } from "@/hooks/useVideoPlayer";
 import { ApiRequestError } from "@/lib/api/client";
 import { lineTargets, type LineTargets } from "@/lib/watch/lines";
@@ -16,6 +17,7 @@ import { createPlaybackClock } from "@/lib/watch/playback-clock";
 import type { SubtitleVisibility, VideoDetail } from "@linguastream/contracts";
 import ControlBar from "./ControlBar";
 import TranscriptPanel, { trackState } from "./TranscriptPanel";
+import TranslateButton from "./TranslateButton";
 import VideoStage from "./VideoStage";
 import WatchHeader from "./WatchHeader";
 
@@ -113,6 +115,7 @@ function LoadingScreen() {
 }
 
 function Watch({ video, startMs }: { video: VideoDetail; startMs: number }) {
+  useRefreshOnProcessing(video.id);
   const [clock] = useState(() => createPlaybackClock(startMs));
   const hostRef = useRef<HTMLDivElement>(null);
   const player = useVideoPlayer(
@@ -182,6 +185,12 @@ function Watch({ video, startMs }: { video: VideoDetail; startMs: number }) {
           channelName={video.channel_name}
           durationMs={video.duration_ms}
           language={video.language}
+          action={
+            <TranslateButton
+              videoId={video.id}
+              translation={video.translation}
+            />
+          }
         />
       }
       stage={

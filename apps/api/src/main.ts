@@ -4,8 +4,10 @@ import { NestFactory } from "@nestjs/core";
 import type { NestExpressApplication } from "@nestjs/platform-express";
 import { AppModule } from "./app.module";
 import { configureApp } from "./http/configure-app";
+import { waitForServices } from "./startup/wait-for-services";
 
 async function bootstrap() {
+  await waitForServices();
   const app = await NestFactory.create<NestExpressApplication>(AppModule, { bodyParser: false });
   configureApp(app);
 

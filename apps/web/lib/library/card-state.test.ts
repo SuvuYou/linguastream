@@ -16,6 +16,7 @@ const video = (track: LibraryVideo["track"]): LibraryVideo => ({
   duration_ms: null,
   added_at: "2026-11-27T01:00:00.000Z",
   track,
+  translation: null,
 });
 
 const track = (status: "pending" | "processing" | "ready" | "failed", progress = 0, error_code: "internal" | "empty_track" | null = null) => ({

@@ -7,6 +7,7 @@ import { useState } from "react";
 import type { CardState } from "@/lib/library/card-state";
 import { addedLabel, coverTint, thumbnailUrl } from "@/lib/library/format";
 import { formatTime } from "@/lib/watch/lines";
+import VideoCardMenu from "./VideoCardMenu";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -15,6 +16,10 @@ interface Props {
   retrying: boolean;
   retryFailed: boolean;
   onRetry: () => void;
+  deleting: boolean;
+  deleteFailed: boolean;
+  onTranslate: () => void;
+  onDelete: () => void;
 }
 
 function StatusOverlay({ state }: { state: CardState }) {
@@ -63,6 +68,10 @@ export default function VideoCard({
   retrying,
   retryFailed,
   onRetry,
+  deleting,
+  deleteFailed,
+  onTranslate,
+  onDelete,
 }: Props) {
   const [thumbFailed, setThumbFailed] = useState(false);
   const meta = [video.channel_name, addedLabel(video.added_at)].filter(Boolean);
@@ -118,6 +127,18 @@ export default function VideoCard({
         </div>
         {status && <span className="sr-only">{status}</span>}
       </Link>
+      <VideoCardMenu
+        video={video}
+        canTranslate={
+          state.kind === "ready" &&
+          (video.translation?.status === "none" ||
+            video.translation?.status === "failed")
+        }
+        deleting={deleting}
+        deleteFailed={deleteFailed}
+        onTranslate={onTranslate}
+        onDelete={onDelete}
+      />
       {state.kind === "failed" && state.retryable && (
         <div className="pointer-events-none absolute inset-x-0 top-0 flex aspect-video items-end justify-center pb-3 text-[13px] font-semibold">
           <button

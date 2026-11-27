@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { MAX_LINE_WINDOW_MS, VideoDetail, getLineWindowRoute, getVideoRoute } from "./watch.js";
+import {
+  MAX_LINE_WINDOW_MS,
+  TranslationRequested,
+  VideoDeleted,
+  VideoDetail,
+  deleteVideoRoute,
+  getLineWindowRoute,
+  getVideoRoute,
+  translateVideoRoute,
+} from "./watch.js";
 
 const video = {
   id: "0190f3c2-7d1a-7c00-8a00-000000000001",
@@ -10,6 +19,7 @@ const video = {
   language: "de",
   track: { id: "t1", language: "de", is_auto_captions: true, status: "ready", line_count: 212 },
   translation_language: "en",
+  translation: { language: "en", status: "ready" },
 };
 
 describe("watch contracts", () => {
@@ -22,6 +32,18 @@ describe("watch contracts", () => {
     expect(VideoDetail.parse(video)).toEqual(video);
     expect(VideoDetail.safeParse({ ...video, track: null, translation_language: null }).success).toBe(true);
     expect(VideoDetail.safeParse({ ...video, track: { ...video.track, status: "done" } }).success).toBe(false);
+    expect(VideoDetail.safeParse({ ...video, translation: null }).success).toBe(true);
+    expect(VideoDetail.safeParse({ ...video, translation: { language: "uk", status: "none" } }).success).toBe(true);
+    expect(VideoDetail.safeParse({ ...video, translation: { language: "uk", status: "done" } }).success).toBe(false);
+  });
+
+  it("translate and delete a video by its id", () => {
+    expect([translateVideoRoute.method, translateVideoRoute.path]).toEqual(["POST", "/api/videos/:videoId/translation"]);
+    expect([deleteVideoRoute.method, deleteVideoRoute.path]).toEqual(["DELETE", "/api/videos/:videoId"]);
+    expect(TranslationRequested.safeParse({ video_id: video.id, translation: { language: "uk", status: "pending" } }).success).toBe(true);
+    expect(TranslationRequested.safeParse({ video_id: video.id, translation: { language: "uk", status: "ready" } }).success).toBe(false);
+    expect(VideoDeleted.parse({ video_id: video.id, deleted: true })).toEqual({ video_id: video.id, deleted: true });
+    expect(deleteVideoRoute.params!.safeParse({ videoId: "x" }).success).toBe(false);
   });
 
   it("need a uuid video id", () => {

@@ -11,7 +11,9 @@ import {
   PROCESS_TRACK_JOB,
   PROCESS_TRACK_OPTIONS,
   PROCESSING_QUEUE,
+  TRANSLATE_TRACK_JOB,
   blockingConnection,
+  translateJobId,
   type ProcessTrackJob,
 } from "./queue-config";
 import { TrackProcessor } from "./track-processor";
@@ -36,7 +38,10 @@ export class ProcessingWorker implements OnModuleInit, OnModuleDestroy {
     });
     this.worker = new Worker<ProcessTrackJob>(
       PROCESSING_QUEUE,
-      (job) => this.processor.process(job),
+      (job) =>
+        job.name === TRANSLATE_TRACK_JOB
+          ? this.processor.translate(job)
+          : this.processor.process(job),
       {
         connection: blockingConnection(),
         concurrency: WORKER_CONCURRENCY,
@@ -67,5 +72,16 @@ export class ProcessingWorker implements OnModuleInit, OnModuleDestroy {
     }
     if (ids.length > 0)
       this.logger.log(`Queued ${ids.length} pending track(s)`);
+
+    const translations = await this.repository.pendingTranslationTrackIds();
+    for (const trackId of translations) {
+      await this.queue!.add(
+        TRANSLATE_TRACK_JOB,
+        { trackId },
+        { ...PROCESS_TRACK_OPTIONS, jobId: translateJobId(trackId) },
+      );
+    }
+    if (translations.length > 0)
+      this.logger.log(`Queued ${translations.length} pending translation(s)`);
   }
 }

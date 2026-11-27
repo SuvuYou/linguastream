@@ -22,11 +22,15 @@ function testRedisUrl(): string {
 
 const ids = (n: number) => `0190f3c2-7d1a-7c00-8a00-00000000000${n}`;
 
+let pendingTranslations: string[] = [];
+
 function fakeRepository(tracks: TrackSummary[]) {
   const find = (id: string) => tracks.find((t) => t.trackId === id) ?? null;
   return {
     findTrack: vi.fn(async (id: string) => find(id)),
     pendingTrackIds: vi.fn(async () => tracks.filter((t) => t.status === "pending").map((t) => t.trackId)),
+    pendingTranslationTrackIds: vi.fn(async () => pendingTranslations),
+    failOpenTranslations: vi.fn(async () => {}),
     markProcessing: vi.fn(async (id: string) => void (find(id)!.status = "processing")),
     completeStep: vi.fn(async (id: string, progress: number) => void (find(id)!.progress = progress)),
     markReady: vi.fn(async (id: string) => void (find(id)!.status = "ready")),
@@ -38,6 +42,7 @@ describe("processing queue (Redis)", { timeout: 15_000 }, () => {
   let redis: Redis;
   let tracks: TrackSummary[];
   let parse: ReturnType<typeof vi.fn<StepHandler>>;
+  let translate: ReturnType<typeof vi.fn<StepHandler>>;
   let worker: ProcessingWorker;
   let queue: ProcessingQueue;
   let events: ProcessingEvents;
@@ -60,9 +65,11 @@ describe("processing queue (Redis)", { timeout: 15_000 }, () => {
       progress: 0,
     }));
     parse = vi.fn<StepHandler>(async () => {});
+    translate = vi.fn<StepHandler>(async () => {});
+    pendingTranslations = [];
     const repository = fakeRepository(tracks) as unknown as ProcessingRepository;
     const spend = { canSpend: vi.fn(async () => true), record: vi.fn(async () => {}) };
-    worker = new ProcessingWorker(new TrackProcessor(repository, { parse }, spend), repository);
+    worker = new ProcessingWorker(new TrackProcessor(repository, { parse, translate }, spend), repository);
     queue = new ProcessingQueue();
     events = new ProcessingEvents(repository);
   });
@@ -138,5 +145,29 @@ describe("processing queue (Redis)", { timeout: 15_000 }, () => {
     await queue.requeue(ids(1));
     expect((await again).at(-1)).toMatchObject({ type: "ready" });
     expect(parse).toHaveBeenCalledTimes(2);
+  });
+
+  it("runs a translate job on a ready track, and queues open translations when the worker starts", async () => {
+    tracks[0]!.status = "ready";
+    tracks[0]!.progress = 5;
+    tracks[1]!.status = "ready";
+    pendingTranslations = [ids(2)];
+    const one = collect("user-1", 2);
+    const two = collect("user-2", 2);
+
+    await worker.onModuleInit();
+    await queue.enqueueTranslation(ids(1));
+    await queue.enqueueTranslation(ids(1));
+
+    for (const received of await Promise.all([one, two])) {
+      expect(received.map((e) => (e.type === "step" ? e.step : e.type))).toEqual(["translate", "ready"]);
+    }
+    expect(translate).toHaveBeenCalledTimes(2);
+    expect(parse).not.toHaveBeenCalled();
+
+    const again = collect("user-1", 2);
+    await queue.enqueueTranslation(ids(1));
+    await again;
+    expect(translate).toHaveBeenCalledTimes(3);
   });
 });

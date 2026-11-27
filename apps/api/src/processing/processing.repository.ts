@@ -3,7 +3,9 @@ import type { ProcessingErrorCode } from "@linguastream/contracts";
 import { db } from "@linguastream/db";
 import type { AnalysedLine, StoredLine, StoredWord } from "./analyse/analyse";
 import type { NormalisedLine, Normalisation } from "./normalise/normalise";
+import { updateLineTextsAndWords, updateLineWordsAndLemmas, upsertLineTranslations } from "./processing.sql";
 import type { ParsedLine } from "./steps/parse-json3";
+import type { SourceLine, TranslatedLine, TranslationReport } from "./translate/translate";
 
 export interface TrackSummary {
   trackId: string;
@@ -112,10 +114,7 @@ export class ProcessingRepository {
     const texts = lines.map((line) => line.text);
     const words = lines.map((line) => JSON.stringify(line.words));
     await db.$transaction([
-      db.$executeRaw`
-        UPDATE lines SET text = v.text, words = v.words::jsonb
-        FROM unnest(${indexes}::int[], ${texts}::text[], ${words}::text[]) AS v(idx, text, words)
-        WHERE lines.track_id = ${trackId}::uuid AND lines.index = v.idx`,
+      db.$executeRaw(updateLineTextsAndWords(trackId, indexes, texts, words)),
       db.track.update({ where: { id: trackId }, data: { normalisation: normalisation as unknown as object } }),
     ]);
   }
@@ -133,10 +132,68 @@ export class ProcessingRepository {
     const indexes = lines.map((line) => line.index);
     const words = lines.map((line) => JSON.stringify(line.words));
     const lemmas = lines.map((line) => JSON.stringify(line.lemmas));
-    await db.$executeRaw`
-      UPDATE lines SET words = v.words::jsonb,
-        lemmas = ARRAY(SELECT jsonb_array_elements_text(v.lemmas::jsonb))
-      FROM unnest(${indexes}::int[], ${words}::text[], ${lemmas}::text[]) AS v(idx, words, lemmas)
-      WHERE lines.track_id = ${trackId}::uuid AND lines.index = v.idx`;
+    await db.$executeRaw(updateLineWordsAndLemmas(trackId, indexes, words, lemmas));
+  }
+
+  async translationTarget(trackId: string): Promise<{ sourceLanguage: string; targetLanguage: string } | null> {
+    const track = await db.track.findUnique({
+      where: { id: trackId },
+      select: { language: true, video: { select: { user: { select: { nativeLanguage: true } } } } },
+    });
+    return track && { sourceLanguage: track.language, targetLanguage: track.video.user.nativeLanguage };
+  }
+
+  async startTranslation(trackId: string, language: string): Promise<string> {
+    const translation = await db.trackTranslation.upsert({
+      where: { trackId_language: { trackId, language } },
+      create: { trackId, language, status: "processing" },
+      update: { status: "processing", errorCode: null },
+      select: { id: true },
+    });
+    return translation.id;
+  }
+
+  async translationLines(trackId: string, translationId: string): Promise<SourceLine[]> {
+    const lines = await db.line.findMany({
+      where: { trackId },
+      orderBy: { index: "asc" },
+      select: { id: true, index: true, text: true, translations: { where: { translationId }, select: { lineId: true } } },
+    });
+    return lines.map((line) => ({
+      lineId: line.id,
+      index: line.index,
+      text: line.text,
+      translated: line.translations.length > 0,
+    }));
+  }
+
+  async saveLineTranslations(translationId: string, lines: TranslatedLine[]): Promise<void> {
+    if (lines.length === 0) return;
+    const ids = lines.map((line) => line.lineId);
+    const texts = lines.map((line) => line.text);
+    await db.$executeRaw(upsertLineTranslations(translationId, ids, texts));
+  }
+
+  async finishTranslation(translationId: string, report: TranslationReport): Promise<void> {
+    await db.trackTranslation.update({
+      where: { id: translationId },
+      data: { status: report.status, errorCode: report.errorCode, progress: report.translatedLines },
+    });
+  }
+
+  async pendingTranslationTrackIds(): Promise<string[]> {
+    const translations = await db.trackTranslation.findMany({
+      where: { status: { in: ["pending", "processing"] }, track: { status: "ready" } },
+      select: { trackId: true },
+      distinct: ["trackId"],
+    });
+    return translations.map((translation) => translation.trackId);
+  }
+
+  async failOpenTranslations(trackId: string): Promise<void> {
+    await db.trackTranslation.updateMany({
+      where: { trackId, status: { in: ["pending", "processing"] } },
+      data: { status: "failed", errorCode: "internal" },
+    });
   }
 }

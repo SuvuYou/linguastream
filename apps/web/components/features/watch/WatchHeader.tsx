@@ -7,11 +7,13 @@ export default function WatchHeader({
   channelName,
   durationMs,
   language,
+  action,
 }: {
   title: string;
   channelName: string | null;
   durationMs: number | null;
   language: string;
+  action?: React.ReactNode;
 }) {
   return (
     <header className="flex items-center gap-4 px-5 py-2.5 @max-[600px]:px-3">
@@ -40,6 +42,7 @@ export default function WatchHeader({
           )}
         </p>
       </div>
+      {action}
     </header>
   );
 }

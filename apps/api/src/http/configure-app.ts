@@ -5,6 +5,8 @@ export function configureApp(
   app: NestExpressApplication,
   largerBodyLimits?: Record<string, string>,
 ): void {
+  app.disable("x-powered-by");
+  app.set("trust proxy", "loopback");
   app.setGlobalPrefix("api");
   applyBodyLimits(app, largerBodyLimits);
 }

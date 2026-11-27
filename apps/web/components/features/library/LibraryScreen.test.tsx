@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FakeEventSource } from "@/helpers/tests/fake-event-source";
 import { createWrapper } from "@/helpers/tests/providers";
 import { libraryPage, mockLibrary } from "@/mocks/fixtures/library";
+import { languageName } from "@/lib/language";
 import LibraryScreen from "./LibraryScreen";
 import { SEARCH_DEBOUNCE_MS } from "./LibrarySearch";
 
@@ -29,12 +30,30 @@ const api = {
   fail: false,
   retryStatus: 200,
   retried: [] as string[],
+  translated: [] as string[],
+  deleted: [] as string[],
+  deleteStatus: 200,
   override: null as ((page: number, q?: string) => unknown) | null,
 };
 
 function stubApi() {
   const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
     const url = new URL(String(input), "http://localhost");
+    const translate = /^\/api\/videos\/([^/]+)\/translation$/.exec(url.pathname);
+    if (translate) {
+      api.translated.push(translate[1]!);
+      return new Response(
+        JSON.stringify({ video_id: translate[1], translation: { language: "uk", status: "pending" } }),
+        { status: 202 },
+      );
+    }
+    const remove = /^\/api\/videos\/([^/]+)$/.exec(url.pathname);
+    if (remove) {
+      if (api.deleteStatus !== 200)
+        return new Response(JSON.stringify({ error: "boom" }), { status: api.deleteStatus });
+      api.deleted.push(remove[1]!);
+      return new Response(JSON.stringify({ video_id: remove[1], deleted: true }), { status: 200 });
+    }
     const retry = /^\/api\/tracks\/([^/]+)\/retry$/.exec(url.pathname);
     if (retry) {
       api.retried.push(retry[1]!);
@@ -76,7 +95,15 @@ const ready = mockLibrary.find((v) => v.track?.status === "ready")!;
 beforeEach(() => {
   nav.search = "";
   nav.replace.mockClear();
-  Object.assign(api, { fail: false, retryStatus: 200, retried: [], override: null });
+  Object.assign(api, {
+    fail: false,
+    retryStatus: 200,
+    retried: [],
+    translated: [],
+    deleted: [],
+    deleteStatus: 200,
+    override: null,
+  });
 });
 
 afterEach(() => {
@@ -197,7 +224,7 @@ describe("LibraryScreen", () => {
     stubApi();
     api.fail = true;
     renderScreen();
-    expect(await screen.findByText("Couldn't load your library")).toBeInTheDocument();
+    expect(await screen.findByText("Couldn't reach the server")).toBeInTheDocument();
     api.fail = false;
     await userEvent.click(screen.getByRole("button", { name: "Try again" }));
     await waitFor(() => expect(screen.getAllByRole("article")).toHaveLength(24));
@@ -213,5 +240,83 @@ describe("LibraryScreen", () => {
     });
     expect(screen.getByRole("article").querySelector("img")).toBeNull();
     expect(screen.getByRole("article")).toHaveTextContent(ready.title.charAt(0));
+  });
+
+  describe("card menu", () => {
+    const untranslated = mockLibrary.find((v) => v.track?.status === "ready" && v.translation?.status === "none")!;
+    const menu = async (video: LibraryVideo) => {
+      await waitFor(() => expect(card(video)).toBeDefined());
+      await userEvent.click(
+        within(card(video).closest("article")!).getByRole("button", { name: `More actions: ${video.title}` }),
+      );
+    };
+
+    it("translates a ready video that has no translation yet", async () => {
+      stubApi();
+      api.override = () => ({ items: [untranslated, ready], page: 0, page_size: 24, total: 2 });
+      renderScreen();
+
+      await menu(untranslated);
+      await userEvent.click(
+        await screen.findByRole("menuitem", {
+          name: `Translate into ${languageName(untranslated.translation!.language)}`,
+        }),
+      );
+      await waitFor(() => expect(api.translated).toEqual([untranslated.id]));
+
+      await menu(ready);
+      expect(await screen.findByRole("menuitem", { name: "Open" })).toHaveAttribute("href", `/watch/${ready.id}`);
+      expect(screen.queryByRole("menuitem", { name: /Translate/ })).toBeNull();
+    });
+
+    it("deletes a video after confirming", async () => {
+      stubApi();
+      api.override = () => ({ items: [ready], page: 0, page_size: 24, total: 1 });
+      renderScreen();
+
+      await menu(ready);
+      await userEvent.click(await screen.findByRole("menuitem", { name: "Delete from library" }));
+      const dialog = await screen.findByRole("alertdialog", { name: "Delete this video?" });
+      await userEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
+      expect(api.deleted).toEqual([]);
+
+      await menu(ready);
+      await userEvent.click(await screen.findByRole("menuitem", { name: "Delete from library" }));
+      await userEvent.click(
+        within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Delete" }),
+      );
+      await waitFor(() => expect(api.deleted).toEqual([ready.id]));
+    });
+
+    it("says so when a delete fails", async () => {
+      stubApi();
+      api.deleteStatus = 500;
+      api.override = () => ({ items: [ready], page: 0, page_size: 24, total: 1 });
+      renderScreen();
+
+      await menu(ready);
+      await userEvent.click(await screen.findByRole("menuitem", { name: "Delete from library" }));
+      await userEvent.click(
+        within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Delete" }),
+      );
+      expect(await screen.findByRole("alert")).toHaveTextContent("Couldn't delete the video.");
+    });
+  });
+
+  it("keeps the list and says the server can't be reached when a refresh fails", async () => {
+    stubApi();
+    renderScreen();
+    await waitFor(() => expect(screen.getAllByRole("article")).toHaveLength(24));
+    api.fail = true;
+    act(() =>
+      FakeEventSource.latest().emit(PROCESSING_EVENT_NAME, {
+        type: "ready",
+        track_id: ready.track!.id,
+        video_id: ready.id,
+        title: ready.title,
+      }),
+    );
+    expect(await screen.findByText(/Can't reach the server right now/)).toBeInTheDocument();
+    expect(screen.getAllByRole("article")).toHaveLength(24);
   });
 });

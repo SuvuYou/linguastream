@@ -101,6 +101,7 @@ export function fakeProcessingQueue() {
   return {
     enqueue: vi.fn<(trackId: string) => Promise<void>>(async () => {}),
     requeue: vi.fn<(trackId: string) => Promise<void>>(async () => {}),
+    enqueueTranslation: vi.fn<(trackId: string) => Promise<void>>(async () => {}),
   };
 }
 

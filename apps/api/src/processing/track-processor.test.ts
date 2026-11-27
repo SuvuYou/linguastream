@@ -24,6 +24,7 @@ function setup(track: TrackSummary | null = { ...TRACK }, handlers: Partial<Reco
     }),
     markReady: vi.fn(async () => {}),
     markFailed: vi.fn(async () => {}),
+    failOpenTranslations: vi.fn(async () => {}),
   };
   const spend = { canSpend: vi.fn(async () => true), record: vi.fn(async () => {}) };
   const processor = new TrackProcessor(repository as unknown as ProcessingRepository, handlers, spend);
@@ -102,13 +103,17 @@ describe("TrackProcessor", () => {
   });
 
   it("marks the track failed on the last attempt", async () => {
+    const warn = vi.spyOn(Logger.prototype, "warn").mockImplementation(() => {});
     const { processor, repository, published, job } = setup(undefined, {
       parse: async () => {
-        throw new Error("connection reset");
+        throw new ProcessingError("internal", true, "NLP service answered 500");
       },
     });
 
     await expect(processor.process(job(2))).rejects.toThrow("internal");
+    expect(warn).toHaveBeenCalledWith(
+      `Track ${TRACK.trackId} failed at parse on attempt 3: internal, NLP service answered 500`,
+    );
     expect(repository.markFailed).toHaveBeenCalledWith(TRACK.trackId, "internal");
     expect(published.at(-1)!.event).toMatchObject({ type: "failed", error_code: "internal" });
   });
@@ -123,5 +128,50 @@ describe("TrackProcessor", () => {
     await expect(processor.process(job(0))).rejects.toBeInstanceOf(UnrecoverableError);
     expect(repository.markFailed).toHaveBeenCalledWith(TRACK.trackId, "invalid_track");
     expect(published.at(-1)!.event).toMatchObject({ type: "failed", error_code: "invalid_track" });
+  });
+
+  describe("translate job", () => {
+    const ready = () => ({ ...TRACK, status: "ready" as const, progress: 5 });
+
+    it("runs only the translate step on a ready track and tells the owner", async () => {
+      const translate = vi.fn(async () => {});
+      const parse = vi.fn(async () => {});
+      const { processor, repository, published, job } = setup(ready(), { translate, parse });
+
+      await processor.translate(job());
+
+      expect(translate).toHaveBeenCalledWith(expect.objectContaining({ trackId: TRACK.trackId }));
+      expect(parse).not.toHaveBeenCalled();
+      expect(repository.markProcessing).not.toHaveBeenCalled();
+      expect(published.map((p) => p.event)).toEqual([
+        { type: "step", track_id: TRACK.trackId, video_id: TRACK.videoId, step: "translate", step_index: 3, step_count: 5 },
+        { type: "ready", track_id: TRACK.trackId, video_id: TRACK.videoId },
+      ]);
+    });
+
+    it("skips a track that's gone or not ready", async () => {
+      for (const track of [null, { ...TRACK }]) {
+        const translate = vi.fn(async () => {});
+        const { processor, published, job } = setup(track, { translate });
+        await processor.translate(job());
+        expect(translate).not.toHaveBeenCalled();
+        expect(published).toEqual([]);
+      }
+    });
+
+    it("retries a failure, and on the last attempt marks the translation failed but keeps the video ready", async () => {
+      const translate = vi.fn(async () => {
+        throw new Error("db down");
+      });
+      const first = setup(ready(), { translate });
+      await expect(first.processor.translate(first.job(0))).rejects.toThrow("db down");
+      expect(first.repository.failOpenTranslations).not.toHaveBeenCalled();
+
+      const last = setup(ready(), { translate });
+      await last.processor.translate(last.job(2));
+      expect(last.repository.failOpenTranslations).toHaveBeenCalledWith(TRACK.trackId);
+      expect(last.repository.markFailed).not.toHaveBeenCalled();
+      expect(last.published.at(-1)!.event.type).toBe("ready");
+    });
   });
 });

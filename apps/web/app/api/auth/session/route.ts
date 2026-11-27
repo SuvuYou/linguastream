@@ -2,11 +2,27 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminAuth } from "@/lib/initializations/firebase/firebase-admin";
 import { db } from "@/lib/initializations/db";
 
+export const RECENT_SIGN_IN_SECONDS = 5 * 60;
+
+function forbidden() {
+  return NextResponse.json({ ok: false }, { status: 403 });
+}
+
+export function isSameOrigin(req: NextRequest): boolean {
+  const origin = req.headers.get("origin");
+  const expected = process.env.WEB_ORIGIN ?? new URL(req.url).origin;
+  return origin !== null && origin === expected;
+}
+
 export async function POST(req: NextRequest) {
+  if (!isSameOrigin(req)) return forbidden();
   try {
     const { idToken } = await req.json();
 
-    const decoded = await adminAuth.verifyIdToken(idToken);
+    const decoded = await adminAuth.verifyIdToken(idToken, true);
+    if (Date.now() / 1000 - decoded.auth_time > RECENT_SIGN_IN_SECONDS) {
+      return NextResponse.json({ ok: false }, { status: 401 });
+    }
 
     await db.user.upsert({
       where: { firebaseUid: decoded.uid },
@@ -36,12 +52,15 @@ export async function POST(req: NextRequest) {
 
     return res;
   } catch (err) {
-    console.error(err);
+    console.error(
+      `Session not created: ${err instanceof Error ? err.name : typeof err}`,
+    );
     return NextResponse.json({ ok: false }, { status: 401 });
   }
 }
 
 export async function DELETE(req: NextRequest) {
+  if (!isSameOrigin(req)) return forbidden();
   const session = req.cookies.get("session")?.value;
 
   if (session) {

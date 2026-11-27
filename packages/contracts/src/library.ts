@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { ProcessingErrorCode } from "./processing.js";
 import { defineRoute } from "./route.js";
-import { ProcessingStatus } from "./watch.js";
+import { ProcessingStatus, VideoTranslation } from "./watch.js";
 
 export const LIBRARY_PAGE_SIZE = 24;
 
@@ -22,6 +22,7 @@ export const LibraryVideo = z.object({
       error_code: ProcessingErrorCode.nullable(),
     })
     .nullable(),
+  translation: VideoTranslation,
 });
 
 export type LibraryVideo = z.infer<typeof LibraryVideo>;

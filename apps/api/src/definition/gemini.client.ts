@@ -38,11 +38,17 @@ export class GeminiClient {
 
   constructor(@Inject(SpendLimiter) private readonly spend: SpendLimiter) {}
 
-  private async recordUsage(model: string, usage: UsageMetadata | undefined): Promise<void> {
+  private async recordUsage(
+    model: string,
+    usage: UsageMetadata | undefined,
+    onCost?: (costMicroUsd: number) => void,
+  ): Promise<void> {
     if (!usage) return;
     const input = usage.promptTokenCount ?? 0;
     const output = Math.max(0, (usage.totalTokenCount ?? 0) - input);
-    await this.spend.record(costMicroUsd(model, input, output)).catch((err: unknown) => {
+    const cost = costMicroUsd(model, input, output);
+    onCost?.(cost);
+    await this.spend.record(cost).catch((err: unknown) => {
       this.logger.error(`Spend not recorded: ${err instanceof Error ? err.name : typeof err}`);
     });
   }
@@ -53,6 +59,7 @@ export class GeminiClient {
       responseMimeType?: "application/json" | "text/plain";
       systemInstruction?: string;
       temperature?: number;
+      onCost?: (costMicroUsd: number) => void;
     },
   ): Promise<string> {
     if (!this.genAI) {
@@ -75,7 +82,7 @@ export class GeminiClient {
             ...(options?.temperature !== undefined && { temperature: options.temperature }),
           },
         });
-        await this.recordUsage(modelName, result.response.usageMetadata);
+        await this.recordUsage(modelName, result.response.usageMetadata, options?.onCost);
         return result.response.text();
       } catch (error) {
         this.logger.warn(`${modelName} failed (status ${statusOf(error as GeminiError) ?? "unknown"})`);

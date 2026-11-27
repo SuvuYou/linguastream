@@ -1,13 +1,22 @@
 import type { INestApplication } from "@nestjs/common";
-import { ApiError, LibraryPage, LineWindow, VideoDetail } from "@linguastream/contracts";
+import {
+  ApiError,
+  LibraryPage,
+  LineWindow,
+  TranslationRequested,
+  VideoDeleted,
+  VideoDetail,
+  type VideoTranslation,
+} from "@linguastream/contracts";
 import request from "supertest";
-import { createTestApp } from "../test/auth-fakes";
+import { ProcessingQueue } from "../processing/processing-queue";
+import { TEST_WEB_ORIGIN, createTestApp, fakeProcessingQueue } from "../test/auth-fakes";
 import { VideosRepository, type VideoView } from "./videos.repository";
 
 const VIDEO_ID = "0190f3c2-7d1a-7c00-8a00-000000000001";
 const TRACK_ID = "0190f3c2-7d1a-7c00-8a00-000000000002";
 
-const view = (track: boolean): VideoView => ({
+const view = (track: boolean, translation: VideoTranslation = null): VideoView => ({
   trackId: track ? TRACK_ID : null,
   translationId: null,
   detail: {
@@ -19,6 +28,7 @@ const view = (track: boolean): VideoView => ({
     language: "de",
     track: track ? { id: TRACK_ID, language: "de", is_auto_captions: true, status: "ready", line_count: 1 } : null,
     translation_language: null,
+    translation,
   },
 });
 
@@ -28,7 +38,10 @@ describe("videos API", () => {
     findVideo: ReturnType<typeof vi.fn>;
     linesInWindow: ReturnType<typeof vi.fn>;
     listVideos: ReturnType<typeof vi.fn>;
+    markTranslationPending: ReturnType<typeof vi.fn>;
+    deleteVideo: ReturnType<typeof vi.fn>;
   };
+  let queue: ReturnType<typeof fakeProcessingQueue>;
 
   beforeEach(async () => {
     repo = {
@@ -46,14 +59,23 @@ describe("videos API", () => {
             duration_ms: 768_000,
             added_at: "2026-11-27T01:00:00.000Z",
             track: { id: TRACK_ID, status: "failed", progress: 1, error_code: "internal" },
+            translation: null,
           },
         ],
         page,
         page_size: 24,
         total: 1,
       })),
+      markTranslationPending: vi.fn(async () => {}),
+      deleteVideo: vi.fn(async (userId: string, videoId: string) => userId === "user-1" && videoId === VIDEO_ID),
     };
-    app = await createTestApp({ providers: [{ token: VideosRepository, value: repo }] });
+    queue = fakeProcessingQueue();
+    app = await createTestApp({
+      providers: [
+        { token: VideosRepository, value: repo },
+        { token: ProcessingQueue, value: queue },
+      ],
+    });
   });
 
   afterEach(async () => {
@@ -124,5 +146,55 @@ describe("videos API", () => {
     await request(app.getHttpServer()).get("/api/videos").expect(401);
     await request(app.getHttpServer()).get(`/api/videos/${VIDEO_ID}`).expect(401);
     await request(app.getHttpServer()).get(`/api/videos/${VIDEO_ID}/lines?from_ms=0&to_ms=1000`).expect(401);
+  });
+
+  const post = (path: string) =>
+    request(app.getHttpServer()).post(path).set("Cookie", "session=valid-session-cookie").set("Origin", TEST_WEB_ORIGIN);
+  const del = (path: string) =>
+    request(app.getHttpServer()).delete(path).set("Cookie", "session=valid-session-cookie").set("Origin", TEST_WEB_ORIGIN);
+
+  describe("POST /api/videos/:videoId/translation", () => {
+    it("marks the translation pending and queues it", async () => {
+      repo.findVideo.mockResolvedValue(view(true, { language: "uk", status: "failed" }));
+      const res = await post(`/api/videos/${VIDEO_ID}/translation`).expect(202);
+      expect(TranslationRequested.parse(res.body)).toEqual({
+        video_id: VIDEO_ID,
+        translation: { language: "uk", status: "pending" },
+      });
+      expect(repo.markTranslationPending).toHaveBeenCalledWith(TRACK_ID, "uk");
+      expect(queue.enqueueTranslation).toHaveBeenCalledWith(TRACK_ID);
+    });
+
+    it("answers 409 when the video isn't ready, needs no translation, or is translated", async () => {
+      for (const v of [view(false), view(true, null), view(true, { language: "uk", status: "ready" })]) {
+        repo.findVideo.mockResolvedValueOnce(v);
+        const res = await post(`/api/videos/${VIDEO_ID}/translation`).expect(409);
+        expect(ApiError.parse(res.body).error).toBeTruthy();
+      }
+      expect(queue.enqueueTranslation).not.toHaveBeenCalled();
+    });
+
+    it("answers 404 for another user's video and 403 from another origin", async () => {
+      repo.findVideo.mockResolvedValue(null);
+      await post(`/api/videos/${VIDEO_ID}/translation`).expect(404);
+      await request(app.getHttpServer())
+        .post(`/api/videos/${VIDEO_ID}/translation`)
+        .set("Cookie", "session=valid-session-cookie")
+        .set("Origin", "https://evil.example")
+        .expect(403);
+    });
+  });
+
+  describe("DELETE /api/videos/:videoId", () => {
+    it("deletes the user's own video", async () => {
+      const res = await del(`/api/videos/${VIDEO_ID}`).expect(200);
+      expect(VideoDeleted.parse(res.body)).toEqual({ video_id: VIDEO_ID, deleted: true });
+      expect(repo.deleteVideo).toHaveBeenCalledWith("user-1", VIDEO_ID);
+    });
+
+    it("answers 404 when nothing was deleted and 400 for a bad id", async () => {
+      await del("/api/videos/0190f3c2-7d1a-7c00-8a00-00000000ffff").expect(404);
+      await del("/api/videos/nope").expect(400);
+    });
   });
 });

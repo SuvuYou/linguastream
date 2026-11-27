@@ -34,6 +34,7 @@ function fromWatch(index: number): LibraryVideo {
       progress: track.status === "processing" ? 3 : track.status === "ready" ? 5 : 1,
       error_code: track.status === "failed" ? "internal" : null,
     },
+    translation: video.translation,
   };
 }
 
@@ -52,6 +53,7 @@ function generated(n: number): LibraryVideo {
       progress: 5,
       error_code: null,
     },
+    translation: { language: "uk", status: n % 5 === 0 ? "none" : "ready" },
   };
 }
 
@@ -59,6 +61,22 @@ export const mockLibrary: LibraryVideo[] = [
   ...Object.keys(mockVideos).map((_, i) => fromWatch(i)),
   ...Array.from({ length: 25 }, (_, i) => generated(i + 1)),
 ];
+
+export function translateMockVideo(videoId: string) {
+  const video = mockLibrary.find((v) => v.id === videoId);
+  if (!video?.translation || video.translation.status === "ready") return undefined;
+  video.translation = { ...video.translation, status: "pending" };
+  const detail = mockVideos[videoId]?.video;
+  if (detail) detail.translation = video.translation;
+  return { video_id: videoId, translation: { language: video.translation.language, status: "pending" as const } };
+}
+
+export function deleteMockVideo(videoId: string) {
+  const index = mockLibrary.findIndex((v) => v.id === videoId);
+  if (index === -1) return undefined;
+  mockLibrary.splice(index, 1);
+  return { video_id: videoId, deleted: true as const };
+}
 
 export function libraryPage(page: number, search?: string): LibraryPage {
   const needle = search?.toLowerCase();

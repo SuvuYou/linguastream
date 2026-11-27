@@ -1,5 +1,5 @@
 import { Module } from "@nestjs/common";
-import { GeminiClient } from "../definition/gemini.client";
+import { GeminiClient } from "../ai/gemini.client";
 import { SpendLimiter, clockProvider } from "../usage/spend-limiter";
 import { UsageStore, redisClientProvider } from "../usage/usage-store";
 import { ProcessingRepository } from "./processing.repository";

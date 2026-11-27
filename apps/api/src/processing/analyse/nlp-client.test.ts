@@ -28,11 +28,17 @@ describe("nlpAnalyser", () => {
       async () => new Response(JSON.stringify({ model: "x", sentences: [] })),
       async () => new Response(JSON.stringify({ model: "x", sentences: [[{ ...tok, head: -1 }]] })),
     ];
-    for (const answer of answers) {
+    const details = [
+      "NLP service unreachable at http://nlp.test (TypeError)",
+      "NLP service answered 500",
+      "NLP service gave an invalid answer",
+      "NLP service gave an invalid answer",
+    ];
+    for (const [i, answer] of answers.entries()) {
       vi.stubGlobal("fetch", vi.fn(answer));
       const error = await nlpAnalyser("http://nlp.test")(["Hallo"]).catch((e: unknown) => e);
       expect(error).toBeInstanceOf(ProcessingError);
-      expect(error).toMatchObject({ code: "internal", retryable: true });
+      expect(error).toMatchObject({ code: "internal", retryable: true, detail: details[i] });
     }
   });
 });

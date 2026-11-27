@@ -2,6 +2,9 @@ import type { ConnectionOptions, JobsOptions } from "bullmq";
 
 export const PROCESSING_QUEUE = "processing";
 export const PROCESS_TRACK_JOB = "process-track";
+export const TRANSLATE_TRACK_JOB = "translate-track";
+
+export const translateJobId = (trackId: string) => `translate-${trackId}`;
 
 export interface ProcessTrackJob {
   trackId: string;

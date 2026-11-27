@@ -3,7 +3,8 @@ import { ApiError, WordDefinition } from "@linguastream/contracts";
 import request from "supertest";
 import { InMemoryUsageStore, createTestApp } from "../test/auth-fakes";
 import { UsageStore } from "../usage/usage-store";
-import { GeminiClient } from "./gemini.client";
+import { GeminiClient } from "../ai/gemini.client";
+import { definitionInstruction } from "../ai/prompts/definition";
 
 const answer = {
   definition: "a building for people to live in",
@@ -51,9 +52,12 @@ describe("GET /api/definition", () => {
     const res = await get().expect(200);
     expect(WordDefinition.parse(res.body)).toEqual(answer);
 
-    const [prompt, options] = gemini.generateText.mock.calls[0]!;
-    expect(prompt).toContain('the de word "Haus" as used in this sentence: "das Haus ist groß und alt"');
-    expect(options).toEqual({ responseMimeType: "application/json" });
+    const [message, options] = gemini.generateText.mock.calls[0]!;
+    expect(JSON.parse(message)).toEqual({ word: "Haus", text: "das Haus ist groß und alt" });
+    expect(options).toEqual({
+      systemInstruction: definitionInstruction("de", "uk"),
+      responseMimeType: "application/json",
+    });
   });
 
   it("answers 401 without a session and never calls Gemini", async () => {
