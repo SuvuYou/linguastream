@@ -1,6 +1,9 @@
 import type { ProcessingStep } from "@linguastream/contracts";
 import { gunzipSync } from "node:zlib";
 import type { SpendLimiter } from "../../usage/spend-limiter";
+import type { VerbLexicon } from "../normalise/join-rule";
+import { normalise } from "../normalise/normalise";
+import type { Punctuator } from "../normalise/punctuate";
 import type { ProcessingRepository } from "../processing.repository";
 import { parseJson3 } from "./parse-json3";
 
@@ -12,9 +15,38 @@ export interface StepContext {
 
 export type StepHandler = (context: StepContext) => Promise<void>;
 
-export const STEP_HANDLERS: Partial<Record<ProcessingStep, StepHandler>> = {
-  parse: async ({ trackId, repository }) => {
-    const raw = gunzipSync(await repository.rawJson3(trackId)).toString("utf8");
-    await repository.replaceLines(trackId, parseJson3(raw));
-  },
-};
+export interface StepDeps {
+  punctuate: Punctuator;
+  lexicon: VerbLexicon | null;
+}
+
+async function rawText(context: StepContext): Promise<string> {
+  return gunzipSync(
+    await context.repository.rawJson3(context.trackId),
+  ).toString("utf8");
+}
+
+export function createStepHandlers(
+  deps: StepDeps,
+): Partial<Record<ProcessingStep, StepHandler>> {
+  return {
+    parse: async (context) => {
+      await context.repository.replaceLines(
+        context.trackId,
+        parseJson3(await rawText(context)),
+      );
+    },
+    normalise: async (context) => {
+      const { lines, normalisation } = await normalise(await rawText(context), {
+        punctuate: deps.punctuate,
+        canSpend: () => context.spend.canSpend(),
+        lexicon: deps.lexicon,
+      });
+      await context.repository.saveNormalisation(
+        context.trackId,
+        lines,
+        normalisation,
+      );
+    },
+  };
+}

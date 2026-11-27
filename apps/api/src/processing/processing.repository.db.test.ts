@@ -115,4 +115,36 @@ describe("ProcessingRepository (Postgres)", () => {
     const track = await trackFor();
     expect(Buffer.from(await repo.rawJson3(track.id))).toEqual(gzipSync('{"events":[]}'));
   });
+
+  it("saves the normalised text and words of each line, and the edit list on the track", async () => {
+    const track = await trackFor();
+    await repo.replaceLines(track.id, [
+      { index: 0, startMs: 0, endMs: 1000, text: "ich weiß nicht" },
+      { index: 1, startMs: 1000, endMs: 2000, text: "ob das geht" },
+    ]);
+    const normalisation = {
+      version: 1,
+      punctuated: false,
+      punctuation: { status: "done" as const, chunks: 1, rejected: 0, failed: 0, salvagedEdits: 0 },
+      join_rule: "off" as const,
+      edits: [{ i: 0, casing: "Ich" }, { i: 2, after: "," }, { i: 5, after: ".", sentenceEnd: true }],
+      sentence_ends: [5],
+    };
+    await repo.saveNormalisation(
+      track.id,
+      [
+        { index: 0, text: "Ich weiß nicht,", words: [{ i: 0, text: "Ich", start_ms: 0 }] },
+        { index: 1, text: "ob das geht.", words: [{ i: 5, text: "geht.", start_ms: 1500, sentence_end: true }] },
+      ],
+      normalisation,
+    );
+
+    const lines = await db.line.findMany({ where: { trackId: track.id }, orderBy: { index: "asc" } });
+    expect(lines.map((l) => [l.text, l.rawText])).toEqual([
+      ["Ich weiß nicht,", "ich weiß nicht"],
+      ["ob das geht.", "ob das geht"],
+    ]);
+    expect(lines[1]!.words).toEqual([{ i: 5, text: "geht.", start_ms: 1500, sentence_end: true }]);
+    expect((await db.track.findUniqueOrThrow({ where: { id: track.id } })).normalisation).toEqual(normalisation);
+  });
 });

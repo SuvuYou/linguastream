@@ -12,7 +12,9 @@ import {
   type TrackSummary,
 } from "./processing.repository";
 import type { ProcessTrackJob } from "./queue-config";
-import { STEP_HANDLERS, type StepHandler } from "./steps";
+import { GeminiClient } from "../definition/gemini.client";
+import { PUNCTUATION_PROMPT } from "./normalise/punctuate";
+import { createStepHandlers, type StepHandler } from "./steps";
 
 export const STEP_HANDLERS_TOKEN = Symbol("STEP_HANDLERS");
 
@@ -40,7 +42,17 @@ function describe(err: unknown): string {
 
 export const stepHandlersProvider = {
   provide: STEP_HANDLERS_TOKEN,
-  useValue: STEP_HANDLERS,
+  inject: [GeminiClient],
+  useFactory: (gemini: GeminiClient) =>
+    createStepHandlers({
+      punctuate: (text) =>
+        gemini.generateText(text, {
+          systemInstruction: PUNCTUATION_PROMPT,
+          temperature: 0,
+          responseMimeType: "text/plain",
+        }),
+      lexicon: null,
+    }),
 };
 
 @Injectable()

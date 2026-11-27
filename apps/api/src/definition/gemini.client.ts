@@ -5,6 +5,8 @@ import { costMicroUsd } from "../usage/usage-config";
 
 const GEMINI_MODELS = ["gemini-3.1-flash-lite", "gemini-3.5-flash"] as const;
 
+export const GEMINI_TIMEOUT_MS = 90_000;
+
 type GeminiError = { status?: number; code?: number; message?: string };
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -47,7 +49,11 @@ export class GeminiClient {
 
   async generateText(
     prompt: string,
-    options?: { responseMimeType?: "application/json" | "text/plain" },
+    options?: {
+      responseMimeType?: "application/json" | "text/plain";
+      systemInstruction?: string;
+      temperature?: number;
+    },
   ): Promise<string> {
     if (!this.genAI) {
       this.logger.error("GEMINI_API_KEY is not set (apps/api/.env)");
@@ -58,12 +64,16 @@ export class GeminiClient {
       const modelName = GEMINI_MODELS[i];
 
       try {
-        const model = this.genAI.getGenerativeModel({ model: modelName });
+        const model = this.genAI.getGenerativeModel(
+          { model: modelName, ...(options?.systemInstruction && { systemInstruction: options.systemInstruction }) },
+          { timeout: GEMINI_TIMEOUT_MS },
+        );
         const result = await model.generateContent({
           contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: options?.responseMimeType
-            ? { responseMimeType: options.responseMimeType }
-            : undefined,
+          generationConfig: {
+            ...(options?.responseMimeType && { responseMimeType: options.responseMimeType }),
+            ...(options?.temperature !== undefined && { temperature: options.temperature }),
+          },
         });
         await this.recordUsage(modelName, result.response.usageMetadata);
         return result.response.text();

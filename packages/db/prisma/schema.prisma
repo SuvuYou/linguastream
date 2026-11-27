@@ -69,6 +69,7 @@ model Track {
   status            ProcessingStatus @default(pending)
   progress          Int              @default(0)
   errorCode         String?          @map("error_code")
+  normalisation     Json?
   createdAt         DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
   processedAt       DateTime?        @map("processed_at") @db.Timestamptz(6)
 

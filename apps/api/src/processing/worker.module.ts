@@ -1,4 +1,5 @@
 import { Module } from "@nestjs/common";
+import { GeminiClient } from "../definition/gemini.client";
 import { SpendLimiter, clockProvider } from "../usage/spend-limiter";
 import { UsageStore, redisClientProvider } from "../usage/usage-store";
 import { ProcessingRepository } from "./processing.repository";
@@ -15,6 +16,7 @@ import { TrackProcessor, stepHandlersProvider } from "./track-processor";
     UsageStore,
     clockProvider,
     SpendLimiter,
+    GeminiClient,
   ],
 })
 export class WorkerModule {}

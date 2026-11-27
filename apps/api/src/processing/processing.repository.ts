@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import type { ProcessingErrorCode } from "@linguastream/contracts";
 import { db } from "@linguastream/db";
+import type { NormalisedLine, Normalisation } from "./normalise/normalise";
 import type { ParsedLine } from "./steps/parse-json3";
 
 export interface TrackSummary {
@@ -102,6 +103,19 @@ export class ProcessingRepository {
           words: [],
         })),
       }),
+    ]);
+  }
+
+  async saveNormalisation(trackId: string, lines: NormalisedLine[], normalisation: Normalisation): Promise<void> {
+    const indexes = lines.map((line) => line.index);
+    const texts = lines.map((line) => line.text);
+    const words = lines.map((line) => JSON.stringify(line.words));
+    await db.$transaction([
+      db.$executeRaw`
+        UPDATE lines SET text = v.text, words = v.words::jsonb
+        FROM unnest(${indexes}::int[], ${texts}::text[], ${words}::text[]) AS v(idx, text, words)
+        WHERE lines.track_id = ${trackId}::uuid AND lines.index = v.idx`,
+      db.track.update({ where: { id: trackId }, data: { normalisation: normalisation as unknown as object } }),
     ]);
   }
 }
