@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import ProcessingToasts from "@/components/features/processing/ProcessingToasts";
 import { Sonner } from "@/components/ui/sonner";
 import { useLineWindows } from "@/hooks/useLineWindows";
 import { usePreferences, useUpdatePreferences } from "@/hooks/usePreferences";
@@ -71,6 +72,7 @@ function Layout({
         </div>
       </div>
       <Sonner position="bottom-center" />
+      <ProcessingToasts placement="bottom-right" />
     </div>
   );
 }

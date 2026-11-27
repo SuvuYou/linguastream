@@ -1,5 +1,6 @@
 import "@testing-library/jest-dom";
-import { vi } from "vitest";
+import { beforeEach, vi } from "vitest";
+import { FakeEventSource } from "./helpers/tests/fake-event-source";
 
 class ResizeObserverMock {
   observe() {}
@@ -21,4 +22,10 @@ Object.defineProperty(window, "matchMedia", {
     removeEventListener: vi.fn(),
     dispatchEvent: vi.fn(),
   })),
+});
+
+(globalThis as { EventSource?: unknown }).EventSource = FakeEventSource;
+
+beforeEach(() => {
+  FakeEventSource.instances = [];
 });

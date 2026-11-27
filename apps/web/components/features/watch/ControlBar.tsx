@@ -135,7 +135,8 @@ export default function ControlBar({
       </button>
       <LineButtons lines={lines} clock={clock} onJump={onJumpToLine} />
       <span className="px-2 font-mono text-xs text-text-3 tabular-nums">
-        <CurrentTime clock={clock} /> / {formatTime(durationMs)}
+        <CurrentTime clock={clock} />
+        <span className="@max-[600px]:hidden"> / {formatTime(durationMs)}</span>
       </span>
       <span className="flex-1" />
       <DropdownMenu>

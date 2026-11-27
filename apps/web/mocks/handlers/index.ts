@@ -3,6 +3,7 @@ import { parseMockSetting } from "../config";
 import { definitionHandlers } from "./definition";
 import { extensionHandlers } from "./extension";
 import { preferencesHandlers } from "./preferences";
+import { processingHandlers } from "./processing";
 import { userHandlers } from "./user";
 import { watchHandlers } from "./watch";
 
@@ -12,6 +13,7 @@ export const handlerGroups: Record<string, RequestHandler[]> = {
   extension: extensionHandlers,
   watch: watchHandlers,
   preferences: preferencesHandlers,
+  processing: processingHandlers,
 };
 
 export function selectHandlers(setting: string | undefined): RequestHandler[] {

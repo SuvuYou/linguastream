@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import Navbar from "@/components/layout/Navbar";
+import ProcessingToasts from "@/components/features/processing/ProcessingToasts";
 import { SidebarProvider } from "@/components/ui/sidebar";
 
 export default function RootLayout({
@@ -13,6 +14,7 @@ export default function RootLayout({
       <main className="flex min-h-dvh w-full flex-col bg-sidebar">
         <Suspense>{children}</Suspense>
       </main>
+      <ProcessingToasts />
     </SidebarProvider>
   );
 }
