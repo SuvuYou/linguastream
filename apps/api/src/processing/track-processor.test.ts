@@ -200,4 +200,12 @@ describe("TrackProcessor", () => {
       }
     });
   });
+
+  it("counts lemmas for a single track on request, without events", async () => {
+    const index = vi.fn<StepHandler>(async () => {});
+    const { processor, repository, published } = setup({ ...TRACK, status: "ready", progress: 5 }, { index });
+    await processor.indexTrack(TRACK.trackId);
+    expect(index).toHaveBeenCalledWith(expect.objectContaining({ trackId: TRACK.trackId, repository }));
+    expect(published).toEqual([]);
+  });
 });

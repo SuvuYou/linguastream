@@ -284,4 +284,42 @@ describe("ProcessingRepository (Postgres)", () => {
     await db.trackTranslation.update({ where: { id }, data: { status: "ready" } });
     expect(await repo.openTranslations(userId)).toEqual([]);
   });
+
+  it("replaces a video's lemma counts and finds ready videos that have none", async () => {
+    const older = await trackFor(undefined, "ready");
+    await db.track.update({ where: { id: older.id }, data: { createdAt: new Date("2026-11-01") } });
+    const newer = await db.track.create({
+      data: {
+        videoId: older.videoId,
+        youtubeTrackId: "a.de",
+        language: "de",
+        isAutoCaptions: true,
+        rawJson3: new Uint8Array([1]),
+        contentHash: `hash-newer-${older.id}`,
+        processingVersion: 1,
+        status: "ready",
+      },
+    });
+    const pending = await trackFor(undefined, "pending");
+
+    let ids = await repo.readyTracksWithoutLemmaCounts();
+    expect(ids).toContain(newer.id);
+    expect(ids).not.toContain(older.id);
+    expect(ids).not.toContain(pending.id);
+
+    await repo.replaceLemmaCounts(newer.id, [
+      { lemma: "gehen", count: 2 },
+      { lemma: "ich", count: 1 },
+    ]);
+    await repo.replaceLemmaCounts(newer.id, [{ lemma: "gehen", count: 3 }]);
+    expect(
+      (await db.videoLemmaCount.findMany({ where: { videoId: older.videoId } })).map((c) => [c.lemma, c.count]),
+    ).toEqual([["gehen", 3]]);
+
+    ids = await repo.readyTracksWithoutLemmaCounts();
+    expect(ids).not.toContain(newer.id);
+
+    await repo.replaceLemmaCounts(newer.id, []);
+    expect(await db.videoLemmaCount.count({ where: { videoId: older.videoId } })).toBe(0);
+  });
 });

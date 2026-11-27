@@ -131,6 +131,10 @@ export class TrackProcessor {
     await publish({ type: "ready", ...base });
   }
 
+  async indexTrack(trackId: string): Promise<void> {
+    await this.handlers.index?.({ trackId, repository: this.repository, spend: this.spend });
+  }
+
   private reporter(
     base: { track_id: string; video_id: string },
     publish: (event: UntitledEvent) => Promise<void>,

@@ -35,8 +35,8 @@ export interface Sentence {
   words: SentenceWord[];
 }
 
-const NO_LEMMA_POS = new Set(["PUNCT", "SYM", "NUM", "SPACE", "X"]);
-const HAS_LETTER = /\p{L}/u;
+export const NO_LEMMA_POS = new Set(["PUNCT", "SYM", "NUM", "SPACE", "X"]);
+export const HAS_LETTER = /\p{L}/u;
 
 export function sentencesOf(lines: StoredLine[]): Sentence[] {
   const sentences: Sentence[] = [];

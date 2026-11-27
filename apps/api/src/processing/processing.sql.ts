@@ -22,3 +22,10 @@ export function upsertLineTranslations(translationId: string, lineIds: string[],
     FROM unnest(${lineIds}::uuid[], ${texts}::text[]) AS v(line_id, text)
     ON CONFLICT (translation_id, line_id) DO UPDATE SET text = EXCLUDED.text`;
 }
+
+export function insertLemmaCounts(videoId: string, lemmas: string[], counts: number[]) {
+  return Prisma.sql`
+    INSERT INTO video_lemma_counts (video_id, lemma, count)
+    SELECT ${videoId}::uuid, v.lemma, v.count
+    FROM unnest(${lemmas}::text[], ${counts}::int[]) AS v(lemma, count)`;
+}

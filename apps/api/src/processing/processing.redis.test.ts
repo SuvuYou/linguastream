@@ -23,6 +23,7 @@ function testRedisUrl(): string {
 const ids = (n: number) => `0190f3c2-7d1a-7c00-8a00-00000000000${n}`;
 
 let pendingTranslations: string[] = [];
+let withoutCounts: string[] = [];
 
 function fakeRepository(tracks: TrackSummary[]) {
   const find = (id: string) => tracks.find((t) => t.trackId === id) ?? null;
@@ -31,6 +32,7 @@ function fakeRepository(tracks: TrackSummary[]) {
     pendingTrackIds: vi.fn(async () => tracks.filter((t) => t.status === "pending").map((t) => t.trackId)),
     pendingTranslationTrackIds: vi.fn(async () => pendingTranslations),
     failOpenTranslations: vi.fn(async () => {}),
+    readyTracksWithoutLemmaCounts: vi.fn(async () => withoutCounts),
     markProcessing: vi.fn(async (id: string) => void (find(id)!.status = "processing")),
     completeStep: vi.fn(async (id: string, progress: number) => void (find(id)!.progress = progress)),
     markReady: vi.fn(async (id: string) => void (find(id)!.status = "ready")),
@@ -43,6 +45,7 @@ describe("processing queue (Redis)", { timeout: 15_000 }, () => {
   let tracks: TrackSummary[];
   let parse: ReturnType<typeof vi.fn<StepHandler>>;
   let translate: ReturnType<typeof vi.fn<StepHandler>>;
+  let index: ReturnType<typeof vi.fn<StepHandler>>;
   let worker: ProcessingWorker;
   let queue: ProcessingQueue;
   let events: ProcessingEvents;
@@ -67,9 +70,11 @@ describe("processing queue (Redis)", { timeout: 15_000 }, () => {
     parse = vi.fn<StepHandler>(async () => {});
     translate = vi.fn<StepHandler>(async () => {});
     pendingTranslations = [];
+    withoutCounts = [];
+    index = vi.fn<StepHandler>(async () => {});
     const repository = fakeRepository(tracks) as unknown as ProcessingRepository;
     const spend = { canSpend: vi.fn(async () => true), record: vi.fn(async () => {}) };
-    worker = new ProcessingWorker(new TrackProcessor(repository, { parse, translate }, spend), repository);
+    worker = new ProcessingWorker(new TrackProcessor(repository, { parse, translate, index }, spend), repository);
     queue = new ProcessingQueue();
     events = new ProcessingEvents(repository);
   });
@@ -169,5 +174,14 @@ describe("processing queue (Redis)", { timeout: 15_000 }, () => {
     await queue.enqueueTranslation(ids(1));
     await again;
     expect(translate).toHaveBeenCalledTimes(3);
+  });
+
+  it("counts lemmas for earlier ready videos when it starts, and carries on after a failure", async () => {
+    withoutCounts = [ids(1), ids(2)];
+    index.mockRejectedValueOnce(new Error("db hiccup"));
+    await worker.onModuleInit();
+    await worker.backfill;
+    expect(index.mock.calls.map(([context]) => context.trackId)).toEqual([ids(1), ids(2)]);
+    expect(Logger.prototype.log).toHaveBeenCalledWith("Counted lemmas for 1 of 2 earlier video(s)");
   });
 });

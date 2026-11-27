@@ -3,7 +3,13 @@ import type { ProcessingErrorCode } from "@linguastream/contracts";
 import { db } from "@linguastream/db";
 import type { AnalysedLine, StoredLine, StoredWord } from "./analyse/analyse";
 import type { NormalisedLine, Normalisation } from "./normalise/normalise";
-import { updateLineTextsAndWords, updateLineWordsAndLemmas, upsertLineTranslations } from "./processing.sql";
+import type { LemmaCount } from "./index/lemma-counts";
+import {
+  insertLemmaCounts,
+  updateLineTextsAndWords,
+  updateLineWordsAndLemmas,
+  upsertLineTranslations,
+} from "./processing.sql";
 import type { ParsedLine } from "./steps/parse-json3";
 import type { SourceLine, TranslatedLine, TranslationReport } from "./translate/translate";
 
@@ -220,5 +226,30 @@ export class ProcessingRepository {
       done: progress,
       total: track._count.lines,
     }));
+  }
+
+  async replaceLemmaCounts(trackId: string, counts: LemmaCount[]): Promise<void> {
+    const { videoId } = await db.track.findUniqueOrThrow({ where: { id: trackId }, select: { videoId: true } });
+    await db.$transaction([
+      db.videoLemmaCount.deleteMany({ where: { videoId } }),
+      db.$executeRaw(
+        insertLemmaCounts(
+          videoId,
+          counts.map((c) => c.lemma),
+          counts.map((c) => c.count),
+        ),
+      ),
+    ]);
+  }
+
+  async readyTracksWithoutLemmaCounts(): Promise<string[]> {
+    const tracks = await db.track.findMany({
+      where: { status: "ready", video: { lemmaCounts: { none: {} } } },
+      orderBy: { createdAt: "desc" },
+      select: { id: true, videoId: true },
+    });
+    const newest = new Map<string, string>();
+    for (const track of tracks) if (!newest.has(track.videoId)) newest.set(track.videoId, track.id);
+    return [...newest.values()];
   }
 }

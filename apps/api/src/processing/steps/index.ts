@@ -8,6 +8,7 @@ import type { VerbLexicon } from "../normalise/join-rule";
 import { normalise } from "../normalise/normalise";
 import type { Punctuator } from "../normalise/punctuate";
 import type { ProcessingRepository } from "../processing.repository";
+import { countLemmas } from "../index/lemma-counts";
 import { translateLines, type Translator } from "../translate/translate";
 import { parseJson3 } from "./parse-json3";
 
@@ -34,6 +35,7 @@ export interface StepDeps {
 }
 
 const logger = new Logger("Translation");
+const indexLogger = new Logger("LemmaCounts");
 
 const baseLanguage = (code: string) => code.toLowerCase().split("-")[0];
 
@@ -94,6 +96,13 @@ export function createStepHandlers(deps: StepDeps): Partial<Record<ProcessingSte
         logger.warn(summary);
         await context.report?.translationFailed(report.errorCode ?? "internal");
       } else logger.log(summary);
+    },
+    index: async (context) => {
+      const counts = countLemmas(await context.repository.lineWords(context.trackId));
+      await context.repository.replaceLemmaCounts(context.trackId, counts);
+      indexLogger.log(
+        `Track ${context.trackId}: ${counts.length} lemmas, ${counts.reduce((sum, c) => sum + c.count, 0)} words counted`,
+      );
     },
   };
 }

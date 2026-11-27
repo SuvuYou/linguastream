@@ -16,6 +16,7 @@ import {
   translateJobId,
   type ProcessTrackJob,
 } from "./queue-config";
+import { describeError } from "./processing-error";
 import { TrackProcessor } from "./track-processor";
 
 export const WORKER_CONCURRENCY = 2;
@@ -25,6 +26,7 @@ export class ProcessingWorker implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(ProcessingWorker.name);
   private worker?: Worker<ProcessTrackJob>;
   private queue?: Queue<ProcessTrackJob>;
+  backfill: Promise<void> = Promise.resolve();
 
   constructor(
     @Inject(TrackProcessor) private readonly processor: TrackProcessor,
@@ -51,6 +53,7 @@ export class ProcessingWorker implements OnModuleInit, OnModuleDestroy {
       this.logger.error(`Worker error: ${err.name}`),
     );
     await this.enqueuePending();
+    this.backfill = this.backfillLemmaCounts();
     this.logger.log(
       `Processing worker started (concurrency ${WORKER_CONCURRENCY})`,
     );
@@ -59,6 +62,26 @@ export class ProcessingWorker implements OnModuleInit, OnModuleDestroy {
   async onModuleDestroy(): Promise<void> {
     await this.worker?.close();
     await this.queue?.close();
+  }
+
+  private async backfillLemmaCounts(): Promise<void> {
+    let ids: string[];
+    try {
+      ids = await this.repository.readyTracksWithoutLemmaCounts();
+    } catch (err) {
+      this.logger.warn(`Lemma count backfill skipped: ${describeError(err)}`);
+      return;
+    }
+    let done = 0;
+    for (const trackId of ids) {
+      try {
+        await this.processor.indexTrack(trackId);
+        done++;
+      } catch (err) {
+        this.logger.warn(`Lemma counts for track ${trackId} failed: ${describeError(err)}`);
+      }
+    }
+    if (ids.length > 0) this.logger.log(`Counted lemmas for ${done} of ${ids.length} earlier video(s)`);
   }
 
   private async enqueuePending(): Promise<void> {
