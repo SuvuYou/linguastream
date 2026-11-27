@@ -16,6 +16,7 @@ import {
 } from "@linguastream/contracts";
 import { createHash } from "node:crypto";
 import { gzipSync } from "node:zlib";
+import { ProcessingService } from "../processing/processing.service";
 import { CapturesRepository, type StoredTrack } from "./captures.repository";
 
 export const PROCESSING_VERSION = 1;
@@ -36,7 +37,10 @@ export function isJson3(raw: string): boolean {
 
 @Injectable()
 export class CapturesService {
-  constructor(@Inject(CapturesRepository) private readonly captures: CapturesRepository) {}
+  constructor(
+    @Inject(CapturesRepository) private readonly captures: CapturesRepository,
+    @Inject(ProcessingService) private readonly processing: ProcessingService,
+  ) {}
 
   async lookup(userId: string, query: RequestQuery<typeof lookupCaptureRoute>): Promise<CaptureLookup> {
     if (await this.captures.isBlocked(query.youtube_video_id)) return { status: "blocked" };
@@ -78,7 +82,7 @@ export class CapturesService {
     const existing = await this.captures.findTrack(key);
     if (existing) return { track: existing, created: false };
 
-    return this.captures.create({
+    const result = await this.captures.create({
       ...key,
       title: video.title,
       channelName: video.channel_name,
@@ -87,5 +91,7 @@ export class CapturesService {
       isAutoCaptions: track.kind === "asr",
       rawJson3: gzipSync(track.raw_json3),
     });
+    if (result.created) await this.processing.enqueue(result.track.trackId);
+    return result;
   }
 }

@@ -102,6 +102,9 @@ export default function PaginationControls({
               onKeyDown={(e) => {
                 switch (e.key) {
                   case "Enter":
+                    // Skip the Enter that confirms an IME composition
+                    // (keyCode 229 covers Safari).
+                    if (e.nativeEvent.isComposing || e.keyCode === 229) break;
                     commit();
                     break;
                 }

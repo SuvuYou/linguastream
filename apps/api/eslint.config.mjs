@@ -3,7 +3,7 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import tseslint from "typescript-eslint";
 
 export default defineConfig([
-  globalIgnores(["dist/**", "coverage/**", "node_modules/**"]),
+  globalIgnores(["dist/**", "dist-worker/**", "coverage/**", "node_modules/**"]),
   js.configs.recommended,
   ...tseslint.configs.recommended,
 ]);

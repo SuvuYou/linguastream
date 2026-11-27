@@ -7,4 +7,5 @@ allowBuilds:
   '@swc/core': false
   plyr: false
   prisma: true
+  msgpackr-extract: false
   protobufjs: false

@@ -13,6 +13,7 @@ npm
 
 # monorepo build output and caches
 dist
+dist-worker
 .turbo
 
 # testing

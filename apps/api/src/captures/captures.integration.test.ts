@@ -3,7 +3,8 @@ import { ApiError, CaptureCreated, CaptureLookup } from "@linguastream/contracts
 import { createHash } from "node:crypto";
 import { gunzipSync } from "node:zlib";
 import request from "supertest";
-import { createTestApp, decodedToken, fakeFirebaseAuth } from "../test/auth-fakes";
+import { ProcessingQueue } from "../processing/processing-queue";
+import { createTestApp, decodedToken, fakeFirebaseAuth, fakeProcessingQueue } from "../test/auth-fakes";
 import { CapturesRepository, type NewCapture, type StoredTrack, type TrackKey } from "./captures.repository";
 import { MIN_EXTENSION_VERSION } from "./extension-version";
 
@@ -44,10 +45,12 @@ const capture = (fields: { video?: object; track?: object } = {}) => ({
 describe("captures API", () => {
   let app: INestApplication;
   let repo: ReturnType<typeof fakeRepository>;
+  let queue: ReturnType<typeof fakeProcessingQueue>;
   let logs: string;
 
   beforeEach(async () => {
     repo = fakeRepository();
+    queue = fakeProcessingQueue();
     const auth = fakeFirebaseAuth("firebase-uid-1");
     auth.verifyIdToken.mockImplementation(async (token: string) => {
       if (token === "token-1") return decodedToken("firebase-uid-1");
@@ -66,6 +69,7 @@ describe("captures API", () => {
       providers: [
         { token: CapturesRepository, value: repo },
         { token: MIN_EXTENSION_VERSION, value: "0.2.0" },
+        { token: ProcessingQueue, value: queue },
       ],
     });
   });
@@ -112,6 +116,20 @@ describe("captures API", () => {
         title: "Ein Tag in Hamburg",
       });
       expect(gunzipSync(row!.rawJson3).toString()).toBe(RAW);
+    });
+
+    it("queues a new capture for processing, once", async () => {
+      await post(capture()).expect(201);
+      await post(capture()).expect(200);
+      expect(queue.enqueue.mock.calls).toEqual([["track-1"]]);
+    });
+
+    it("still stores the capture when the queue is down", async () => {
+      queue.enqueue.mockRejectedValueOnce(Object.assign(new Error("Connection is closed."), { name: "MaxRetriesError" }));
+      const res = await post(capture()).expect(201);
+      expect(CaptureCreated.parse(res.body).status).toBe("pending");
+      expect(logs).toContain("stays pending");
+      expect(logs).not.toContain("Das Haus");
     });
 
     it("uses the uploaded track's id for uploaded captions", async () => {

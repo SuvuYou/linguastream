@@ -6,7 +6,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
-    include: ["src/**/*.db.test.ts"],
+    include: ["src/**/*.db.test.ts", "src/**/*.redis.test.ts"],
     globalSetup: ["../../packages/db/test/global-setup.ts"],
     setupFiles: ["../../packages/db/test/setup.ts"],
     fileParallelism: false,

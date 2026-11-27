@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import PaginationControls from "./PaginationControls";
 
@@ -42,6 +42,30 @@ describe("PaginationControls", () => {
       expect(onPageChange).toHaveBeenCalledWith(3);
       expect(onPageChange).toHaveBeenCalledTimes(1);
     });
+
+    it.each([
+      { name: "isComposing", init: { isComposing: true } },
+      { name: "keyCode 229", init: { keyCode: 229 } },
+    ])(
+      "does not change the page on Enter during IME composition ($name)",
+      ({ init }) => {
+        const onPageChange = vi.fn();
+
+        render(
+          <PaginationControls
+            page={0}
+            pageCount={5}
+            onPageChange={onPageChange}
+          />,
+        );
+
+        const input = screen.getByRole("spinbutton");
+        fireEvent.change(input, { target: { value: "4" } });
+        fireEvent.keyDown(input, { key: "Enter", ...init });
+
+        expect(onPageChange).not.toHaveBeenCalled();
+      },
+    );
 
     it("accepts the first page", async () => {
       const user = userEvent.setup();

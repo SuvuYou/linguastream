@@ -83,7 +83,11 @@ export default function CreateDeckModal({
             }
             placeholder="e.g. German Verbs"
             onKeyDown={(e) => {
-              if (e.key === "Enter") handleCreateDeck();
+              if (e.key !== "Enter") return;
+              // Enter also confirms an IME composition (Japanese, Chinese, Korean);
+              // keyCode 229 covers Safari, which resets isComposing too early.
+              if (e.nativeEvent.isComposing || e.keyCode === 229) return;
+              handleCreateDeck();
             }}
             autoFocus
           />

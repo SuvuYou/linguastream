@@ -6,3 +6,4 @@ export * from "./extension.js";
 export * from "./captures.js";
 export * from "./watch.js";
 export * from "./preferences.js";
+export * from "./processing.js";

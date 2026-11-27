@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import React from "react";
 
@@ -165,5 +165,16 @@ describe("CreateDeckModal", () => {
     await waitFor(() => {
       expect(fetch).toHaveBeenCalled();
     });
+  });
+
+  it.each([
+    { name: "isComposing", init: { isComposing: true } },
+    { name: "keyCode 229", init: { keyCode: 229 } },
+  ])("does not submit on Enter during IME composition ($name)", ({ init }) => {
+    renderComponent();
+
+    fireEvent.keyDown(screen.getByRole("textbox"), { key: "Enter", ...init });
+
+    expect(fetch).not.toHaveBeenCalled();
   });
 });
