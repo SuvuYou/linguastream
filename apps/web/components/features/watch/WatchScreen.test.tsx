@@ -836,5 +836,42 @@ describe("WatchScreen", () => {
       expect(await screen.findByText("Couldn't save the word's status")).toBeInTheDocument();
       await waitFor(async () => expect((await word("Hafen")).className).toContain("bg-unknown"));
     });
+
+    it("opens the full view from the popup, follows clicked words and goes back to the transcript", async () => {
+      const fake = await renderLine();
+      const user = userEvent.setup();
+      await user.click(screen.getByRole("button", { name: "Play (Space)" }));
+      await user.click(await word("fangen"));
+      const popup = within(await screen.findByRole("dialog", { name: "Word: anfangen" }));
+      await user.click(await popup.findByRole("button", { name: "Details" }));
+
+      const details = within(await screen.findByRole("complementary", { name: "Word details" }));
+      expect(screen.queryByRole("dialog", { name: "Word: anfangen" })).toBeNull();
+      expect(screen.queryByRole("complementary", { name: "Transcript" })).toBeNull();
+      expect(details.getByRole("heading", { level: 2, name: "anfangen" })).toBeInTheDocument();
+      expect(details.getByText("separable")).toBeInTheDocument();
+      expect(details.getByText("here: 1st person · plural · present · indicative")).toBeInTheDocument();
+      expect(details.getByText("to begin, to start")).toBeInTheDocument();
+      expect(details.getByText("Der Film fängt um acht an.")).toHaveAttribute("lang", "de");
+
+      await user.click(details.getByRole("tab", { name: "Forms" }));
+      expect(details.getByText("fängt an")).toBeInTheDocument();
+      expect(details.getByText("participle · past")).toBeInTheDocument();
+
+      await user.click(details.getByRole("button", { name: "Known" }));
+      await waitFor(() =>
+        expect(api.statusChanges).toEqual([{ language: "de", lemma: "anfangen", status: "known" }]),
+      );
+
+      await user.click(await word("Hafen"));
+      const next = within(await screen.findByRole("complementary", { name: "Word details" }));
+      expect(await next.findByRole("heading", { level: 2, name: "Hafen" })).toBeInTheDocument();
+      expect(next.queryByRole("tab", { name: "Forms" })).toBeInTheDocument();
+      expect(screen.queryByRole("dialog")).toBeNull();
+
+      await user.click(next.getByRole("button", { name: "Transcript" }));
+      expect(await screen.findByRole("complementary", { name: "Transcript" })).toBeInTheDocument();
+      expect(fake.player.play).toHaveBeenCalledTimes(2);
+    });
   });
 });

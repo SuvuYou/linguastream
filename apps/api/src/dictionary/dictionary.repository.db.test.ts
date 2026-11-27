@@ -98,4 +98,20 @@ describe("DictionaryRepository (Postgres)", () => {
     ]);
     expect(await repo.fullEntries("de", "Katze")).toEqual([]);
   });
+
+  it("lists a lemma's forms with their tags, once each", async () => {
+    await db.dictionaryForm.createMany({
+      data: [
+        { language: "de", form: "Hunde", formLower: "hunde", lemma: "Hund", pos: "noun", tags: ["nominative", "plural"] },
+        { language: "de", form: "Hunde", formLower: "hunde", lemma: "Hund", pos: "noun", tags: ["nominative", "plural"] },
+        { language: "de", form: "Hundes", formLower: "hundes", lemma: "Hund", pos: "noun", tags: ["genitive", "singular"] },
+        { language: "de", form: "hunde", formLower: "hunde", lemma: "hunden", pos: "verb", tags: [] },
+      ],
+    });
+    expect(await repo.forms("de", "Hund")).toEqual([
+      { form: "Hunde", pos: "noun", tags: ["nominative", "plural"] },
+      { form: "Hundes", pos: "noun", tags: ["genitive", "singular"] },
+    ]);
+    expect(await repo.forms("de", "Katze")).toEqual([]);
+  });
 });

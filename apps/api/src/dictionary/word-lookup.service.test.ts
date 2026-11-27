@@ -38,6 +38,9 @@ function setup(line: LookupLine | null = LINE) {
     fullEntries: vi.fn(async (_language: string, lemma: string) =>
       lemma === "Essen" ? [entry("essen", "verb", ["to eat"]), entry("Essen", "noun", ["food; meal", "dinner"])] : [],
     ),
+    forms: vi.fn(async (_language: string, lemma: string) =>
+      lemma === "Essen" ? [{ form: "Essens", pos: "noun", tags: ["genitive", "singular"] }] : [],
+    ),
     ranks: vi.fn(async () => new Map([["Essen", 1200]])),
     glossTranslations: vi.fn(async () => new Map([[glossKey({ word: "Essen", pos: "noun", gloss: "food" }), "їжа"]])),
     aiWords: vi.fn(async () => new Map([["anfangen", { pos: "verb", gender: null, gloss: "починати", parts: [] }]])),
@@ -72,6 +75,7 @@ describe("WordLookupService", () => {
       gloss: "їжа",
       gloss_language: "uk",
       entries: [entry("Essen", "noun", ["food; meal", "dinner"]), entry("essen", "verb", ["to eat"])],
+      forms: [{ form: "Essens", pos: "noun", tags: ["genitive", "singular"] }],
       ai: null,
     });
     expect(dictionary.aiWords).not.toHaveBeenCalled();
@@ -98,6 +102,7 @@ describe("WordLookupService", () => {
       lemma: null,
       status: "unknown",
       entries: [],
+      forms: [],
       gloss: null,
       line: { translation: LINE.translation },
     });

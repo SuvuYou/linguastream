@@ -35,6 +35,7 @@ import TranscriptPanel, { trackState } from "./TranscriptPanel";
 import TranslateButton from "./TranslateButton";
 import VideoStage from "./VideoStage";
 import WatchHeader from "./WatchHeader";
+import WordDetails from "./WordDetails";
 import WordPopup from "./WordPopup";
 
 const TYPING_INPUTS = new Set([
@@ -138,6 +139,7 @@ function useWordPopup(
   const statuses = useWordStatuses(video.id, ready);
   const [target, setTarget] = useState<WordTarget | null>(null);
   const [pausedForWord, setPausedForWord] = useState(false);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const [announcement, setAnnouncement] = useState("");
   const anchorRef = useRef<HTMLElement | null>(null);
   const lookup = useWordLookup(video.id, target);
@@ -147,7 +149,7 @@ function useWordPopup(
   if (playing !== seenPlaying) {
     setSeenPlaying(playing);
     if (playing && target) {
-      setTarget(null);
+      if (!detailsOpen) setTarget(null);
       setPausedForWord(false);
     }
   }
@@ -155,6 +157,7 @@ function useWordPopup(
   const close = useCallback(
     (resume: boolean) => {
       setTarget(null);
+      setDetailsOpen(false);
       setPausedForWord(false);
       if (pausedForWord && resume) toggle();
     },
@@ -164,7 +167,7 @@ function useWordPopup(
   const select = useCallback(
     (next: WordTarget, element: HTMLElement) => {
       if (target && target.index === next.index && target.i === next.i) {
-        close(true);
+        if (!detailsOpen) close(true);
         return;
       }
       anchorRef.current = element;
@@ -174,7 +177,7 @@ function useWordPopup(
       }
       setTarget(next);
     },
-    [target, playing, toggle, close],
+    [target, playing, toggle, close, detailsOpen],
   );
 
   const setStatus = useCallback(
@@ -195,7 +198,22 @@ function useWordPopup(
     ? (statusOf(statuses, target.lemma) ?? lookup.data?.status ?? null)
     : null;
 
+  const lemma = lookup.data?.lemma ?? target?.lemma ?? "";
+  const changeStatus = (next: WordStatus) => target && setStatus(target.lemma, next);
+
   return {
+    details:
+      target && detailsOpen ? (
+        <WordDetails
+          key={`${target.index}-${target.i}`}
+          lemma={lemma}
+          status={status}
+          lookup={lookup.data}
+          isError={lookup.isError}
+          onStatusChange={changeStatus}
+          onClose={() => close(true)}
+        />
+      ) : null,
     words: {
       statuses,
       selected: target,
@@ -207,18 +225,19 @@ function useWordPopup(
       <>
         <WordPopup
           anchorRef={anchorRef}
-          open={target !== null}
+          open={target !== null && !detailsOpen}
           language={video.language}
           state={
             target && {
-              lemma: lookup.data?.lemma ?? target.lemma,
+              lemma,
               status,
               lookup: lookup.data,
               isLoading: lookup.isPending,
               isError: lookup.isError,
             }
           }
-          onStatusChange={(next) => target && setStatus(target.lemma, next)}
+          onStatusChange={changeStatus}
+          onDetails={() => setDetailsOpen(true)}
           onClose={() => close(true)}
         />
         <span role="status" aria-live="polite" className="sr-only">
@@ -252,7 +271,11 @@ function Watch({ video, startMs }: { video: VideoDetail; startMs: number }) {
   );
   const navigable = state === "ready" && player.status === "ready";
   const lineList = lines.lines;
-  const { words, popup } = useWordPopup(video, state === "ready", player);
+  const { words, popup, details } = useWordPopup(
+    video,
+    state === "ready",
+    player,
+  );
 
   const jumpToLine = useCallback(
     (target: keyof LineTargets) => {
@@ -339,6 +362,7 @@ function Watch({ video, startMs }: { video: VideoDetail; startMs: number }) {
         </>
       }
       side={
+        details ?? (
         <TranscriptPanel
           video={video}
           lines={lines.lines}
@@ -349,6 +373,7 @@ function Watch({ video, startMs }: { video: VideoDetail; startMs: number }) {
           statuses={words.statuses}
           onSeek={player.seek}
         />
+        )
       }
     />
   );

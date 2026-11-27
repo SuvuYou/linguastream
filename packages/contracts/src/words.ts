@@ -72,6 +72,14 @@ export const AiWordEntry = z.object({
 
 export type AiWordEntry = z.infer<typeof AiWordEntry>;
 
+export const WordForm = z.object({
+  form: z.string(),
+  pos: z.string(),
+  tags: z.array(z.string()),
+});
+
+export type WordForm = z.infer<typeof WordForm>;
+
 export const WordLookup = z.object({
   video_id: z.uuid(),
   line_index: z.number().int().nonnegative(),
@@ -90,6 +98,7 @@ export const WordLookup = z.object({
   gloss: z.string().nullable(),
   gloss_language: z.string().nullable(),
   entries: z.array(DictionaryEntry),
+  forms: z.array(WordForm),
   ai: AiWordEntry.nullable(),
 });
 

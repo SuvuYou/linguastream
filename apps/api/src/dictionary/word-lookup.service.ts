@@ -47,11 +47,22 @@ export class WordLookupService {
       native_language: nativeLanguage,
     };
     if (!lemma) {
-      return { ...base, lemma: null, status: "unknown", rank: null, gloss: null, gloss_language: null, entries: [], ai: null };
+      return {
+        ...base,
+        lemma: null,
+        status: "unknown",
+        rank: null,
+        gloss: null,
+        gloss_language: null,
+        entries: [],
+        forms: [],
+        ai: null,
+      };
     }
 
-    const [found, status, ranks] = await Promise.all([
+    const [found, forms, status, ranks] = await Promise.all([
       this.dictionary.fullEntries(language, lemma),
+      this.dictionary.forms(language, lemma),
       this.vocabulary.status(userId, language, lemma),
       this.dictionary.ranks(language, [lemma]),
     ]);
@@ -84,6 +95,7 @@ export class WordLookupService {
       gloss: packed.gloss,
       gloss_language: packed.gloss_language,
       entries,
+      forms,
       ai,
     };
   }

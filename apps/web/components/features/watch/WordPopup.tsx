@@ -18,7 +18,7 @@ export interface WordPopupState {
   isError: boolean;
 }
 
-function Rank({ rank, status }: { rank: number; status: WordStatus | null }) {
+export function Rank({ rank, status }: { rank: number; status: WordStatus | null }) {
   const worth = status !== null && isWorthLearning(rank, status);
   return (
     <span
@@ -75,6 +75,7 @@ export default function WordPopup({
   language,
   state,
   onStatusChange,
+  onDetails,
   onClose,
 }: {
   anchorRef: RefObject<HTMLElement | null>;
@@ -82,6 +83,7 @@ export default function WordPopup({
   language: string;
   state: WordPopupState | null;
   onStatusChange(status: WordStatus): void;
+  onDetails(): void;
   onClose(): void;
 }) {
   const lookup = state?.lookup;
@@ -125,9 +127,19 @@ export default function WordPopup({
             </div>
             <Body state={state} language={language} />
             <StatusPicker value={state.status} onChange={onStatusChange} />
-            <Button disabled title="Saving words comes next" className="w-full">
-              Save word · coming soon
-            </Button>
+            <div className="flex gap-2">
+              <Button disabled title="Saving words comes next" className="flex-1">
+                Save word · coming soon
+              </Button>
+              <Button
+                variant="ghost"
+                disabled={!lookup}
+                onClick={onDetails}
+                className="bg-foreground/8 text-foreground hover:bg-foreground/12"
+              >
+                Details
+              </Button>
+            </div>
           </Popover.Content>
         )}
       </Popover.Portal>

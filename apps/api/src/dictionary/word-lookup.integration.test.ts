@@ -20,6 +20,7 @@ const RESULT: WordLookup = {
   gloss: "dog",
   gloss_language: "en",
   entries: [],
+  forms: [{ form: "Hunde", pos: "noun", tags: ["nominative", "plural"] }],
   ai: null,
 };
 

@@ -54,7 +54,8 @@ function SubtitleWords({
     const status = statusOf(words.statuses, lemma);
     const colour = status ? COLOURED[status] : undefined;
     const selected =
-      words.selected?.index === line.index && words.selected.i === word.i;
+      words.selected?.index === line.index &&
+      (words.selected.i === word.i || words.selected.lemma === lemma);
     return (
       <Fragment key={word.i}>
         {before}

@@ -322,6 +322,7 @@ model DictionaryForm {
   tags      String[] @default([])
 
   @@index([language, formLower])
+  @@index([language, lemma])
   @@map("dictionary_forms")
 }
 

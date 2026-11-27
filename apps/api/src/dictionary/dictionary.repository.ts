@@ -1,11 +1,13 @@
 import { Injectable } from "@nestjs/common";
-import type { DictionaryEntry, DictionarySense } from "@linguastream/contracts";
+import type { DictionaryEntry, DictionarySense, WordForm } from "@linguastream/contracts";
 import { db } from "@linguastream/db";
 import type { AiWord, EntrySummary } from "./word-pack";
 
 export const DICTIONARY_LANGUAGE = "de";
 
 const VERB_POS = ["verb"];
+
+const FORMS_LIMIT = 300;
 
 interface Sense {
   gloss?: string;
@@ -79,6 +81,22 @@ export class DictionaryRepository {
       select: { word: true, pos: true, gender: true, plural: true, flags: true, senses: true },
     });
     return rows.map((row) => ({ ...row, senses: ((row.senses as Sense[] | null) ?? []).map(fullSense) }));
+  }
+
+  async forms(language: string, lemma: string): Promise<WordForm[]> {
+    const rows = await db.dictionaryForm.findMany({
+      where: { language, lemma },
+      orderBy: { id: "asc" },
+      select: { form: true, pos: true, tags: true },
+      take: FORMS_LIMIT,
+    });
+    const seen = new Set<string>();
+    return rows.filter((row) => {
+      const key = `${row.pos}|${row.form}|${row.tags.join(",")}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   }
 
   async ranks(language: string, lemmas: string[]): Promise<Map<string, number>> {

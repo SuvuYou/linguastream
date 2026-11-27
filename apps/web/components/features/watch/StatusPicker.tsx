@@ -26,7 +26,7 @@ export default function StatusPicker({
   onChange(status: WordStatus): void;
 }) {
   return (
-    <div role="group" aria-label="Status" className="grid grid-cols-4 gap-1 rounded-lg bg-inset p-1">
+    <div role="group" aria-label="Status" className="grid grid-cols-4 gap-1 rounded-lg bg-inset p-1 text-xs">
       {STATUS_CYCLE.map((status) => {
         const dot = DOT[status];
         return (

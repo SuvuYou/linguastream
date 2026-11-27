@@ -1,6 +1,7 @@
 import type {
   AiWordEntry,
   DictionaryEntry,
+  WordForm,
   Line,
   PackWord,
   WordLookup,
@@ -145,6 +146,34 @@ const DICTIONARY: Record<string, MockWord> = {
   noch: { rank: 45, gloss: "still, yet", entries: [entry("noch", "adverb", [sense("still, yet"), sense("another, more")])] },
 };
 
+const form = (text: string, ...tags: string[]): WordForm => ({ form: text, pos: "", tags });
+
+const FORMS_OF: Record<string, WordForm[]> = {
+  anfangen: [
+    form("fange an", "first-person", "singular", "present"),
+    form("fängst an", "second-person", "singular", "present"),
+    form("fängt an", "third-person", "singular", "present"),
+    form("fangen an", "first-person", "plural", "present"),
+    form("fing an", "first-person", "singular", "past"),
+    form("anfangen", "infinitive"),
+    form("angefangen", "participle", "past"),
+  ],
+  Hafen: [
+    form("Hafen", "nominative", "singular"),
+    form("Hafens", "genitive", "singular"),
+    form("Häfen", "nominative", "plural"),
+    form("Häfen", "accusative", "plural"),
+    form("Häfen", "dative", "plural"),
+  ],
+};
+
+const MORPH: Record<string, string> = {
+  fangen: "Mood=Ind|Number=Plur|Person=1|Tense=Pres|VerbForm=Fin",
+  "an,": "Mood=Ind|Number=Plur|Person=1|Tense=Pres|VerbForm=Fin",
+  Hafen: "Case=Dat|Gender=Masc|Number=Sing",
+  ruhig: "Degree=Pos",
+};
+
 const AI_WORDS: Record<string, AiWordEntry> = {
   Zimtschnecke: { pos: "noun", gender: "f", gloss: "cinnamon roll", parts: ["Zimt", "Schnecke"] },
   Fischbrötchen: { pos: "noun", gender: "n", gloss: "fish sandwich", parts: ["Fisch", "Brötchen"] },
@@ -226,12 +255,22 @@ export function mockWordLookup(videoId: string, line: Line, i: number): WordLook
     video_id: videoId,
     line_index: line.index,
     line: { text: line.text, translation: line.translation },
-    word: { i, text: word.text, pos: null, morph: null },
+    word: { i, text: word.text, pos: null, morph: MORPH[word.text] ?? null },
     language: "de",
     native_language: "en",
   };
   if (!word.lemma)
-    return { ...base, lemma: null, status: "unknown", rank: null, gloss: null, gloss_language: null, entries: [], ai: null };
+    return {
+      ...base,
+      lemma: null,
+      status: "unknown",
+      rank: null,
+      gloss: null,
+      gloss_language: null,
+      entries: [],
+      forms: [],
+      ai: null,
+    };
   const packed = glossOf(word.lemma);
   return {
     ...base,
@@ -241,6 +280,7 @@ export function mockWordLookup(videoId: string, line: Line, i: number): WordLook
     gloss: packed.gloss,
     gloss_language: packed.gloss_language,
     entries: DICTIONARY[word.lemma]?.entries ?? [],
+    forms: (FORMS_OF[word.lemma] ?? []).map((f) => ({ ...f, pos: DICTIONARY[word.lemma!]!.entries[0]!.pos })),
     ai: AI_WORDS[word.lemma] ?? null,
   };
 }

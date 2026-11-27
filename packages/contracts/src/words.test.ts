@@ -62,6 +62,10 @@ describe("word lookup contract", () => {
         senses: [{ gloss: "dog", glosses: ["dog"], tags: [], example: "Der Hund bellt.", example_en: "The dog barks." }],
       },
     ],
+    forms: [
+      { form: "Hunde", pos: "noun", tags: ["nominative", "plural"] },
+      { form: "Hundes", pos: "noun", tags: ["genitive", "singular"] },
+    ],
     ai: null,
   };
 
@@ -77,7 +81,7 @@ describe("word lookup contract", () => {
 
   it("accepts a dictionary word and a word without a lemma", () => {
     expect(WordLookup.parse(lookup)).toEqual(lookup);
-    const punctuation = { ...lookup, lemma: null, status: "unknown", rank: null, gloss: null, gloss_language: null, entries: [] };
+    const punctuation = { ...lookup, lemma: null, status: "unknown", rank: null, gloss: null, gloss_language: null, entries: [], forms: [] };
     expect(WordLookup.parse(punctuation)).toEqual(punctuation);
   });
 
