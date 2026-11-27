@@ -6,33 +6,23 @@ import type { DecodedIdToken, UserRecord } from "firebase-admin/auth";
 import { Subject, filter, map } from "rxjs";
 import type { Mock } from "vitest";
 import { AppModule } from "../app.module";
-import {
-  FIREBASE_AUTH,
-  type FirebaseAuth,
-} from "../auth/firebase-auth.provider";
+import { FIREBASE_AUTH, type FirebaseAuth } from "../auth/firebase-auth.provider";
 import { UsersRepository } from "../users/users.repository";
 import { configureApp } from "../http/configure-app";
 import { EXTENSION_ORIGIN, WEB_ORIGIN } from "../http/origin.guard";
 import { ProcessingEvents } from "../processing/processing-events";
 import { ProcessingQueue } from "../processing/processing-queue";
-import {
-  ProcessingRepository,
-  type TrackSummary,
-} from "../processing/processing.repository";
+import { ProcessingRepository, type TrackSummary } from "../processing/processing.repository";
+import { UsageStore } from "../usage/usage-store";
 
 export const TEST_WEB_ORIGIN = "http://localhost:3000";
 export const TEST_EXTENSION_ORIGIN = "chrome-extension://testextensionid";
 
-export type FakeFirebaseAuth = {
-  [K in keyof FirebaseAuth]: Mock<FirebaseAuth[K]>;
-};
+export type FakeFirebaseAuth = { [K in keyof FirebaseAuth]: Mock<FirebaseAuth[K]> };
 
 export const NOW_SEC = 1_800_000_000;
 
-export function decodedToken(
-  uid: string,
-  authTimeSec = NOW_SEC,
-): DecodedIdToken {
+export function decodedToken(uid: string, authTimeSec = NOW_SEC): DecodedIdToken {
   return { uid, auth_time: authTimeSec } as DecodedIdToken;
 }
 
@@ -44,44 +34,67 @@ export function fakeFirebaseAuth(uid = "firebase-uid-1"): FakeFirebaseAuth {
   return {
     verifyIdToken: vi.fn(async (token: string) => {
       if (token === "valid-id-token") return decodedToken(uid);
-      throw Object.assign(new Error("invalid"), {
-        code: "auth/argument-error",
-      });
+      throw Object.assign(new Error("invalid"), { code: "auth/argument-error" });
     }),
     verifySessionCookie: vi.fn(async (cookie: string) => {
       if (cookie === "valid-session-cookie") return decodedToken(uid);
-      throw Object.assign(new Error("invalid"), {
-        code: "auth/argument-error",
-      });
+      throw Object.assign(new Error("invalid"), { code: "auth/argument-error" });
     }),
     getUser: vi.fn(async () => userRecord()),
-    createCustomToken: vi.fn(
-      async (forUid: string) => `custom-token-for-${forUid}`,
+    createCustomToken: vi.fn(async (forUid: string) => `custom-token-for-${forUid}`),
+  };
+}
+
+export function fakeUsersRepository(users: Record<string, string> = { "firebase-uid-1": "user-1" }) {
+  const ids = new Set(Object.values(users));
+  return {
+    findIdByFirebaseUid: vi.fn(async (firebaseUid: string) => users[firebaseUid] ?? null),
+    findProfile: vi.fn(async (id: string) =>
+      ids.has(id)
+        ? { id, email: `${id}@linguastream.test`, displayName: null, nativeLanguage: "uk", learningLanguage: "de", isAdmin: false }
+        : null,
     ),
   };
 }
 
-export function fakeUsersRepository(
-  users: Record<string, string> = { "firebase-uid-1": "user-1" },
-) {
-  const ids = new Set(Object.values(users));
-  return {
-    findIdByFirebaseUid: vi.fn(
-      async (firebaseUid: string) => users[firebaseUid] ?? null,
-    ),
-    findProfile: vi.fn(async (id: string) =>
-      ids.has(id)
-        ? {
-            id,
-            email: `${id}@linguastream.test`,
-            displayName: null,
-            nativeLanguage: "uk",
-            learningLanguage: "de",
-            isAdmin: false,
-          }
-        : null,
-    ),
-  };
+export class InMemoryUsageStore {
+  readonly values = new Map<string, number>();
+  readonly ttls = new Map<string, number>();
+  failing = false;
+
+  private check() {
+    if (this.failing) throw Object.assign(new Error("Connection is closed."), { name: "MaxRetriesPerRequestError" });
+  }
+
+  async get(key: string) {
+    this.check();
+    return this.values.get(key) ?? 0;
+  }
+
+  async addWithin(key: string, amount: number, limit: number, ttlSeconds: number) {
+    this.check();
+    const current = this.values.get(key) ?? 0;
+    if (current + amount > limit) return null;
+    this.values.set(key, current + amount);
+    this.ttls.set(key, ttlSeconds);
+    return current + amount;
+  }
+
+  async add(key: string, amount: number, ttlSeconds: number) {
+    this.check();
+    const total = (this.values.get(key) ?? 0) + amount;
+    this.values.set(key, total);
+    this.ttls.set(key, ttlSeconds);
+    return total;
+  }
+
+  async setOnce(key: string, ttlSeconds: number) {
+    this.check();
+    if (this.values.has(key)) return false;
+    this.values.set(key, 1);
+    this.ttls.set(key, ttlSeconds);
+    return true;
+  }
 }
 
 export function fakeProcessingQueue() {
@@ -107,17 +120,11 @@ export function fakeProcessingEvents() {
 export function fakeProcessingRepository(tracks: TrackSummary[] = []) {
   return {
     tracks,
-    findUserTrack: vi.fn(
-      async (userId: string, trackId: string) =>
-        tracks.find((t) => t.userId === userId && t.trackId === trackId) ??
-        null,
+    findUserTrack: vi.fn(async (userId: string, trackId: string) =>
+      tracks.find((t) => t.userId === userId && t.trackId === trackId) ?? null,
     ),
     unfinishedTracks: vi.fn(async (userId: string) =>
-      tracks.filter(
-        (t) =>
-          t.userId === userId &&
-          (t.status === "pending" || t.status === "processing"),
-      ),
+      tracks.filter((t) => t.userId === userId && (t.status === "pending" || t.status === "processing")),
     ),
     markPendingAgain: vi.fn(async (trackId: string) => {
       const track = tracks.find((t) => t.trackId === trackId);
@@ -152,15 +159,15 @@ export async function createTestApp(
     .overrideProvider(ProcessingEvents)
     .useValue(fakeProcessingEvents())
     .overrideProvider(ProcessingRepository)
-    .useValue(fakeProcessingRepository());
+    .useValue(fakeProcessingRepository())
+    .overrideProvider(UsageStore)
+    .useValue(new InMemoryUsageStore());
   for (const { token, value } of options.providers ?? []) {
     builder.overrideProvider(token).useValue(value);
   }
   const moduleRef = await builder.compile();
 
-  const app = moduleRef.createNestApplication<NestExpressApplication>({
-    bodyParser: false,
-  });
+  const app = moduleRef.createNestApplication<NestExpressApplication>({ bodyParser: false });
   configureApp(app, options.largerBodyLimits);
   await app.init();
   return app;

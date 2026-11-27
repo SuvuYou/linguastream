@@ -45,6 +45,11 @@ export class ProcessingEvents implements OnModuleDestroy {
     );
   }
 
+  async whenListening(): Promise<void> {
+    this.listen();
+    await this.queueEvents!.waitUntilReady();
+  }
+
   async onModuleDestroy(): Promise<void> {
     this.published.complete();
     await this.queueEvents?.close();

@@ -1,5 +1,6 @@
 import { Logger } from "@nestjs/common";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import type { SpendLimiter } from "../usage/spend-limiter";
 import { GeminiClient } from "./gemini.client";
 
 const generateContent = vi.fn();
@@ -10,7 +11,12 @@ vi.mock("@google/generative-ai", () => ({
   }),
 }));
 
-const ok = (text: string) => ({ response: { text: () => text } });
+const ok = (text: string, usageMetadata?: { promptTokenCount: number; totalTokenCount: number }) => ({
+  response: { text: () => text, usageMetadata },
+});
+
+const spend = { record: vi.fn<(microUsd: number) => Promise<void>>(async () => {}) };
+const client = () => new GeminiClient(spend as unknown as SpendLimiter);
 
 describe("GeminiClient", () => {
   let warn: ReturnType<typeof vi.spyOn>;
@@ -18,6 +24,7 @@ describe("GeminiClient", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     generateContent.mockReset();
+    spend.record.mockReset();
     vi.stubEnv("GEMINI_API_KEY", "test-key");
     warn = vi.spyOn(Logger.prototype, "warn").mockImplementation(() => undefined);
     vi.spyOn(Logger.prototype, "error").mockImplementation(() => undefined);
@@ -31,7 +38,7 @@ describe("GeminiClient", () => {
 
   it("returns the first model's text", async () => {
     generateContent.mockResolvedValue(ok("{}"));
-    await expect(new GeminiClient().generateText("prompt")).resolves.toBe("{}");
+    await expect(client().generateText("prompt")).resolves.toBe("{}");
     expect(generateContent).toHaveBeenCalledTimes(1);
     expect(GoogleGenerativeAI).toHaveBeenCalledWith("test-key");
   });
@@ -40,7 +47,7 @@ describe("GeminiClient", () => {
     generateContent
       .mockRejectedValueOnce({ status: 503, message: "UNAVAILABLE" })
       .mockResolvedValueOnce(ok("fallback"));
-    const result = new GeminiClient().generateText("prompt");
+    const result = client().generateText("prompt");
     await vi.runAllTimersAsync();
     await expect(result).resolves.toBe("fallback");
     expect(generateContent.mock.calls.map(([model]) => model)).toEqual([
@@ -51,18 +58,30 @@ describe("GeminiClient", () => {
 
   it("stops at once on an error that won't go away", async () => {
     generateContent.mockRejectedValue({ status: 400, message: "bad request about Haus" });
-    await expect(new GeminiClient().generateText("prompt")).rejects.toThrow("Gemini failed");
+    await expect(client().generateText("prompt")).rejects.toThrow("Gemini failed");
     expect(generateContent).toHaveBeenCalledTimes(1);
   });
 
   it("logs the model and status, not the error text", async () => {
     generateContent.mockRejectedValue({ status: 400, message: "bad request about Haus" });
-    await expect(new GeminiClient().generateText("prompt with Haus")).rejects.toThrow();
+    await expect(client().generateText("prompt with Haus")).rejects.toThrow();
     expect(warn.mock.calls).toEqual([["gemini-3.1-flash-lite failed (status 400)"]]);
   });
 
   it("fails clearly without an API key", async () => {
     vi.stubEnv("GEMINI_API_KEY", "");
-    await expect(new GeminiClient().generateText("prompt")).rejects.toThrow("GEMINI_API_KEY is not set");
+    await expect(client().generateText("prompt")).rejects.toThrow("GEMINI_API_KEY is not set");
+  });
+
+  it("records the call's cost from the reported tokens, thinking included", async () => {
+    generateContent.mockResolvedValue(ok("{}", { promptTokenCount: 1000, totalTokenCount: 1400 }));
+    await client().generateText("prompt");
+    expect(spend.record).toHaveBeenCalledWith(1000 * 0.25 + 400 * 1.5);
+  });
+
+  it("still answers when the cost can't be recorded", async () => {
+    generateContent.mockResolvedValue(ok("{}", { promptTokenCount: 10, totalTokenCount: 20 }));
+    spend.record.mockRejectedValueOnce(new Error("redis down"));
+    await expect(client().generateText("prompt")).resolves.toBe("{}");
   });
 });

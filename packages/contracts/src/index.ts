@@ -7,3 +7,4 @@ export * from "./captures.js";
 export * from "./watch.js";
 export * from "./preferences.js";
 export * from "./processing.js";
+export * from "./usage.js";

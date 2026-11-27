@@ -1,10 +1,11 @@
-import { BadGatewayException, Injectable, Logger } from "@nestjs/common";
+import { BadGatewayException, Inject, Injectable, Logger } from "@nestjs/common";
 import {
   WordDefinition,
   type ApiError,
   type RequestQuery,
   type getWordDefinitionRoute,
 } from "@linguastream/contracts";
+import { UsageService } from "../usage/usage.service";
 import { GeminiClient } from "./gemini.client";
 
 type DefinitionQuery = RequestQuery<typeof getWordDefinitionRoute>;
@@ -42,9 +43,13 @@ const FAILED = { error: "Failed to generate definition" } satisfies ApiError;
 export class DefinitionService {
   private readonly logger = new Logger(DefinitionService.name);
 
-  constructor(private readonly gemini: GeminiClient) {}
+  constructor(
+    @Inject(GeminiClient) private readonly gemini: GeminiClient,
+    @Inject(UsageService) private readonly usage: UsageService,
+  ) {}
 
-  async define(query: DefinitionQuery): Promise<WordDefinition> {
+  async define(userId: string, query: DefinitionQuery): Promise<WordDefinition> {
+    await this.usage.startAiCall(userId);
     let text: string;
     try {
       text = await this.gemini.generateText(buildDefinitionPrompt(query), {

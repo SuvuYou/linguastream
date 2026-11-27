@@ -1,5 +1,7 @@
-import { Injectable, Logger } from "@nestjs/common";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { Inject, Injectable, Logger } from "@nestjs/common";
+import { GoogleGenerativeAI, type UsageMetadata } from "@google/generative-ai";
+import { SpendLimiter } from "../usage/spend-limiter";
+import { costMicroUsd } from "../usage/usage-config";
 
 const GEMINI_MODELS = ["gemini-3.1-flash-lite", "gemini-3.5-flash"] as const;
 
@@ -32,6 +34,17 @@ export class GeminiClient {
     ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
     : null;
 
+  constructor(@Inject(SpendLimiter) private readonly spend: SpendLimiter) {}
+
+  private async recordUsage(model: string, usage: UsageMetadata | undefined): Promise<void> {
+    if (!usage) return;
+    const input = usage.promptTokenCount ?? 0;
+    const output = Math.max(0, (usage.totalTokenCount ?? 0) - input);
+    await this.spend.record(costMicroUsd(model, input, output)).catch((err: unknown) => {
+      this.logger.error(`Spend not recorded: ${err instanceof Error ? err.name : typeof err}`);
+    });
+  }
+
   async generateText(
     prompt: string,
     options?: { responseMimeType?: "application/json" | "text/plain" },
@@ -52,6 +65,7 @@ export class GeminiClient {
             ? { responseMimeType: options.responseMimeType }
             : undefined,
         });
+        await this.recordUsage(modelName, result.response.usageMetadata);
         return result.response.text();
       } catch (error) {
         this.logger.warn(`${modelName} failed (status ${statusOf(error as GeminiError) ?? "unknown"})`);

@@ -25,7 +25,8 @@ function setup(track: TrackSummary | null = { ...TRACK }, handlers: Partial<Reco
     markReady: vi.fn(async () => {}),
     markFailed: vi.fn(async () => {}),
   };
-  const processor = new TrackProcessor(repository as unknown as ProcessingRepository, handlers);
+  const spend = { canSpend: vi.fn(async () => true), record: vi.fn(async () => {}) };
+  const processor = new TrackProcessor(repository as unknown as ProcessingRepository, handlers, spend);
   const published: PublishedEvent[] = [];
   const job = (attemptsMade = 0): ProcessJob => ({
     data: { trackId: TRACK.trackId },
@@ -49,7 +50,9 @@ describe("TrackProcessor", () => {
 
     await processor.process(job());
 
-    expect(parse).toHaveBeenCalledWith(expect.objectContaining({ trackId: TRACK.trackId }));
+    expect(parse).toHaveBeenCalledWith(
+      expect.objectContaining({ trackId: TRACK.trackId, spend: expect.objectContaining({ canSpend: expect.any(Function) }) }),
+    );
     expect(repository.markProcessing).toHaveBeenCalledWith(TRACK.trackId);
     expect(repository.completeStep.mock.calls.map((c) => c[1])).toEqual([1, 2, 3, 4, 5]);
     expect(repository.markReady).toHaveBeenCalledWith(TRACK.trackId);

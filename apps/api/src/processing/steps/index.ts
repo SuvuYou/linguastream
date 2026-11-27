@@ -1,11 +1,13 @@
 import type { ProcessingStep } from "@linguastream/contracts";
 import { gunzipSync } from "node:zlib";
+import type { SpendLimiter } from "../../usage/spend-limiter";
 import type { ProcessingRepository } from "../processing.repository";
 import { parseJson3 } from "./parse-json3";
 
 export interface StepContext {
   trackId: string;
   repository: ProcessingRepository;
+  spend: Pick<SpendLimiter, "canSpend" | "record">;
 }
 
 export type StepHandler = (context: StepContext) => Promise<void>;

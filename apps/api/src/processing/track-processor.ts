@@ -5,6 +5,7 @@ import {
   type ProcessingStep,
 } from "@linguastream/contracts";
 import { UnrecoverableError, type Job } from "bullmq";
+import { SpendLimiter } from "../usage/spend-limiter";
 import { toProcessingError } from "./processing-error";
 import {
   ProcessingRepository,
@@ -51,6 +52,8 @@ export class TrackProcessor {
     private readonly repository: ProcessingRepository,
     @Inject(STEP_HANDLERS_TOKEN)
     private readonly handlers: Partial<Record<ProcessingStep, StepHandler>>,
+    @Inject(SpendLimiter)
+    private readonly spend: Pick<SpendLimiter, "canSpend" | "record">,
   ) {}
 
   async process(job: ProcessJob): Promise<void> {
@@ -101,6 +104,7 @@ export class TrackProcessor {
       await this.handlers[step]?.({
         trackId: track.trackId,
         repository: this.repository,
+        spend: this.spend,
       });
       await this.repository.completeStep(track.trackId, index + 1);
     }

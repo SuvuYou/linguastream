@@ -34,7 +34,7 @@ function fakeRepository(tracks: TrackSummary[]) {
   };
 }
 
-describe("processing queue (Redis)", () => {
+describe("processing queue (Redis)", { timeout: 15_000 }, () => {
   let redis: Redis;
   let tracks: TrackSummary[];
   let parse: ReturnType<typeof vi.fn<StepHandler>>;
@@ -61,7 +61,8 @@ describe("processing queue (Redis)", () => {
     }));
     parse = vi.fn<StepHandler>(async () => {});
     const repository = fakeRepository(tracks) as unknown as ProcessingRepository;
-    worker = new ProcessingWorker(new TrackProcessor(repository, { parse }), repository);
+    const spend = { canSpend: vi.fn(async () => true), record: vi.fn(async () => {}) };
+    worker = new ProcessingWorker(new TrackProcessor(repository, { parse }, spend), repository);
     queue = new ProcessingQueue();
     events = new ProcessingEvents(repository);
   });
@@ -75,7 +76,8 @@ describe("processing queue (Redis)", () => {
 
   async function collect(userId: string, count: number): Promise<ProcessingEvent[]> {
     const received = firstValueFrom(events.forUser(userId).pipe(take(count), toArray()));
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    await events.whenListening();
+    await new Promise((resolve) => setTimeout(resolve, 200));
     return received;
   }
 

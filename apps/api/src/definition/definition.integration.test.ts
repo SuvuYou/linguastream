@@ -1,7 +1,8 @@
 import { Logger, type INestApplication } from "@nestjs/common";
 import { ApiError, WordDefinition } from "@linguastream/contracts";
 import request from "supertest";
-import { createTestApp } from "../test/auth-fakes";
+import { InMemoryUsageStore, createTestApp } from "../test/auth-fakes";
+import { UsageStore } from "../usage/usage-store";
 import { GeminiClient } from "./gemini.client";
 
 const answer = {
@@ -16,6 +17,7 @@ describe("GET /api/definition", () => {
   let app: INestApplication;
   const gemini = { generateText: vi.fn<GeminiClient["generateText"]>() };
   let logs: string;
+  let store: InMemoryUsageStore;
 
   beforeEach(async () => {
     gemini.generateText.mockReset().mockResolvedValue(JSON.stringify(answer));
@@ -25,7 +27,13 @@ describe("GET /api/definition", () => {
         logs += JSON.stringify(args);
       });
     }
-    app = await createTestApp({ providers: [{ token: GeminiClient, value: gemini }] });
+    store = new InMemoryUsageStore();
+    app = await createTestApp({
+      providers: [
+        { token: GeminiClient, value: gemini },
+        { token: UsageStore, value: store },
+      ],
+    });
   });
 
   afterEach(async () => {
@@ -83,5 +91,34 @@ describe("GET /api/definition", () => {
     for (let i = 0; i < 20; i++) await get().expect(200);
     const res = await get().expect(429);
     expect(ApiError.parse(res.body)).toEqual({ error: "Too many requests" });
+  });
+
+  describe("limits", () => {
+    afterEach(() => vi.unstubAllEnvs());
+
+    it("counts each call and refuses calls over the daily AI quota", async () => {
+      vi.stubEnv("AI_CALLS_PER_DAY", "2");
+      await get().expect(200);
+      await get().expect(200);
+      const res = await get().expect(429);
+      expect(ApiError.parse(res.body).error).toBe("Daily AI limit reached. It resets at midnight.");
+      expect(gemini.generateText).toHaveBeenCalledTimes(2);
+    });
+
+    it("answers 503 without calling Gemini once the month's spend cap is reached", async () => {
+      vi.stubEnv("MONTHLY_SPEND_CAP_USD", "1");
+      store.values.set(`usage:spend:${new Date().toISOString().slice(0, 7)}`, 1_000_000);
+      const res = await get().expect(503);
+      expect(ApiError.parse(res.body).error).toBe("AI limit reached for this month");
+      expect(gemini.generateText).not.toHaveBeenCalled();
+      expect(logs).toContain("Monthly spend cap reached");
+    });
+
+    it("refuses AI calls while their use can't be counted", async () => {
+      store.failing = true;
+      const res = await get().expect(503);
+      expect(ApiError.parse(res.body).error).toContain("AI is unavailable right now");
+      expect(gemini.generateText).not.toHaveBeenCalled();
+    });
   });
 });

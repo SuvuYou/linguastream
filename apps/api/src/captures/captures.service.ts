@@ -17,6 +17,7 @@ import {
 import { createHash } from "node:crypto";
 import { gzipSync } from "node:zlib";
 import { ProcessingService } from "../processing/processing.service";
+import { UsageService } from "../usage/usage.service";
 import { CapturesRepository, type StoredTrack } from "./captures.repository";
 
 export const PROCESSING_VERSION = 1;
@@ -25,6 +26,15 @@ const UNAVAILABLE_FOR_LEGAL_REASONS = 451;
 
 export function sha256(text: string): string {
   return createHash("sha256").update(text).digest("hex");
+}
+
+export function transcriptCharacters(raw: string): number {
+  const events = (JSON.parse(raw) as { events?: { segs?: { utf8?: unknown }[] }[] }).events ?? [];
+  let characters = 0;
+  for (const event of events) {
+    for (const seg of event.segs ?? []) if (typeof seg.utf8 === "string") characters += seg.utf8.trim().length;
+  }
+  return characters;
 }
 
 export function isJson3(raw: string): boolean {
@@ -40,6 +50,7 @@ export class CapturesService {
   constructor(
     @Inject(CapturesRepository) private readonly captures: CapturesRepository,
     @Inject(ProcessingService) private readonly processing: ProcessingService,
+    @Inject(UsageService) private readonly usage: UsageService,
   ) {}
 
   async lookup(userId: string, query: RequestQuery<typeof lookupCaptureRoute>): Promise<CaptureLookup> {
@@ -82,16 +93,24 @@ export class CapturesService {
     const existing = await this.captures.findTrack(key);
     if (existing) return { track: existing, created: false };
 
-    const result = await this.captures.create({
-      ...key,
-      title: video.title,
-      channelName: video.channel_name,
-      durationMs: video.duration_ms,
-      language: track.language,
-      isAutoCaptions: track.kind === "asr",
-      rawJson3: gzipSync(track.raw_json3),
-    });
-    if (result.created) await this.processing.enqueue(result.track.trackId);
+    const refund = await this.usage.reserveTransfer(userId, transcriptCharacters(track.raw_json3));
+    let result: { track: StoredTrack; created: boolean };
+    try {
+      result = await this.captures.create({
+        ...key,
+        title: video.title,
+        channelName: video.channel_name,
+        durationMs: video.duration_ms,
+        language: track.language,
+        isAutoCaptions: track.kind === "asr",
+        rawJson3: gzipSync(track.raw_json3),
+      });
+    } catch (err) {
+      await refund();
+      throw err;
+    }
+    if (!result.created) await refund();
+    else await this.processing.enqueue(result.track.trackId);
     return result;
   }
 }

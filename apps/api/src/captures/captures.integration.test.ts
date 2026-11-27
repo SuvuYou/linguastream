@@ -178,7 +178,8 @@ describe("captures API", () => {
       await post({ video: {} }).expect(400);
     });
 
-    it("accepts a large track and refuses one over the limit", async () => {
+    it("accepts a large track and refuses one over the size limit", async () => {
+      vi.stubEnv("TRANSFER_CHARS_PER_DAY", String(10_000_000));
       const segs = Array.from({ length: 20_000 }, (_, i) => ({ tStartMs: i, segs: [{ utf8: "Wort ".repeat(10) }] }));
       const big = JSON.stringify({ events: segs });
       expect(big.length).toBeGreaterThan(1024 * 1024);
@@ -186,6 +187,38 @@ describe("captures API", () => {
 
       const huge = "x".repeat(9 * 1024 * 1024);
       await post(capture({ track: { raw_json3: huge } })).expect(413);
+      vi.unstubAllEnvs();
+    });
+
+    describe("daily transfer quota", () => {
+      const track = (characters: number) =>
+        JSON.stringify({ events: [{ tStartMs: 0, dDurationMs: 1000, segs: [{ utf8: "a".repeat(characters) }] }] });
+
+      afterEach(() => vi.unstubAllEnvs());
+
+      it("counts the caption text and refuses a capture over the day's limit", async () => {
+        vi.stubEnv("TRANSFER_CHARS_PER_DAY", "2000");
+        await post(capture({ track: { raw_json3: track(1500) } })).expect(201);
+
+        const res = await post(capture({ video: { youtube_video_id: "abcdefghijk" }, track: { raw_json3: track(600) } })).expect(429);
+        expect(ApiError.parse(res.body).error).toMatch(/Daily transfer limit reached\. About 0 minutes/);
+        expect(repo.rows).toHaveLength(1);
+        expect(queue.enqueue).toHaveBeenCalledTimes(1);
+      });
+
+      it("doesn't count sending the same track again", async () => {
+        vi.stubEnv("TRANSFER_CHARS_PER_DAY", "2000");
+        await post(capture({ track: { raw_json3: track(1500) } })).expect(201);
+        await post(capture({ track: { raw_json3: track(1500) } })).expect(200);
+        await post(capture({ video: { youtube_video_id: "abcdefghijk" }, track: { raw_json3: track(400) } })).expect(201);
+      });
+
+      it("gives the characters back when storing fails", async () => {
+        vi.stubEnv("TRANSFER_CHARS_PER_DAY", "2000");
+        repo.create.mockRejectedValueOnce(new Error("db down"));
+        await post(capture({ track: { raw_json3: track(1500) } })).expect(500);
+        await post(capture({ track: { raw_json3: track(1500) } })).expect(201);
+      });
     });
 
     it("answers 401 without auth", async () => {
