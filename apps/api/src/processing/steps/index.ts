@@ -1,6 +1,8 @@
 import type { ProcessingStep } from "@linguastream/contracts";
 import { gunzipSync } from "node:zlib";
 import type { SpendLimiter } from "../../usage/spend-limiter";
+import { analyseLines } from "../analyse/analyse";
+import type { Analyser } from "../analyse/nlp-client";
 import type { VerbLexicon } from "../normalise/join-rule";
 import { normalise } from "../normalise/normalise";
 import type { Punctuator } from "../normalise/punctuate";
@@ -18,6 +20,7 @@ export type StepHandler = (context: StepContext) => Promise<void>;
 export interface StepDeps {
   punctuate: Punctuator;
   lexicon: VerbLexicon | null;
+  analyse: Analyser;
 }
 
 async function rawText(context: StepContext): Promise<string> {
@@ -46,6 +49,13 @@ export function createStepHandlers(
         context.trackId,
         lines,
         normalisation,
+      );
+    },
+    analyse: async (context) => {
+      const lines = await context.repository.lineWords(context.trackId);
+      await context.repository.saveAnalysis(
+        context.trackId,
+        await analyseLines(lines, deps.analyse),
       );
     },
   };

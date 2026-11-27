@@ -147,4 +147,37 @@ describe("ProcessingRepository (Postgres)", () => {
     expect(lines[1]!.words).toEqual([{ i: 5, text: "geht.", start_ms: 1500, sentence_end: true }]);
     expect((await db.track.findUniqueOrThrow({ where: { id: track.id } })).normalisation).toEqual(normalisation);
   });
+
+  it("reads each line's words and saves the analysed words and lemma arrays", async () => {
+    const track = await trackFor();
+    await repo.replaceLines(track.id, [
+      { index: 0, startMs: 0, endMs: 1000, text: "Ich fange" },
+      { index: 1, startMs: 1000, endMs: 2000, text: "an." },
+    ]);
+    const words = [
+      { index: 0, text: "Ich fange", words: [{ i: 0, text: "Ich", start_ms: 0 }, { i: 1, text: "fange", start_ms: 300 }] },
+      { index: 1, text: "an.", words: [{ i: 2, text: "an.", start_ms: 1000, sentence_end: true as const }] },
+    ];
+    await repo.saveNormalisation(track.id, words, {
+      version: 1,
+      punctuated: true,
+      punctuation: "not_needed",
+      join_rule: "off",
+      edits: [],
+      sentence_ends: [2],
+    });
+    expect((await repo.lineWords(track.id)).map((l) => l.words.map((w) => w.text))).toEqual([["Ich", "fange"], ["an."]]);
+
+    await repo.saveAnalysis(track.id, [
+      { index: 0, words: [{ i: 0, text: "Ich", start_ms: 0, lemma: "ich", pos: "PRON" }, { i: 1, text: "fange", start_ms: 300, lemma: "anfangen", pos: "VERB" }], lemmas: ["ich", "anfangen"] },
+      { index: 1, words: [{ i: 2, text: "an.", start_ms: 1000, lemma: "anfangen", pos: "ADP", particle_of: 1 }], lemmas: ["anfangen"] },
+    ]);
+
+    const lines = await db.line.findMany({ where: { trackId: track.id }, orderBy: { index: "asc" } });
+    expect(lines.map((l) => l.lemmas)).toEqual([["ich", "anfangen"], ["anfangen"]]);
+    expect(lines[1]!.words).toEqual([{ i: 2, text: "an.", start_ms: 1000, lemma: "anfangen", pos: "ADP", particle_of: 1 }]);
+    expect(
+      (await db.line.findMany({ where: { trackId: track.id, lemmas: { has: "anfangen" } } })).map((l) => l.index),
+    ).toEqual([0, 1]);
+  });
 });

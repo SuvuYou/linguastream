@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import type { ProcessingErrorCode } from "@linguastream/contracts";
 import { db } from "@linguastream/db";
+import type { AnalysedLine, StoredLine, StoredWord } from "./analyse/analyse";
 import type { NormalisedLine, Normalisation } from "./normalise/normalise";
 import type { ParsedLine } from "./steps/parse-json3";
 
@@ -117,5 +118,25 @@ export class ProcessingRepository {
         WHERE lines.track_id = ${trackId}::uuid AND lines.index = v.idx`,
       db.track.update({ where: { id: trackId }, data: { normalisation: normalisation as unknown as object } }),
     ]);
+  }
+
+  async lineWords(trackId: string): Promise<StoredLine[]> {
+    const lines = await db.line.findMany({
+      where: { trackId },
+      orderBy: { index: "asc" },
+      select: { index: true, words: true },
+    });
+    return lines.map((line) => ({ index: line.index, words: (line.words as unknown as StoredWord[]) ?? [] }));
+  }
+
+  async saveAnalysis(trackId: string, lines: AnalysedLine[]): Promise<void> {
+    const indexes = lines.map((line) => line.index);
+    const words = lines.map((line) => JSON.stringify(line.words));
+    const lemmas = lines.map((line) => JSON.stringify(line.lemmas));
+    await db.$executeRaw`
+      UPDATE lines SET words = v.words::jsonb,
+        lemmas = ARRAY(SELECT jsonb_array_elements_text(v.lemmas::jsonb))
+      FROM unnest(${indexes}::int[], ${words}::text[], ${lemmas}::text[]) AS v(idx, words, lemmas)
+      WHERE lines.track_id = ${trackId}::uuid AND lines.index = v.idx`;
   }
 }

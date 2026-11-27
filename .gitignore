@@ -70,3 +70,8 @@ DESIGN.md
 
 # Index measurements (the record lives in docs/changes/007-indexes/)
 packages/db/perf/results.md
+
+# Python (services/nlp)
+__pycache__/
+.pytest_cache/
+.venv/

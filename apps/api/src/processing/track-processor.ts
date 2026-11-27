@@ -13,6 +13,7 @@ import {
 } from "./processing.repository";
 import type { ProcessTrackJob } from "./queue-config";
 import { GeminiClient } from "../definition/gemini.client";
+import { nlpAnalyser } from "./analyse/nlp-client";
 import { PUNCTUATION_PROMPT } from "./normalise/punctuate";
 import { createStepHandlers, type StepHandler } from "./steps";
 
@@ -52,6 +53,7 @@ export const stepHandlersProvider = {
           responseMimeType: "text/plain",
         }),
       lexicon: null,
+      analyse: nlpAnalyser(),
     }),
 };
 

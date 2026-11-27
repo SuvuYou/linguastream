@@ -28,6 +28,11 @@ services:
       timeout: 5s
       retries: 10
 
+  nlp:
+    build: ./services/nlp
+    ports:
+      - "8100:8000"
+
 volumes:
   pgdata:
   redisdata:
