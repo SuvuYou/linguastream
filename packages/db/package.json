@@ -19,7 +19,8 @@
     "postinstall": "prisma generate",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "db:import-dictionary": "tsc -p tsconfig.build.json && node scripts/import-dictionary.mjs"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.6.0",

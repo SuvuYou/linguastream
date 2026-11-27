@@ -13,6 +13,9 @@ import {
 } from "./processing.repository";
 import type { ProcessTrackJob } from "./queue-config";
 import { GeminiClient } from "../ai/gemini.client";
+import { DictionaryRepository } from "../dictionary/dictionary.repository";
+import { dictionaryVerbLexicon } from "../dictionary/verb-lexicon";
+import { WordPackService } from "../dictionary/word-pack.service";
 import { nlpAnalyser } from "./analyse/nlp-client";
 import { PUNCTUATION_INSTRUCTION } from "../ai/prompts/punctuation";
 import { geminiTranslator } from "./translate/gemini-translator";
@@ -38,8 +41,8 @@ export type ProcessJob = Pick<
 
 export const stepHandlersProvider = {
   provide: STEP_HANDLERS_TOKEN,
-  inject: [GeminiClient],
-  useFactory: (gemini: GeminiClient) =>
+  inject: [GeminiClient, DictionaryRepository, WordPackService],
+  useFactory: (gemini: GeminiClient, dictionary: DictionaryRepository, words: WordPackService) =>
     createStepHandlers({
       punctuate: (text) =>
         gemini.generateText(text, {
@@ -47,9 +50,10 @@ export const stepHandlersProvider = {
           temperature: 0,
           responseMimeType: "text/plain",
         }),
-      lexicon: null,
+      lexicon: dictionaryVerbLexicon(dictionary),
       analyse: nlpAnalyser(),
       translate: geminiTranslator(gemini),
+      words,
     }),
 };
 

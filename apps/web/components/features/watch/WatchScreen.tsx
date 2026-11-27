@@ -11,15 +11,31 @@ import { usePreferences, useUpdatePreferences } from "@/hooks/usePreferences";
 import { useVideo } from "@/hooks/useVideo";
 import { useRefreshOnProcessing } from "@/hooks/useVideoActions";
 import { useVideoPlayer } from "@/hooks/useVideoPlayer";
+import {
+  useSetWordStatus,
+  useWordLookup,
+  useWordStatuses,
+} from "@/hooks/useWords";
 import { ApiRequestError } from "@/lib/api/client";
 import { lineTargets, type LineTargets } from "@/lib/watch/lines";
 import { createPlaybackClock } from "@/lib/watch/playback-clock";
-import type { SubtitleVisibility, VideoDetail } from "@linguastream/contracts";
+import {
+  STATUS_LABELS,
+  nextStatus,
+  statusOf,
+  type WordTarget,
+} from "@/lib/watch/words";
+import type {
+  SubtitleVisibility,
+  VideoDetail,
+  WordStatus,
+} from "@linguastream/contracts";
 import ControlBar from "./ControlBar";
 import TranscriptPanel, { trackState } from "./TranscriptPanel";
 import TranslateButton from "./TranslateButton";
 import VideoStage from "./VideoStage";
 import WatchHeader from "./WatchHeader";
+import WordPopup from "./WordPopup";
 
 const TYPING_INPUTS = new Set([
   "text",
@@ -114,6 +130,105 @@ function LoadingScreen() {
   );
 }
 
+function useWordPopup(
+  video: VideoDetail,
+  ready: boolean,
+  player: { playing: boolean; toggle(): void },
+) {
+  const statuses = useWordStatuses(video.id, ready);
+  const [target, setTarget] = useState<WordTarget | null>(null);
+  const [pausedForWord, setPausedForWord] = useState(false);
+  const [announcement, setAnnouncement] = useState("");
+  const anchorRef = useRef<HTMLElement | null>(null);
+  const lookup = useWordLookup(video.id, target);
+  const { mutate: saveStatus } = useSetWordStatus(video.id);
+  const { playing, toggle } = player;
+  const [seenPlaying, setSeenPlaying] = useState(playing);
+  if (playing !== seenPlaying) {
+    setSeenPlaying(playing);
+    if (playing && target) {
+      setTarget(null);
+      setPausedForWord(false);
+    }
+  }
+
+  const close = useCallback(
+    (resume: boolean) => {
+      setTarget(null);
+      setPausedForWord(false);
+      if (pausedForWord && resume) toggle();
+    },
+    [toggle, pausedForWord],
+  );
+
+  const select = useCallback(
+    (next: WordTarget, element: HTMLElement) => {
+      if (target && target.index === next.index && target.i === next.i) {
+        close(true);
+        return;
+      }
+      anchorRef.current = element;
+      if (playing) {
+        setPausedForWord(true);
+        toggle();
+      }
+      setTarget(next);
+    },
+    [target, playing, toggle, close],
+  );
+
+  const setStatus = useCallback(
+    (lemma: string, status: WordStatus) => {
+      saveStatus({ language: video.language, lemma, status });
+      setAnnouncement(`${lemma}: ${STATUS_LABELS[status]}`);
+    },
+    [saveStatus, video.language],
+  );
+
+  const cycle = useCallback(
+    (lemma: string) =>
+      setStatus(lemma, nextStatus(statusOf(statuses, lemma) ?? "unknown")),
+    [setStatus, statuses],
+  );
+
+  const status = target
+    ? (statusOf(statuses, target.lemma) ?? lookup.data?.status ?? null)
+    : null;
+
+  return {
+    words: {
+      statuses,
+      selected: target,
+      pausedForWord,
+      onSelect: select,
+      onCycle: cycle,
+    },
+    popup: (
+      <>
+        <WordPopup
+          anchorRef={anchorRef}
+          open={target !== null}
+          language={video.language}
+          state={
+            target && {
+              lemma: lookup.data?.lemma ?? target.lemma,
+              status,
+              lookup: lookup.data,
+              isLoading: lookup.isPending,
+              isError: lookup.isError,
+            }
+          }
+          onStatusChange={(next) => target && setStatus(target.lemma, next)}
+          onClose={() => close(true)}
+        />
+        <span role="status" aria-live="polite" className="sr-only">
+          {announcement}
+        </span>
+      </>
+    ),
+  };
+}
+
 function Watch({ video, startMs }: { video: VideoDetail; startMs: number }) {
   useRefreshOnProcessing(video.id);
   const [clock] = useState(() => createPlaybackClock(startMs));
@@ -137,6 +252,7 @@ function Watch({ video, startMs }: { video: VideoDetail; startMs: number }) {
   );
   const navigable = state === "ready" && player.status === "ready";
   const lineList = lines.lines;
+  const { words, popup } = useWordPopup(video, state === "ready", player);
 
   const jumpToLine = useCallback(
     (target: keyof LineTargets) => {
@@ -204,7 +320,9 @@ function Watch({ video, startMs }: { video: VideoDetail; startMs: number }) {
             clock={clock}
             language={video.language}
             translationLanguage={video.translation_language}
+            words={words}
           />
+          {popup}
           <ControlBar
             player={player}
             clock={clock}
@@ -228,6 +346,7 @@ function Watch({ video, startMs }: { video: VideoDetail; startMs: number }) {
           clock={clock}
           followKey={followKey}
           visibility={visibility}
+          statuses={words.statuses}
           onSeek={player.seek}
         />
       }

@@ -4,7 +4,7 @@ import type { Line, SubtitleVisibility } from "@linguastream/contracts";
 import type { RefObject } from "react";
 import type { PlayerStatus } from "@/hooks/useVideoPlayer";
 import type { PlaybackClock } from "@/lib/watch/playback-clock";
-import SubtitleLines from "./SubtitleLines";
+import SubtitleLines, { type SubtitleWordActions } from "./SubtitleLines";
 
 export default function VideoStage({
   hostRef,
@@ -14,6 +14,7 @@ export default function VideoStage({
   language,
   translationLanguage,
   visibility,
+  words,
   onToggle,
 }: {
   hostRef: RefObject<HTMLDivElement | null>;
@@ -23,6 +24,7 @@ export default function VideoStage({
   language: string;
   translationLanguage: string | null;
   visibility: SubtitleVisibility;
+  words: SubtitleWordActions;
   onToggle(): void;
 }) {
   return (
@@ -52,6 +54,7 @@ export default function VideoStage({
         language={language}
         translationLanguage={translationLanguage}
         visibility={visibility}
+        words={words}
       />
     </div>
   );

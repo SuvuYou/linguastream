@@ -1,6 +1,48 @@
-import type { Line, TrackVisibility } from "@linguastream/contracts";
-import { memo } from "react";
+import type {
+  Line,
+  TrackVisibility,
+  WordStatus,
+} from "@linguastream/contracts";
+import { Fragment, memo } from "react";
 import { cn } from "@/lib/utils";
+import { splitToken, statusOf, type WordStatuses } from "@/lib/watch/words";
+
+const TEXT_STATUS: Partial<Record<WordStatus, string>> = {
+  unknown: "text-unknown",
+  learning: "text-learning",
+};
+
+function ColouredText({
+  line,
+  statuses,
+}: {
+  line: Line;
+  statuses: WordStatuses | undefined;
+}) {
+  if (!statuses || line.words.length === 0) return line.text;
+  const last = line.words.length - 1;
+  return line.words.map((word, n) => {
+    const status = statusOf(statuses, word.lemma);
+    const colour = status && TEXT_STATUS[status];
+    const space = n < last ? " " : "";
+    if (!colour)
+      return (
+        <Fragment key={word.i}>
+          {word.text}
+          {space}
+        </Fragment>
+      );
+    const { before, core, after } = splitToken(word.text);
+    return (
+      <Fragment key={word.i}>
+        {before}
+        <span className={colour}>{core}</span>
+        {after}
+        {space}
+      </Fragment>
+    );
+  });
+}
 
 const BLURRED =
   "blur-[5px] transition-[filter] duration-150 group-hover/line:blur-none group-focus-visible/line:blur-none motion-reduce:transition-none";
@@ -12,6 +54,7 @@ function TranscriptLine({
   translationLanguage,
   originalVisibility,
   translationVisibility,
+  statuses,
   onSeek,
   setRef,
 }: {
@@ -21,6 +64,7 @@ function TranscriptLine({
   translationLanguage: string | null;
   originalVisibility: TrackVisibility;
   translationVisibility: TrackVisibility;
+  statuses: WordStatuses | undefined;
   onSeek(ms: number): void;
   setRef(index: number, element: HTMLButtonElement | null): void;
 }) {
@@ -49,7 +93,7 @@ function TranscriptLine({
             originalVisibility === "blur" && BLURRED,
           )}
         >
-          {line.text}
+          <ColouredText line={line} statuses={statuses} />
         </span>
       )}
       {showTranslation && (

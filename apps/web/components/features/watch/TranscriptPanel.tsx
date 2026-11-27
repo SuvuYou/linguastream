@@ -16,6 +16,7 @@ import {
   lastStartedIndex,
 } from "@/lib/watch/lines";
 import { useClockValue, type PlaybackClock } from "@/lib/watch/playback-clock";
+import type { WordStatuses } from "@/lib/watch/words";
 import TranscriptLine from "./TranscriptLine";
 
 export const FOLLOW_PAUSE_MS = 5000;
@@ -57,6 +58,7 @@ export default function TranscriptPanel({
   clock,
   followKey,
   visibility,
+  statuses,
   onSeek,
 }: {
   video: VideoDetail;
@@ -65,6 +67,7 @@ export default function TranscriptPanel({
   clock: PlaybackClock;
   followKey: number;
   visibility: SubtitleVisibility;
+  statuses: WordStatuses | undefined;
   onSeek(ms: number): void;
 }) {
   const [query, setQuery] = useState("");
@@ -307,6 +310,7 @@ export default function TranscriptPanel({
                     translationLanguage={video.translation_language}
                     originalVisibility={visibility.original}
                     translationVisibility={visibility.translation}
+                    statuses={statuses}
                     onSeek={seekTo}
                     setRef={setRef}
                   />

@@ -1,6 +1,8 @@
 import { Controller, Delete, Get, HttpCode, Inject, NotFoundException, Post } from "@nestjs/common";
 import {
   deleteVideoRoute,
+  getWordPackRoute,
+  type WordPack,
   getLineWindowRoute,
   getVideoRoute,
   listVideosRoute,
@@ -19,6 +21,7 @@ import { CurrentUser } from "../auth/current-user.decorator";
 import { RateLimit } from "../http/rate-limit";
 import { ValidParams, ValidQuery } from "../http/valid-input.decorators";
 import { VideosRepository, type VideoView } from "./videos.repository";
+import { WordPackService } from "../dictionary/word-pack.service";
 import { VideosService } from "./videos.service";
 
 @Controller("videos")
@@ -26,6 +29,7 @@ export class VideosController {
   constructor(
     @Inject(VideosRepository) private readonly videos: VideosRepository,
     @Inject(VideosService) private readonly service: VideosService,
+    @Inject(WordPackService) private readonly words: WordPackService,
   ) {}
 
   @Get()
@@ -53,6 +57,16 @@ export class VideosController {
     const { trackId, translationId } = await this.find(user.id, params.videoId);
     const lines = trackId ? await this.videos.linesInWindow(trackId, translationId, query.from_ms, query.to_ms) : [];
     return { from_ms: query.from_ms, to_ms: query.to_ms, lines };
+  }
+
+  @Get(":videoId/words")
+  async wordPack(
+    @CurrentUser() user: AuthUser,
+    @ValidParams(getWordPackRoute) params: RequestParams<typeof getWordPackRoute>,
+  ): Promise<WordPack> {
+    const pack = await this.words.build(user.id, params.videoId);
+    if (!pack) throw new NotFoundException({ error: "Video not found" } satisfies ApiError);
+    return pack;
   }
 
   @Post(":videoId/translation")

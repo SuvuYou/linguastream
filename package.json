@@ -14,7 +14,8 @@
     "test:coverage": "turbo run test:coverage",
     "test:integration": "turbo run test:integration",
     "db:migrate": "pnpm --filter @linguastream/db db:migrate",
-    "db:studio": "pnpm --filter @linguastream/db db:studio"
+    "db:studio": "pnpm --filter @linguastream/db db:studio",
+    "db:import-dictionary": "pnpm --filter @linguastream/db db:import-dictionary"
   },
   "devDependencies": {
     "turbo": "^2.11.13"

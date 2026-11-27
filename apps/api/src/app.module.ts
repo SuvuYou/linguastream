@@ -9,9 +9,10 @@ import { ProcessingModule } from "./processing/processing.module";
 import { UsageModule } from "./usage/usage.module";
 import { UsersModule } from "./users/users.module";
 import { VideosModule } from "./videos/videos.module";
+import { VocabularyModule } from "./vocabulary/vocabulary.module";
 
 @Module({
-  imports: [AuthModule, HttpModule, UsersModule, DefinitionModule, ExtensionModule, CapturesModule, ProcessingModule, VideosModule, UsageModule],
+  imports: [AuthModule, HttpModule, UsersModule, DefinitionModule, ExtensionModule, CapturesModule, ProcessingModule, VideosModule, VocabularyModule, UsageModule],
   controllers: [HealthController],
 })
 export class AppModule {}

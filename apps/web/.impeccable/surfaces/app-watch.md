@@ -10,7 +10,7 @@ related_targets: []
 Scope: `/watch/[videoId]`, the page a learner sits in for whole sessions on desktop and phone. Mode: Operate.
 Job: watch a German video with dual subtitles and a transcript that follows playback; jump by clicking a line.
 Constraints: DESIGN.md world fixed; Theme Studio "Reading" screen (D-089) is the composition; mock data until card [15].
-Unresolved: Words / Saved tabs, text size, theater mode, word popup (later cards).
+Unresolved: Words / Saved tabs, text size, theater mode (later cards). Word popup and status colours built in change 033 (D-114).
 
 ## Direction contract
 THESIS: A screening room for one video: the picture and the target-language line are the only bright things; everything else is quiet graphite that recedes until needed. Refuses the generic video-app layout with a busy sidebar of equal-weight cards.

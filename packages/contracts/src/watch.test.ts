@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  Line,
   MAX_LINE_WINDOW_MS,
   TranslationRequested,
   VideoDeleted,
@@ -64,5 +65,22 @@ describe("watch contracts", () => {
     expect(query.parse({ from_ms: "0", to_ms: String(MAX_LINE_WINDOW_MS) })).toEqual({ from_ms: 0, to_ms: MAX_LINE_WINDOW_MS });
     expect(query.safeParse({ from_ms: 0, to_ms: MAX_LINE_WINDOW_MS + 1 }).success).toBe(false);
     expect(query.safeParse({ from_ms: 5000, to_ms: 5000 }).success).toBe(false);
+  });
+
+  it("carry each line's words with their lemma", () => {
+    const line = {
+      index: 0,
+      start_ms: 0,
+      end_ms: 900,
+      text: "Der Hund, 2026!",
+      translation: null,
+      words: [
+        { i: 0, text: "Der", lemma: "der" },
+        { i: 1, text: "Hund,", lemma: "Hund" },
+        { i: 2, text: "2026!", lemma: null },
+      ],
+    };
+    expect(Line.parse(line)).toEqual(line);
+    expect(Line.safeParse({ ...line, words: undefined }).success).toBe(false);
   });
 });

@@ -52,11 +52,19 @@ async function lines(trackId: string, starts: number[]) {
       endMs: startMs + 900,
       text: `Zeile ${index}`,
       rawText: `Zeile ${index}`,
-      words: [],
+      words: [
+        { i: 0, text: "Zeile", start_ms: startMs, lemma: "Zeile", pos: "NOUN" },
+        { i: 1, text: `${index}`, start_ms: startMs + 400, lemma: `${index}`, pos: "NUM" },
+      ],
     })),
   });
   return db.line.findMany({ where: { trackId }, orderBy: { index: "asc" } });
 }
+
+const words = (index: number) => [
+  { i: 0, text: "Zeile", lemma: "Zeile" },
+  { i: 1, text: `${index}`, lemma: null },
+];
 
 describe("VideosRepository (Postgres)", () => {
   it("returns the user's video with its newest ready track and line count", async () => {
@@ -131,8 +139,8 @@ describe("VideosRepository (Postgres)", () => {
 
     const window = await repo.linesInWindow(t.id, null, 60_000, 120_000);
     expect(window).toEqual([
-      { index: 2, start_ms: 60_000, end_ms: 60_900, text: "Zeile 2", translation: null },
-      { index: 3, start_ms: 90_000, end_ms: 90_900, text: "Zeile 3", translation: null },
+      { index: 2, start_ms: 60_000, end_ms: 60_900, text: "Zeile 2", translation: null, words: words(2) },
+      { index: 3, start_ms: 90_000, end_ms: 90_900, text: "Zeile 3", translation: null, words: words(3) },
     ]);
   });
 

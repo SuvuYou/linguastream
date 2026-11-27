@@ -8,7 +8,9 @@ import type { VerbLexicon } from "../normalise/join-rule";
 import { normalise } from "../normalise/normalise";
 import type { Punctuator } from "../normalise/punctuate";
 import type { ProcessingRepository } from "../processing.repository";
+import type { WordPackService } from "../../dictionary/word-pack.service";
 import { countLemmas } from "../index/lemma-counts";
+import { describeError } from "../processing-error";
 import { translateLines, type Translator } from "../translate/translate";
 import { parseJson3 } from "./parse-json3";
 
@@ -32,6 +34,7 @@ export interface StepDeps {
   analyse: Analyser;
   translate: Translator;
   retryDelayMs?: number;
+  words?: Pick<WordPackService, "prepare">;
 }
 
 const logger = new Logger("Translation");
@@ -103,6 +106,19 @@ export function createStepHandlers(deps: StepDeps): Partial<Record<ProcessingSte
       indexLogger.log(
         `Track ${context.trackId}: ${counts.length} lemmas, ${counts.reduce((sum, c) => sum + c.count, 0)} words counted`,
       );
+      if (!deps.words) return;
+      try {
+        const report = await deps.words.prepare(context.trackId, context.spend);
+        if (report.skipped === "not_imported") return;
+        const line =
+          `Track ${context.trackId}: word data ${report.described} missing words described, ` +
+          `${report.translated} glosses translated, ${report.calls} calls` +
+          (report.failures ? `, ${report.failures} failed` : "") +
+          (report.skipped ? ` (stopped: ${report.skipped})` : "");
+        if (report.calls > 0 || report.skipped) indexLogger.log(line);
+      } catch (err) {
+        indexLogger.warn(`Track ${context.trackId}: word data failed: ${describeError(err)}`);
+      }
     },
   };
 }

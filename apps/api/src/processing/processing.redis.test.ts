@@ -32,7 +32,7 @@ function fakeRepository(tracks: TrackSummary[]) {
     pendingTrackIds: vi.fn(async () => tracks.filter((t) => t.status === "pending").map((t) => t.trackId)),
     pendingTranslationTrackIds: vi.fn(async () => pendingTranslations),
     failOpenTranslations: vi.fn(async () => {}),
-    readyTracksWithoutLemmaCounts: vi.fn(async () => withoutCounts),
+    newestReadyTracks: vi.fn(async () => withoutCounts),
     markProcessing: vi.fn(async (id: string) => void (find(id)!.status = "processing")),
     completeStep: vi.fn(async (id: string, progress: number) => void (find(id)!.progress = progress)),
     markReady: vi.fn(async (id: string) => void (find(id)!.status = "ready")),
@@ -176,12 +176,12 @@ describe("processing queue (Redis)", { timeout: 15_000 }, () => {
     expect(translate).toHaveBeenCalledTimes(3);
   });
 
-  it("counts lemmas for earlier ready videos when it starts, and carries on after a failure", async () => {
+  it("checks the word data of every ready video when it starts, and carries on after a failure", async () => {
     withoutCounts = [ids(1), ids(2)];
     index.mockRejectedValueOnce(new Error("db hiccup"));
     await worker.onModuleInit();
     await worker.backfill;
     expect(index.mock.calls.map(([context]) => context.trackId)).toEqual([ids(1), ids(2)]);
-    expect(Logger.prototype.log).toHaveBeenCalledWith("Counted lemmas for 1 of 2 earlier video(s)");
+    expect(Logger.prototype.log).toHaveBeenCalledWith("Word data checked for 1 of 2 video(s)");
   });
 });

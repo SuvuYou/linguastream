@@ -5,15 +5,14 @@ export interface LemmaCount {
   count: number;
 }
 
+export function vocabularyLemma(word: StoredWord): string | null {
+  const { lemma, pos } = word;
+  if (!lemma || !pos || NO_LEMMA_POS.has(pos) || pos === "PROPN" || !HAS_LETTER.test(lemma)) return null;
+  return lemma;
+}
+
 export function isCountedWord(word: StoredWord): word is StoredWord & { lemma: string } {
-  return (
-    !!word.lemma &&
-    !!word.pos &&
-    !NO_LEMMA_POS.has(word.pos) &&
-    word.pos !== "PROPN" &&
-    word.particle_of === undefined &&
-    HAS_LETTER.test(word.lemma)
-  );
+  return vocabularyLemma(word) !== null && word.particle_of === undefined;
 }
 
 export function countLemmas(lines: StoredLine[]): LemmaCount[] {

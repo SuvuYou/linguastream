@@ -6,9 +6,11 @@ import {
   TranslationRequested,
   VideoDeleted,
   VideoDetail,
+  WordPack,
   type VideoTranslation,
 } from "@linguastream/contracts";
 import request from "supertest";
+import { WordPackService } from "../dictionary/word-pack.service";
 import { ProcessingQueue } from "../processing/processing-queue";
 import { TEST_WEB_ORIGIN, createTestApp, fakeProcessingQueue } from "../test/auth-fakes";
 import { VideosRepository, type VideoView } from "./videos.repository";
@@ -32,6 +34,28 @@ const view = (track: boolean, translation: VideoTranslation = null): VideoView =
   },
 });
 
+const PACK: WordPack = {
+  video_id: VIDEO_ID,
+  language: "de",
+  native_language: "uk",
+  words: [
+    {
+      lemma: "Hund",
+      count: 3,
+      pos: "noun",
+      gender: "m",
+      plural: "Hunde",
+      flags: [],
+      gloss: "собака",
+      gloss_language: "uk",
+      source: "dictionary",
+      rank: 812,
+      parts: [],
+      status: "learning",
+    },
+  ],
+};
+
 describe("videos API", () => {
   let app: INestApplication;
   let repo: {
@@ -42,13 +66,14 @@ describe("videos API", () => {
     deleteVideo: ReturnType<typeof vi.fn>;
   };
   let queue: ReturnType<typeof fakeProcessingQueue>;
+  let words: { build: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
     repo = {
       findVideo: vi.fn(async (userId: string, videoId: string) =>
         userId === "user-1" && videoId === VIDEO_ID ? view(true) : null,
       ),
-      linesInWindow: vi.fn(async () => [{ index: 0, start_ms: 0, end_ms: 900, text: "Hallo", translation: null }]),
+      linesInWindow: vi.fn(async () => [{ index: 0, start_ms: 0, end_ms: 900, text: "Hallo", translation: null, words: [{ i: 0, text: "Hallo", lemma: "hallo" }] }]),
       listVideos: vi.fn(async (_userId: string, page: number) => ({
         items: [
           {
@@ -70,10 +95,16 @@ describe("videos API", () => {
       deleteVideo: vi.fn(async (userId: string, videoId: string) => userId === "user-1" && videoId === VIDEO_ID),
     };
     queue = fakeProcessingQueue();
+    words = {
+      build: vi.fn(async (userId: string, videoId: string) =>
+        userId === "user-1" && videoId === VIDEO_ID ? PACK : null,
+      ),
+    };
     app = await createTestApp({
       providers: [
         { token: VideosRepository, value: repo },
         { token: ProcessingQueue, value: queue },
+        { token: WordPackService, value: words },
       ],
     });
   });
@@ -96,7 +127,7 @@ describe("videos API", () => {
     expect(LineWindow.parse(res.body)).toEqual({
       from_ms: 0,
       to_ms: 300000,
-      lines: [{ index: 0, start_ms: 0, end_ms: 900, text: "Hallo", translation: null }],
+      lines: [{ index: 0, start_ms: 0, end_ms: 900, text: "Hallo", translation: null, words: [{ i: 0, text: "Hallo", lemma: "hallo" }] }],
     });
     expect(repo.linesInWindow).toHaveBeenCalledWith(TRACK_ID, null, 0, 300000);
   });
@@ -195,6 +226,20 @@ describe("videos API", () => {
     it("answers 404 when nothing was deleted and 400 for a bad id", async () => {
       await del("/api/videos/0190f3c2-7d1a-7c00-8a00-00000000ffff").expect(404);
       await del("/api/videos/nope").expect(400);
+    });
+  });
+
+  describe("GET /api/videos/:videoId/words", () => {
+    it("returns the word pack for the user's video", async () => {
+      const res = await get(`/api/videos/${VIDEO_ID}/words`).expect(200);
+      expect(WordPack.parse(res.body)).toEqual(PACK);
+      expect(words.build).toHaveBeenCalledWith("user-1", VIDEO_ID);
+    });
+
+    it("answers 404 for another user's video, 400 for a bad id and 401 without a session", async () => {
+      await get("/api/videos/0190f3c2-7d1a-7c00-8a00-00000000ffff/words").expect(404);
+      await get("/api/videos/nope/words").expect(400);
+      await request(app.getHttpServer()).get(`/api/videos/${VIDEO_ID}/words`).expect(401);
     });
   });
 });

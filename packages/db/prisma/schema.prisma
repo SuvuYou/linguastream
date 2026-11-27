@@ -299,6 +299,7 @@ model DictionaryEntry {
   id         Int      @id @default(autoincrement())
   language   String
   word       String
+  wordLower  String   @map("word_lower")
   pos        String
   gender     String?
   plural     String?
@@ -306,17 +307,21 @@ model DictionaryEntry {
   senses     Json
   senseCount Int      @map("sense_count")
 
+  @@index([language, word])
+  @@index([language, wordLower])
   @@map("dictionary_entries")
 }
 
 model DictionaryForm {
-  id       Int      @id @default(autoincrement())
-  language String
-  form     String
-  lemma    String
-  pos      String
-  tags     String[] @default([])
+  id        Int      @id @default(autoincrement())
+  language  String
+  form      String
+  formLower String   @map("form_lower")
+  lemma     String
+  pos       String
+  tags      String[] @default([])
 
+  @@index([language, formLower])
   @@map("dictionary_forms")
 }
 
@@ -328,4 +333,34 @@ model LemmaFrequency {
 
   @@id([language, word])
   @@map("lemma_frequencies")
+}
+
+// Shared caches filled by Gemini (D-060, D-065, Q-40). Dictionary data, not
+// user content: kept across dictionary re-imports, keyed by text, not ids.
+
+model GlossTranslation {
+  language       String
+  word           String
+  pos            String
+  gloss          String
+  targetLanguage String   @map("target_language")
+  text           String
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@id([language, word, pos, gloss, targetLanguage])
+  @@map("gloss_translations")
+}
+
+model AiWordEntry {
+  language       String
+  lemma          String
+  targetLanguage String   @map("target_language")
+  pos            String?
+  gender         String?
+  gloss          String?
+  parts          String[] @default([])
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@id([language, lemma, targetLanguage])
+  @@map("ai_word_entries")
 }

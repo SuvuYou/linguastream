@@ -242,9 +242,9 @@ export class ProcessingRepository {
     ]);
   }
 
-  async readyTracksWithoutLemmaCounts(): Promise<string[]> {
+  async newestReadyTracks(): Promise<string[]> {
     const tracks = await db.track.findMany({
-      where: { status: "ready", video: { lemmaCounts: { none: {} } } },
+      where: { status: "ready" },
       orderBy: { createdAt: "desc" },
       select: { id: true, videoId: true },
     });

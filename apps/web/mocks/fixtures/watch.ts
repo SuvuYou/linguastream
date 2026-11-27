@@ -1,4 +1,5 @@
 import type { Line, VideoDetail } from "@linguastream/contracts";
+import { lemmaOf } from "./words";
 
 export const MOCK_VIDEO_IDS = {
   normal: "0190f3c2-7d1a-7c00-8a00-000000000001",
@@ -106,6 +107,14 @@ const LONG_SENTENCE: [string, string] = [
   "And if you're still hungry in the late morning, which is pretty much always the case for me, it's worth a detour to the Schanze, where there are countless little shops offering homemade rolls, cakes and coffee specialities from all over the world.",
 ];
 
+function wordsOf(text: string): Line["words"] {
+  return text.split(/\s+/).map((word, i) => ({
+    i,
+    text: word,
+    lemma: lemmaOf(word.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, "")),
+  }));
+}
+
 export function buildLines(
   durationMs: number,
   options: { translated?: boolean; long?: boolean } = {},
@@ -124,6 +133,7 @@ export function buildLines(
       end_ms: start + length,
       text,
       translation: translated ? translation : null,
+      words: wordsOf(text),
     });
     start += length + (i % 4 === 0 ? 900 : 250);
     i++;

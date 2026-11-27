@@ -7,6 +7,7 @@ import { preferencesHandlers } from "./preferences";
 import { processingHandlers } from "./processing";
 import { userHandlers } from "./user";
 import { watchHandlers } from "./watch";
+import { wordsHandlers } from "./words";
 
 export const handlerGroups: Record<string, RequestHandler[]> = {
   user: userHandlers,
@@ -16,6 +17,7 @@ export const handlerGroups: Record<string, RequestHandler[]> = {
   preferences: preferencesHandlers,
   processing: processingHandlers,
   library: libraryHandlers,
+  words: wordsHandlers,
 };
 
 export function selectHandlers(setting: string | undefined): RequestHandler[] {

@@ -53,7 +53,7 @@ export class ProcessingWorker implements OnModuleInit, OnModuleDestroy {
       this.logger.error(`Worker error: ${err.name}`),
     );
     await this.enqueuePending();
-    this.backfill = this.backfillLemmaCounts();
+    this.backfill = this.backfillWordData();
     this.logger.log(
       `Processing worker started (concurrency ${WORKER_CONCURRENCY})`,
     );
@@ -64,12 +64,12 @@ export class ProcessingWorker implements OnModuleInit, OnModuleDestroy {
     await this.queue?.close();
   }
 
-  private async backfillLemmaCounts(): Promise<void> {
+  private async backfillWordData(): Promise<void> {
     let ids: string[];
     try {
-      ids = await this.repository.readyTracksWithoutLemmaCounts();
+      ids = await this.repository.newestReadyTracks();
     } catch (err) {
-      this.logger.warn(`Lemma count backfill skipped: ${describeError(err)}`);
+      this.logger.warn(`Word data backfill skipped: ${describeError(err)}`);
       return;
     }
     let done = 0;
@@ -78,10 +78,10 @@ export class ProcessingWorker implements OnModuleInit, OnModuleDestroy {
         await this.processor.indexTrack(trackId);
         done++;
       } catch (err) {
-        this.logger.warn(`Lemma counts for track ${trackId} failed: ${describeError(err)}`);
+        this.logger.warn(`Word data for track ${trackId} failed: ${describeError(err)}`);
       }
     }
-    if (ids.length > 0) this.logger.log(`Counted lemmas for ${done} of ${ids.length} earlier video(s)`);
+    if (ids.length > 0) this.logger.log(`Word data checked for ${done} of ${ids.length} video(s)`);
   }
 
   private async enqueuePending(): Promise<void> {

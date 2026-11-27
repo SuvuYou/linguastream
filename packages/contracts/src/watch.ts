@@ -91,12 +91,21 @@ export const deleteVideoRoute = defineRoute({
   response: VideoDeleted,
 });
 
+export const LineWord = z.object({
+  i: z.number().int().nonnegative(),
+  text: z.string(),
+  lemma: z.string().nullable(),
+});
+
+export type LineWord = z.infer<typeof LineWord>;
+
 export const Line = z.object({
   index: z.number().int().nonnegative(),
   start_ms: z.number().int().nonnegative(),
   end_ms: z.number().int().nonnegative(),
   text: z.string(),
   translation: z.string().nullable(),
+  words: z.array(LineWord),
 });
 
 export type Line = z.infer<typeof Line>;

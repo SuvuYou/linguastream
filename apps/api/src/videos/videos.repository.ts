@@ -10,6 +10,8 @@ import {
   type VideoTranslation,
 } from "@linguastream/contracts";
 import { db } from "@linguastream/db";
+import type { StoredWord } from "../processing/analyse/analyse";
+import { vocabularyLemma } from "../processing/index/lemma-counts";
 
 export interface VideoView {
   detail: VideoDetail;
@@ -192,6 +194,7 @@ export class VideosRepository {
         startMs: true,
         endMs: true,
         text: true,
+        words: true,
         translations: translationId ? { where: { translationId }, select: { text: true } } : false,
       },
     });
@@ -201,6 +204,11 @@ export class VideosRepository {
       end_ms: line.endMs,
       text: line.text,
       translation: line.translations?.[0]?.text ?? null,
+      words: ((line.words as unknown as StoredWord[] | null) ?? []).map((word) => ({
+        i: word.i,
+        text: word.text,
+        lemma: vocabularyLemma(word),
+      })),
     }));
   }
 }

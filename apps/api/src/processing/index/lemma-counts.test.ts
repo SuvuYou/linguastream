@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { StoredWord } from "../analyse/analyse";
-import { countLemmas, isCountedWord } from "./lemma-counts";
+import { countLemmas, isCountedWord, vocabularyLemma } from "./lemma-counts";
 
 const w = (i: number, text: string, lemma: string | undefined, pos: string | undefined, extra: Partial<StoredWord> = {}): StoredWord => ({
   i,
@@ -56,5 +56,17 @@ describe("countLemmas", () => {
   it("returns nothing for a track without analysed words", () => {
     expect(countLemmas([])).toEqual([]);
     expect(countLemmas([{ index: 0, words: [w(0, "Hallo", undefined, undefined)] }])).toEqual([]);
+  });
+});
+
+describe("vocabularyLemma", () => {
+  it("gives the lemma a word is learned under, the particle included", () => {
+    const at = (fields: Partial<StoredWord>): StoredWord => ({ i: 0, text: "x", start_ms: 0, ...fields });
+    expect(vocabularyLemma(at({ lemma: "anfangen", pos: "VERB" }))).toBe("anfangen");
+    expect(vocabularyLemma(at({ lemma: "anfangen", pos: "ADP", particle_of: 0 }))).toBe("anfangen");
+    expect(vocabularyLemma(at({ lemma: "Berlin", pos: "PROPN" }))).toBeNull();
+    expect(vocabularyLemma(at({ lemma: ",", pos: "PUNCT" }))).toBeNull();
+    expect(vocabularyLemma(at({ lemma: "2026", pos: "NOUN" }))).toBeNull();
+    expect(vocabularyLemma(at({}))).toBeNull();
   });
 });

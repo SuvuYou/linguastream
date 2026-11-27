@@ -55,6 +55,9 @@ apps/web/lib/generated/prisma
 # Real spike data for mocks stays local
 apps/web/mocks/fixtures/local/
 
+# One time vocabulary date imported to database
+data-import
+
 # Claude Code: personal settings stay local
 .claude/settings.local.json
 .claude/settings.json

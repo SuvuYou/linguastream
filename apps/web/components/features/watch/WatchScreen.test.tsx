@@ -20,6 +20,12 @@ import type {
   VideoPlayerFactory,
 } from "@/lib/watch/video-player";
 import { MOCK_VIDEO_IDS, mockVideos } from "@/mocks/fixtures/watch";
+import {
+  mockWordLookup,
+  mockWordPack,
+  resetMockWordStatuses,
+  setMockWordStatus,
+} from "@/mocks/fixtures/words";
 import WatchScreen from "./WatchScreen";
 
 const api = {
@@ -28,12 +34,42 @@ const api = {
   },
   failPreferences: false,
   translating: new Set<string>(),
+  words: false,
+  failStatus: false,
+  statusChanges: [] as unknown[],
 };
+
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), { status });
+
+function wordsApi(url: URL, init?: RequestInit): Response | null {
+  if (!api.words) return null;
+  if (url.pathname === "/api/vocabulary/status" && init?.method === "PUT") {
+    if (api.failStatus) return json({ error: "boom" }, 500);
+    const change = JSON.parse(String(init.body));
+    api.statusChanges.push(change);
+    setMockWordStatus(change.lemma, change.status);
+    return json(change);
+  }
+  const pack = /^\/api\/videos\/([^/]+)\/words$/.exec(url.pathname);
+  if (pack) {
+    const entry = mockVideos[pack[1]!]!;
+    return json(mockWordPack(entry.video.id, entry.lines));
+  }
+  const lookup = /^\/api\/videos\/([^/]+)\/lines\/(\d+)\/words\/(\d+)$/.exec(url.pathname);
+  if (lookup) {
+    const line = mockVideos[lookup[1]!]!.lines.find((l) => l.index === Number(lookup[2]))!;
+    return json(mockWordLookup(lookup[1]!, line, Number(lookup[3])));
+  }
+  return null;
+}
 
 function stubApi() {
   const fetchMock = vi.fn(
     async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = new URL(String(input), "http://localhost");
+      const words = wordsApi(url, init);
+      if (words) return words;
       if (url.pathname === "/api/preferences") {
         if (init?.method === "PATCH") {
           if (api.failPreferences)
@@ -137,6 +173,10 @@ beforeEach(() => {
   };
   api.failPreferences = false;
   api.translating.clear();
+  api.words = false;
+  api.failStatus = false;
+  api.statusChanges = [];
+  resetMockWordStatuses();
   Element.prototype.scrollIntoView = vi.fn();
   vi.stubGlobal(
     "ResizeObserver",
@@ -677,7 +717,12 @@ describe("WatchScreen", () => {
       expect(
         await screen.findByText("Couldn't save the subtitle setting"),
       ).toBeInTheDocument();
-      expect(within(video()).getByText(first.text)).toBeInTheDocument();
+      expect(
+        within(video()).getByText(
+          (_, element) =>
+            element?.tagName === "P" && element.textContent === first.text,
+        ),
+      ).toBeInTheDocument();
     });
 
     it("offers only the original track without a translation", async () => {
@@ -694,6 +739,102 @@ describe("WatchScreen", () => {
         menu.getByRole("radiogroup", { name: "German" }),
       ).toBeInTheDocument();
       expect(menu.queryByRole("radiogroup", { name: "English" })).toBeNull();
+    });
+  });
+
+  describe("words", () => {
+    const line = mockVideos[MOCK_VIDEO_IDS.normal]!.lines[2]!;
+    const video = () => within(screen.getByRole("region", { name: "Video" }));
+    const word = async (text: string) =>
+      (await screen.findAllByRole("button", { name: text })).find((el) =>
+        el.hasAttribute("data-word"),
+      )!;
+
+    beforeEach(() => {
+      api.words = true;
+    });
+
+    async function renderLine() {
+      const fake = fakePlayer();
+      fake.state.seconds = (line.start_ms + 100) / 1000;
+      renderWatch(MOCK_VIDEO_IDS.normal, fake, line.start_ms + 100);
+      await waitFor(() =>
+        expect(screen.getByRole("button", { name: "Play (Space)" })).toBeEnabled(),
+      );
+      await waitFor(async () => expect((await word("Hafen")).className).toContain("bg-unknown"));
+      return fake;
+    }
+
+    it("colours words by status on the video and in the transcript", async () => {
+      await renderLine();
+      expect((await word("Hafen")).className).toContain("bg-unknown");
+      expect((await word("ruhig")).className).toContain("bg-learning");
+      expect((await word("weil")).className).not.toMatch(/bg-(unknown|learning)/);
+      const row = (await transcript()).getAllByText(
+        (_, element) => element?.tagName === "SPAN" && element.getAttribute("lang") === "de" && element.textContent === line.text,
+      )[0]!;
+      expect(within(row).getByText("Hafen")).toHaveClass("text-unknown");
+      expect(within(row).getByText("ruhig")).toHaveClass("text-learning");
+    });
+
+    it("opens a popup on click, pauses while it's open and sets a status", async () => {
+      const fake = await renderLine();
+      const user = userEvent.setup();
+      await user.click(screen.getByRole("button", { name: "Play (Space)" }));
+      expect(fake.player.play).toHaveBeenCalledTimes(1);
+
+      await user.click(await word("Hafen"));
+      const popup = within(await screen.findByRole("dialog", { name: "Word: Hafen" }));
+      expect(fake.player.pause).toHaveBeenCalled();
+      expect(video().getByText("Paused while you read")).toBeInTheDocument();
+      expect(await popup.findByText("harbour, port")).toBeInTheDocument();
+      expect(popup.getByText("noun")).toBeInTheDocument();
+      expect(popup.getByTitle("Worth learning: common, not known yet")).toHaveTextContent("#2810");
+      expect(popup.getByRole("button", { name: "Unknown" })).toHaveAttribute("aria-pressed", "true");
+      expect(popup.getByRole("button", { name: /Save word/ })).toBeDisabled();
+      expect(await word("Hafen")).toHaveAttribute("aria-expanded", "true");
+
+      await user.click(popup.getByRole("button", { name: "Known" }));
+      expect(popup.getByRole("button", { name: "Known" })).toHaveAttribute("aria-pressed", "true");
+      await waitFor(() =>
+        expect(api.statusChanges).toEqual([{ language: "de", lemma: "Hafen", status: "known" }]),
+      );
+
+      await user.click(popup.getByRole("button", { name: "Close" }));
+      await waitFor(() => expect(screen.queryByRole("dialog", { name: "Word: Hafen" })).toBeNull());
+      expect(fake.player.play).toHaveBeenCalledTimes(2);
+      expect((await word("Hafen")).className).not.toContain("bg-unknown");
+    });
+
+    it("moves the popup to another word without resuming, and shows a missing entry", async () => {
+      const fake = await renderLine();
+      const user = userEvent.setup();
+      await user.click(await word("Hafen"));
+      await screen.findByRole("dialog", { name: "Word: Hafen" });
+      await user.click(await word("da"));
+      const popup = within(await screen.findByRole("dialog", { name: "Word: da" }));
+      expect(await popup.findByText("No dictionary entry for this word yet.")).toBeInTheDocument();
+      expect(fake.player.play).not.toHaveBeenCalled();
+      expect(video().queryByText("Paused while you read")).toBeNull();
+    });
+
+    it("cycles the status on right-click without opening anything", async () => {
+      await renderLine();
+      fireEvent.contextMenu(await word("ruhig"));
+      expect((await word("ruhig")).className).not.toContain("bg-learning");
+      expect(screen.queryByRole("dialog")).toBeNull();
+      expect(screen.getByRole("status")).toHaveTextContent("ruhig: Known");
+      await waitFor(() =>
+        expect(api.statusChanges).toEqual([{ language: "de", lemma: "ruhig", status: "known" }]),
+      );
+    });
+
+    it("puts the colour back when saving a status fails", async () => {
+      await renderLine();
+      api.failStatus = true;
+      fireEvent.contextMenu(await word("Hafen"));
+      expect(await screen.findByText("Couldn't save the word's status")).toBeInTheDocument();
+      await waitFor(async () => expect((await word("Hafen")).className).toContain("bg-unknown"));
     });
   });
 });

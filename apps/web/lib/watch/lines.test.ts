@@ -23,6 +23,7 @@ const line = (
   end_ms: end,
   text,
   translation,
+  words: [],
 });
 
 const lines = [
