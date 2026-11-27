@@ -19,7 +19,7 @@ const video = {
   language: "de",
   track: { id: "t1", language: "de", is_auto_captions: true, status: "ready", line_count: 212 },
   translation_language: "en",
-  translation: { language: "en", status: "ready" },
+  translation: { language: "en", status: "ready", error_code: null, progress: null },
 };
 
 describe("watch contracts", () => {
@@ -33,8 +33,16 @@ describe("watch contracts", () => {
     expect(VideoDetail.safeParse({ ...video, track: null, translation_language: null }).success).toBe(true);
     expect(VideoDetail.safeParse({ ...video, track: { ...video.track, status: "done" } }).success).toBe(false);
     expect(VideoDetail.safeParse({ ...video, translation: null }).success).toBe(true);
-    expect(VideoDetail.safeParse({ ...video, translation: { language: "uk", status: "none" } }).success).toBe(true);
-    expect(VideoDetail.safeParse({ ...video, translation: { language: "uk", status: "done" } }).success).toBe(false);
+    const translation = { language: "uk", status: "none", error_code: null, progress: null };
+    expect(VideoDetail.safeParse({ ...video, translation }).success).toBe(true);
+    expect(
+      VideoDetail.safeParse({
+        ...video,
+        translation: { ...translation, status: "failed", error_code: "provider_unavailable", progress: { done: 40, total: 812 } },
+      }).success,
+    ).toBe(true);
+    expect(VideoDetail.safeParse({ ...video, translation: { ...translation, status: "done" } }).success).toBe(false);
+    expect(VideoDetail.safeParse({ ...video, translation: { ...translation, error_code: "oops" } }).success).toBe(false);
   });
 
   it("translate and delete a video by its id", () => {

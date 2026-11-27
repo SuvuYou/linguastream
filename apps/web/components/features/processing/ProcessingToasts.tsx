@@ -11,7 +11,7 @@ export default function ProcessingToasts({
 }: {
   placement?: "bottom-left" | "bottom-right";
 }) {
-  const { toasts, dismiss, retry } = useProcessingToasts();
+  const { toasts, dismiss, retry, retryTranslation } = useProcessingToasts();
   if (toasts.length === 0) return null;
 
   const visible = toasts.slice(-VISIBLE_TOASTS);
@@ -36,6 +36,7 @@ export default function ProcessingToasts({
           toast={toast}
           onDismiss={() => dismiss(toast.event.track_id)}
           onRetry={() => void retry(toast.event)}
+          onRetryTranslation={() => void retryTranslation(toast.event)}
         />
       ))}
     </section>

@@ -1,7 +1,7 @@
 import { Logger } from "@nestjs/common";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ProcessingRepository } from "../processing.repository";
-import type { SourceLine, Translator } from "../translate/translate";
+import { TranslationProviderError, type SourceLine, type Translator } from "../translate/translate";
 import { createStepHandlers, type StepContext } from "./index";
 
 const lines: SourceLine[] = [
@@ -16,7 +16,9 @@ function setup(target: { sourceLanguage: string; targetLanguage: string } | null
     translationLines: vi.fn(async () => lines),
     saveLineTranslations: vi.fn(async () => {}),
     finishTranslation: vi.fn(async () => {}),
+    saveTranslationProgress: vi.fn(async () => {}),
   };
+  const report = { progress: vi.fn(async () => {}), translationFailed: vi.fn(async () => {}) };
   const handlers = createStepHandlers({
     punctuate: vi.fn(),
     lexicon: null,
@@ -24,21 +26,23 @@ function setup(target: { sourceLanguage: string; targetLanguage: string } | null
     translate:
       translate ??
       (async (request) => ({ translations: request.lines.map((l) => `uk:${l}`), costMicroUsd: 1234 })),
+    retryDelayMs: 0,
   });
   const context: StepContext = {
     trackId: "track-1",
     repository: repository as unknown as ProcessingRepository,
     spend: { canSpend: async () => true, record: async () => {} },
+    report,
   };
-  return { run: () => handlers.translate!(context), repository };
+  return { run: () => handlers.translate!(context), repository, report };
 }
 
 afterEach(() => vi.restoreAllMocks());
 
 describe("translate step", () => {
-  it("translates into the owner's native language and logs the cost without any text", async () => {
+  it("translates into the owner's native language, reports progress and logs the cost without any text", async () => {
     const log = vi.spyOn(Logger.prototype, "log").mockImplementation(() => {});
-    const { run, repository } = setup({ sourceLanguage: "de", targetLanguage: "uk" });
+    const { run, repository, report } = setup({ sourceLanguage: "de", targetLanguage: "uk" });
     await run();
 
     expect(repository.startTranslation).toHaveBeenCalledWith("track-1", "uk");
@@ -50,25 +54,42 @@ describe("translate step", () => {
       status: "ready",
       errorCode: null,
       translatedLines: 2,
+      totalLines: 2,
       chunks: 1,
       calls: 1,
       costMicroUsd: 1234,
     });
-    const message = String(log.mock.calls[0]![0]);
-    expect(message).toBe("Track track-1 → uk: ready, 2/2 lines, 1 chunks, 1 calls, $0.0012");
-    expect(message).not.toMatch(/Hallo|willkommen/);
+    expect(report.progress.mock.calls).toEqual([
+      [0, 2],
+      [2, 2],
+    ]);
+    expect(repository.saveTranslationProgress).toHaveBeenCalledWith("translation-1", 2);
+    expect(report.translationFailed).not.toHaveBeenCalled();
+    const messages = log.mock.calls.map((c) => String(c[0]));
+    expect(messages).toEqual([
+      "Track track-1 → uk: translating 2 of 2 lines",
+      "Track track-1 → uk: ready, 2/2 lines, 1 chunks, 1 calls, $0.0012",
+    ]);
+    expect(messages.join()).not.toMatch(/Hallo|willkommen/);
   });
 
-  it("finishes the step with a failed translation instead of failing the track", async () => {
+  it("finishes the step with a failed translation instead of failing the track, and says why", async () => {
     vi.spyOn(Logger.prototype, "log").mockImplementation(() => {});
-    const { run, repository } = setup({ sourceLanguage: "de", targetLanguage: "uk" }, async () => {
-      throw new Error("Gemini failed");
+    const warn = vi.spyOn(Logger.prototype, "warn").mockImplementation(() => {});
+    const { run, repository, report } = setup({ sourceLanguage: "de", targetLanguage: "uk" }, async () => {
+      throw new TranslationProviderError("gemini-3.5-flash 503", true);
     });
     await expect(run()).resolves.toBeUndefined();
     expect(repository.finishTranslation).toHaveBeenCalledWith(
       "translation-1",
-      expect.objectContaining({ status: "failed", errorCode: "internal", translatedLines: 0 }),
+      expect.objectContaining({ status: "failed", errorCode: "provider_unavailable", translatedLines: 0 }),
     );
+    expect(report.translationFailed).toHaveBeenCalledWith("provider_unavailable");
+    expect(warn.mock.calls.map((c) => String(c[0]))).toEqual([
+      "Track track-1 → uk: lines 0–1, try 1 failed: gemini-3.5-flash 503",
+      "Track track-1 → uk: lines 0–1, try 2 failed: gemini-3.5-flash 503",
+      "Track track-1 → uk: failed (provider_unavailable), 0/2 lines, 1 chunks, 2 calls, $0.0000",
+    ]);
   });
 
   it.each([

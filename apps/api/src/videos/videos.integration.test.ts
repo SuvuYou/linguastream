@@ -155,7 +155,7 @@ describe("videos API", () => {
 
   describe("POST /api/videos/:videoId/translation", () => {
     it("marks the translation pending and queues it", async () => {
-      repo.findVideo.mockResolvedValue(view(true, { language: "uk", status: "failed" }));
+      repo.findVideo.mockResolvedValue(view(true, { language: "uk", status: "failed", error_code: "provider_unavailable", progress: { done: 3, total: 9 } }));
       const res = await post(`/api/videos/${VIDEO_ID}/translation`).expect(202);
       expect(TranslationRequested.parse(res.body)).toEqual({
         video_id: VIDEO_ID,
@@ -166,7 +166,7 @@ describe("videos API", () => {
     });
 
     it("answers 409 when the video isn't ready, needs no translation, or is translated", async () => {
-      for (const v of [view(false), view(true, null), view(true, { language: "uk", status: "ready" })]) {
+      for (const v of [view(false), view(true, null), view(true, { language: "uk", status: "ready", error_code: null, progress: null })]) {
         repo.findVideo.mockResolvedValueOnce(v);
         const res = await post(`/api/videos/${VIDEO_ID}/translation`).expect(409);
         expect(ApiError.parse(res.body).error).toBeTruthy();

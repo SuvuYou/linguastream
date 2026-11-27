@@ -171,7 +171,33 @@ describe("TrackProcessor", () => {
       await last.processor.translate(last.job(2));
       expect(last.repository.failOpenTranslations).toHaveBeenCalledWith(TRACK.trackId);
       expect(last.repository.markFailed).not.toHaveBeenCalled();
-      expect(last.published.at(-1)!.event.type).toBe("ready");
+      expect(last.published.slice(-2).map((p) => p.event)).toEqual([
+        { type: "translation_failed", track_id: TRACK.trackId, video_id: TRACK.videoId, error_code: "internal" },
+        { type: "ready", track_id: TRACK.trackId, video_id: TRACK.videoId },
+      ]);
+    });
+
+    it("lets the step publish line progress and a translation failure, in the pipeline too", async () => {
+      const translate: StepHandler = async (context) => {
+        await context.report!.progress(40, 812);
+        await context.report!.translationFailed("provider_unavailable");
+      };
+      const base = { track_id: TRACK.trackId, video_id: TRACK.videoId };
+      for (const run of ["translate", "process"] as const) {
+        const { processor, published, job } = setup(run === "translate" ? ready() : { ...TRACK }, { translate });
+        await processor[run](job());
+        const events = published.map((p) => p.event);
+        expect(events).toContainEqual({
+          type: "step",
+          ...base,
+          step: "translate",
+          step_index: 3,
+          step_count: 5,
+          progress: { done: 40, total: 812 },
+        });
+        expect(events).toContainEqual({ type: "translation_failed", ...base, error_code: "provider_unavailable" });
+        expect(events.at(-1)!.type).toBe("ready");
+      }
     });
   });
 });

@@ -79,7 +79,7 @@ describe("VideosRepository (Postgres)", () => {
         language: "de",
         track: { id: ready.id, language: "de", is_auto_captions: true, status: "ready", line_count: 3 },
         translation_language: null,
-        translation: { language: "uk", status: "none" },
+        translation: { language: "uk", status: "none", error_code: null, progress: null },
       },
     });
   });
@@ -117,7 +117,7 @@ describe("VideosRepository (Postgres)", () => {
     await db.lineTranslation.create({ data: { translationId: uk.id, lineId: second!.id, text: "Рядок 1" } });
     const view = (await repo.findVideo(u.id, v.id))!;
     expect(view.detail.translation_language).toBe("uk");
-    expect(view.detail.translation).toEqual({ language: "uk", status: "ready" });
+    expect(view.detail.translation).toEqual({ language: "uk", status: "ready", error_code: null, progress: null });
 
     const window = await repo.linesInWindow(t.id, view.translationId, 0, 2000);
     expect(window.map((l) => l.translation)).toEqual([null, "Рядок 1"]);
@@ -200,18 +200,36 @@ describe("VideosRepository (Postgres)", () => {
       expect((await repo.findVideo(u.id, v.id))!.detail.translation).toBeNull();
 
       await db.track.update({ where: { id: t.id }, data: { status: "ready" } });
-      expect((await repo.findVideo(u.id, v.id))!.detail.translation).toEqual({ language: "uk", status: "none" });
-      expect((await repo.listVideos(u.id, 0)).items[0]!.translation).toEqual({ language: "uk", status: "none" });
+      const none = { language: "uk", status: "none", error_code: null, progress: null };
+      expect((await repo.findVideo(u.id, v.id))!.detail.translation).toEqual(none);
+      expect((await repo.listVideos(u.id, 0)).items[0]!.translation).toEqual(none);
 
+      await lines(t.id, [0, 1000, 2000]);
       await repo.markTranslationPending(t.id, "uk");
-      expect((await repo.findVideo(u.id, v.id))!.detail.translation).toEqual({ language: "uk", status: "pending" });
-      await db.trackTranslation.updateMany({ where: { trackId: t.id }, data: { status: "failed", errorCode: "internal" } });
+      expect((await repo.findVideo(u.id, v.id))!.detail.translation).toEqual({
+        language: "uk",
+        status: "pending",
+        error_code: null,
+        progress: { done: 0, total: 3 },
+      });
+      await db.trackTranslation.updateMany({
+        where: { trackId: t.id },
+        data: { status: "failed", errorCode: "provider_unavailable", progress: 2 },
+      });
+      expect((await repo.listVideos(u.id, 0)).items[0]!.translation).toEqual({
+        language: "uk",
+        status: "failed",
+        error_code: "provider_unavailable",
+        progress: { done: 2, total: 3 },
+      });
+      await db.trackTranslation.updateMany({ where: { trackId: t.id }, data: { errorCode: "something_old" } });
+      expect((await repo.findVideo(u.id, v.id))!.detail.translation!.error_code).toBe("internal");
       await repo.markTranslationPending(t.id, "uk");
       expect(await db.trackTranslation.findFirst({ where: { trackId: t.id } })).toMatchObject({
         status: "pending",
         errorCode: null,
       });
-      expect((await repo.listVideos(u.id, 0)).items[0]!.translation).toEqual({ language: "uk", status: "pending" });
+      expect((await repo.listVideos(u.id, 0)).items[0]!.translation).toMatchObject({ status: "pending", error_code: null });
     });
 
     it("needs no translation when the owner's language is the video's", async () => {

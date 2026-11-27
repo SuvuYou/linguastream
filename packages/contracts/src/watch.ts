@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { StepProgress, TranslationErrorCode } from "./processing.js";
 import { defineRoute } from "./route.js";
 
 export const MAX_LINE_WINDOW_MS = 10 * 60 * 1000;
@@ -23,7 +24,12 @@ export const TranslationStatus = z.enum([
 export type TranslationStatus = z.infer<typeof TranslationStatus>;
 
 export const VideoTranslation = z
-  .object({ language: z.string(), status: TranslationStatus })
+  .object({
+    language: z.string(),
+    status: TranslationStatus,
+    error_code: TranslationErrorCode.nullable(),
+    progress: StepProgress.nullable(),
+  })
   .nullable();
 
 export type VideoTranslation = z.infer<typeof VideoTranslation>;

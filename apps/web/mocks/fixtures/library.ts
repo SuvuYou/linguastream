@@ -38,6 +38,20 @@ function fromWatch(index: number): LibraryVideo {
   };
 }
 
+function mockTranslation(n: number): LibraryVideo["translation"] {
+  const base = { language: "uk", error_code: null, progress: null };
+  if (n === 7)
+    return {
+      ...base,
+      status: "failed",
+      error_code: "provider_unavailable",
+      progress: { done: 80, total: 214 },
+    };
+  if (n === 11)
+    return { ...base, status: "processing", progress: { done: 120, total: 214 } };
+  return { ...base, status: n % 5 === 0 ? "none" : "ready" };
+}
+
 function generated(n: number): LibraryVideo {
   const id = String(n).padStart(12, "0");
   return {
@@ -53,7 +67,7 @@ function generated(n: number): LibraryVideo {
       progress: 5,
       error_code: null,
     },
-    translation: { language: "uk", status: n % 5 === 0 ? "none" : "ready" },
+    translation: mockTranslation(n),
   };
 }
 
@@ -65,7 +79,12 @@ export const mockLibrary: LibraryVideo[] = [
 export function translateMockVideo(videoId: string) {
   const video = mockLibrary.find((v) => v.id === videoId);
   if (!video?.translation || video.translation.status === "ready") return undefined;
-  video.translation = { ...video.translation, status: "pending" };
+  video.translation = {
+    ...video.translation,
+    status: "pending",
+    error_code: null,
+    progress: { done: 0, total: 214 },
+  };
   const detail = mockVideos[videoId]?.video;
   if (detail) detail.translation = video.translation;
   return { video_id: videoId, translation: { language: video.translation.language, status: "pending" as const } };

@@ -7,15 +7,36 @@ const GEMINI_MODELS = ["gemini-3.1-flash-lite", "gemini-3.5-flash"] as const;
 
 export const GEMINI_TIMEOUT_MS = 90_000;
 
-type GeminiError = { status?: number; code?: number; message?: string };
+type RawGeminiError = { status?: number; code?: number; message?: string; name?: string };
+
+export class GeminiCallError extends Error {
+  readonly code: string;
+
+  constructor(
+    readonly model: string,
+    readonly status: number | "timeout" | null,
+    readonly retryable: boolean,
+  ) {
+    super(`Gemini failed on ${model} (${status ?? "unknown status"})`);
+    this.name = "GeminiCallError";
+    this.code = `GEMINI_${status === null ? "ERROR" : String(status).toUpperCase()}`;
+  }
+}
+
+function describeStatus(error: RawGeminiError): number | "timeout" | null {
+  const status = error?.status ?? error?.code;
+  if (typeof status === "number") return status;
+  if (error?.name === "AbortError" || /timed? ?out|aborted/i.test(error?.message ?? "")) return "timeout";
+  return null;
+}
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-function statusOf(error: GeminiError) {
+function statusOf(error: RawGeminiError) {
   return error?.status ?? error?.code;
 }
 
-function isRetryableError(error: GeminiError) {
+function isRetryableError(error: RawGeminiError) {
   const status = statusOf(error);
   const message = error?.message ?? "";
 
@@ -85,10 +106,13 @@ export class GeminiClient {
         await this.recordUsage(modelName, result.response.usageMetadata, options?.onCost);
         return result.response.text();
       } catch (error) {
-        this.logger.warn(`${modelName} failed (status ${statusOf(error as GeminiError) ?? "unknown"})`);
+        const raw = error as RawGeminiError;
+        const status = describeStatus(raw);
+        const retryable = status === "timeout" || isRetryableError(raw);
+        this.logger.warn(`${modelName} failed (status ${status ?? "unknown"})`);
 
-        if (!isRetryableError(error as GeminiError) || i === GEMINI_MODELS.length - 1) {
-          throw new Error(`Gemini failed on ${modelName}`);
+        if (!retryable || i === GEMINI_MODELS.length - 1) {
+          throw new GeminiCallError(modelName, status, retryable);
         }
         await sleep(1000);
       }

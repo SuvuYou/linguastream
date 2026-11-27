@@ -1,5 +1,6 @@
 import { parseTranslations, translationInstruction, translationMessage } from "../../ai/prompts/translation";
-import type { Translator } from "./translate";
+import { GeminiCallError } from "../../ai/gemini.client";
+import { TranslationProviderError, type Translator } from "./translate";
 
 export interface TextGenerator {
   generateText(
@@ -16,14 +17,21 @@ export interface TextGenerator {
 export function geminiTranslator(gemini: TextGenerator): Translator {
   return async (request) => {
     let costMicroUsd = 0;
-    const answer = await gemini.generateText(translationMessage(request), {
-      systemInstruction: translationInstruction(request.sourceLanguage, request.targetLanguage),
-      temperature: 0,
-      responseMimeType: "application/json",
-      onCost: (cost) => {
-        costMicroUsd += cost;
-      },
-    });
+    let answer: string;
+    try {
+      answer = await gemini.generateText(translationMessage(request), {
+        systemInstruction: translationInstruction(request.sourceLanguage, request.targetLanguage),
+        temperature: 0,
+        responseMimeType: "application/json",
+        onCost: (cost) => {
+          costMicroUsd += cost;
+        },
+      });
+    } catch (err) {
+      if (err instanceof GeminiCallError)
+        throw new TranslationProviderError(`${err.model} ${err.status ?? "error"}`, err.retryable);
+      throw new TranslationProviderError(err instanceof Error ? err.name : "unknown", true);
+    }
     return { translations: parseTranslations(answer, request.lines.length), costMicroUsd };
   };
 }

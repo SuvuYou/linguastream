@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import { translationInstruction, translationMessage } from "../../ai/prompts/translation";
 import { geminiTranslator, type TextGenerator } from "./gemini-translator";
-import { TranslationAnswerError } from "./translate";
+import { GeminiCallError } from "../../ai/gemini.client";
+import { TranslationAnswerError, TranslationProviderError } from "./translate";
 
 const request = {
   lines: ["und dann sind wir", "zum Hafen gegangen."],
@@ -32,5 +33,18 @@ describe("geminiTranslator", () => {
   it("reports an answer with the wrong number of lines", async () => {
     const generateText = vi.fn<TextGenerator["generateText"]>(async () => '["nur eins"]');
     await expect(geminiTranslator({ generateText })(request)).rejects.toEqual(new TranslationAnswerError(2, 1));
+  });
+
+  it("turns a Gemini failure into a provider error that says whether to try again", async () => {
+    const failing = (error: unknown) =>
+      geminiTranslator({ generateText: vi.fn<TextGenerator["generateText"]>(async () => Promise.reject(error)) })(request);
+    await expect(failing(new GeminiCallError("gemini-3.5-flash", 503, true))).rejects.toEqual(
+      new TranslationProviderError("gemini-3.5-flash 503", true),
+    );
+    await expect(failing(new GeminiCallError("gemini-3.1-flash-lite", null, false))).rejects.toMatchObject({
+      reason: "gemini-3.1-flash-lite error",
+      retryable: false,
+    });
+    await expect(failing(new TypeError("x"))).rejects.toMatchObject({ reason: "TypeError", retryable: true });
   });
 });

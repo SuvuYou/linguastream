@@ -1,9 +1,16 @@
 import {
   PROCESSING_STEPS,
+  TRANSLATION_ERROR_CODES,
   type ProcessingEvent,
 } from "@linguastream/contracts";
 import { describe, expect, it } from "vitest";
-import { STAGES, stageStates } from "./stages";
+import {
+  STAGES,
+  TRANSLATION_FAILURE_MESSAGES,
+  TRANSLATION_FAILURE_SHORT,
+  TRANSLATION_RETRYABLE,
+  stageStates,
+} from "./stages";
 
 const base = { track_id: "t", video_id: "v", title: "x" };
 const step = (s: (typeof PROCESSING_STEPS)[number]): ProcessingEvent => ({
@@ -64,6 +71,22 @@ describe("stageStates", () => {
       "done",
       "done",
       "done",
+    ]);
+  });
+
+  it("marks the translating stage failed when only the translation failed", () => {
+    expect(
+      stageStates({ type: "translation_failed", ...base, error_code: "provider_unavailable" }),
+    ).toEqual(["done", "done", "failed", "todo"]);
+  });
+
+  it("explains every translation error and retries all but the budget", () => {
+    for (const code of TRANSLATION_ERROR_CODES) {
+      expect(TRANSLATION_FAILURE_MESSAGES[code]).toBeTruthy();
+      expect(TRANSLATION_FAILURE_SHORT[code]).toBeTruthy();
+    }
+    expect(Object.entries(TRANSLATION_RETRYABLE).filter(([, retry]) => !retry).map(([code]) => code)).toEqual([
+      "spend_cap",
     ]);
   });
 });

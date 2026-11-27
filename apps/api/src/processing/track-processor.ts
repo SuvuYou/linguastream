@@ -16,7 +16,7 @@ import { GeminiClient } from "../ai/gemini.client";
 import { nlpAnalyser } from "./analyse/nlp-client";
 import { PUNCTUATION_INSTRUCTION } from "../ai/prompts/punctuation";
 import { geminiTranslator } from "./translate/gemini-translator";
-import { createStepHandlers, type StepHandler } from "./steps";
+import { createStepHandlers, type StepHandler, type StepReporter } from "./steps";
 
 export const STEP_HANDLERS_TOKEN = Symbol("STEP_HANDLERS");
 
@@ -114,15 +114,40 @@ export class TrackProcessor {
       step_count: PROCESSING_STEPS.length,
     });
     try {
-      await this.handlers.translate?.({ trackId: track.trackId, repository: this.repository, spend: this.spend });
+      await this.handlers.translate?.({
+        trackId: track.trackId,
+        repository: this.repository,
+        spend: this.spend,
+        report: this.reporter(base, publish),
+      });
     } catch (err) {
       this.logger.warn(
         `Translation of track ${track.trackId} failed on attempt ${job.attemptsMade + 1}: ${describeError(err)}`,
       );
       if (job.attemptsMade + 1 < (job.opts.attempts ?? 1)) throw err;
       await this.repository.failOpenTranslations(track.trackId);
+      await publish({ type: "translation_failed", ...base, error_code: "internal" });
     }
     await publish({ type: "ready", ...base });
+  }
+
+  private reporter(
+    base: { track_id: string; video_id: string },
+    publish: (event: UntitledEvent) => Promise<void>,
+  ): StepReporter {
+    const step = "translate" as const;
+    return {
+      progress: (done, total) =>
+        publish({
+          type: "step",
+          ...base,
+          step,
+          step_index: PROCESSING_STEPS.indexOf(step),
+          step_count: PROCESSING_STEPS.length,
+          progress: { done, total },
+        }),
+      translationFailed: (error_code) => publish({ type: "translation_failed", ...base, error_code }),
+    };
   }
 
   private async runSteps(
@@ -145,6 +170,7 @@ export class TrackProcessor {
         trackId: track.trackId,
         repository: this.repository,
         spend: this.spend,
+        report: this.reporter(base, publish),
       });
       await this.repository.completeStep(track.trackId, index + 1);
     }

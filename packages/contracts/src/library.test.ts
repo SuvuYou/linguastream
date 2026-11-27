@@ -9,7 +9,7 @@ const video = {
   duration_ms: 768_000,
   added_at: "2026-11-27T01:00:00.000Z",
   track: { id: "0190f3c2-7d1a-7c00-8a00-000000000002", status: "processing", progress: 2, error_code: null },
-  translation: { language: "uk", status: "none" },
+  translation: { language: "uk", status: "none", error_code: null, progress: null },
 };
 
 const query = listVideosRoute.query!;

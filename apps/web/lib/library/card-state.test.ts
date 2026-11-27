@@ -8,7 +8,7 @@ const ids = {
   title: "Ein Tag in Hamburg",
 };
 
-const video = (track: LibraryVideo["track"]): LibraryVideo => ({
+const video = (track: LibraryVideo["track"], translation: LibraryVideo["translation"] = null): LibraryVideo => ({
   id: ids.video_id,
   youtube_video_id: "4Ja5iJtYOPw",
   title: ids.title,
@@ -16,7 +16,7 @@ const video = (track: LibraryVideo["track"]): LibraryVideo => ({
   duration_ms: null,
   added_at: "2026-11-27T01:00:00.000Z",
   track,
-  translation: null,
+  translation,
 });
 
 const track = (status: "pending" | "processing" | "ready" | "failed", progress = 0, error_code: "internal" | "empty_track" | null = null) => ({
@@ -50,5 +50,29 @@ describe("cardState", () => {
       [{ type: "failed", ...ids, error_code: "internal" }, { kind: "failed", message: "Something went wrong on our side. Try again.", retryable: true }],
     ];
     for (const [event, state] of events) expect(cardState(v, event)).toEqual(state);
+  });
+
+  it("shows a ready video's translation in progress, from the data or a live event", () => {
+    const translating = video(track("ready", 5), {
+      language: "uk",
+      status: "processing",
+      error_code: null,
+      progress: { done: 120, total: 812 },
+    });
+    expect(cardState(translating)).toEqual({ kind: "preparing", stage: "Translating", percent: 15 });
+    expect(cardState(video(track("ready", 5), { language: "uk", status: "pending", error_code: null, progress: null }))).toEqual({
+      kind: "preparing",
+      stage: "Translating",
+      percent: 0,
+    });
+    expect(
+      cardState(translating, { type: "step", ...ids, step: "translate", step_index: 3, step_count: 5, progress: { done: 406, total: 812 } }),
+    ).toEqual({ kind: "preparing", stage: "Translating", percent: 50 });
+    expect(cardState(translating, { type: "translation_failed", ...ids, error_code: "provider_unavailable" })).toEqual({
+      kind: "ready",
+    });
+    expect(
+      cardState(video(track("ready", 5), { language: "uk", status: "failed", error_code: "internal", progress: null })),
+    ).toEqual({ kind: "ready" });
   });
 });

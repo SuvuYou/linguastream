@@ -1,7 +1,7 @@
 import { Logger } from "@nestjs/common";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { SpendLimiter } from "../usage/spend-limiter";
-import { GeminiClient } from "./gemini.client";
+import { GeminiCallError, GeminiClient } from "./gemini.client";
 
 const generateContent = vi.fn();
 
@@ -60,6 +60,30 @@ describe("GeminiClient", () => {
     generateContent.mockRejectedValue({ status: 400, message: "bad request about Haus" });
     await expect(client().generateText("prompt")).rejects.toThrow("Gemini failed");
     expect(generateContent).toHaveBeenCalledTimes(1);
+  });
+
+  it("says which model failed, with what status, and whether trying later can help", async () => {
+    generateContent.mockRejectedValue({ status: 400, message: "bad request about Haus" });
+    const error = await client().generateText("prompt").catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(GeminiCallError);
+    expect(error).toMatchObject({ model: "gemini-3.1-flash-lite", status: 400, retryable: false, code: "GEMINI_400" });
+    expect((error as Error).message).not.toContain("Haus");
+
+    generateContent.mockReset().mockRejectedValue({ status: 429, message: "RESOURCE_EXHAUSTED" });
+    const busy = client().generateText("prompt").catch((e: unknown) => e);
+    await vi.runAllTimersAsync();
+    expect(await busy).toMatchObject({ model: "gemini-3.5-flash", status: 429, retryable: true, code: "GEMINI_429" });
+
+    generateContent.mockReset().mockRejectedValue(Object.assign(new Error("Request aborted"), { name: "AbortError" }));
+    const slow = client().generateText("prompt").catch((e: unknown) => e);
+    await vi.runAllTimersAsync();
+    expect(await slow).toMatchObject({ status: "timeout", retryable: true, code: "GEMINI_TIMEOUT" });
+
+    generateContent.mockReset().mockRejectedValue(new Error("socket hang up"));
+    expect(await client().generateText("prompt").catch((e: unknown) => e)).toMatchObject({
+      status: null,
+      code: "GEMINI_ERROR",
+    });
   });
 
   it("logs the model and status, not the error text", async () => {

@@ -45,6 +45,22 @@ export class ProcessingService {
   }
 
   async currentEvents(userId: string): Promise<ProcessingEvent[]> {
-    return (await this.repository.unfinishedTracks(userId)).map(currentState);
+    const [tracks, translations] = await Promise.all([
+      this.repository.unfinishedTracks(userId),
+      this.repository.openTranslations(userId),
+    ]);
+    return [
+      ...tracks.map(currentState),
+      ...translations.map(({ track, done, total }): ProcessingEvent => ({
+        type: "step",
+        track_id: track.trackId,
+        video_id: track.videoId,
+        title: track.title,
+        step: "translate",
+        step_index: PROCESSING_STEPS.indexOf("translate"),
+        step_count: PROCESSING_STEPS.length,
+        progress: { done, total },
+      })),
+    ];
   }
 }

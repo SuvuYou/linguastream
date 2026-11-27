@@ -49,6 +49,35 @@ describe("processing contracts", () => {
     });
   });
 
+  it("carries line progress on a step and a translation failure with its reason", () => {
+    expect(
+      ProcessingEvent.parse({
+        type: "step",
+        ...ids,
+        step: "translate",
+        step_index: 3,
+        step_count: 5,
+        progress: { done: 120, total: 812 },
+      }),
+    ).toMatchObject({ progress: { done: 120, total: 812 } });
+    expect(
+      ProcessingEvent.parse({ type: "translation_failed", ...ids, error_code: "provider_unavailable" }),
+    ).toMatchObject({ error_code: "provider_unavailable" });
+    expect(
+      ProcessingEvent.safeParse({ type: "translation_failed", ...ids, error_code: "empty_track" }).success,
+    ).toBe(false);
+    expect(
+      ProcessingEvent.safeParse({
+        type: "step",
+        ...ids,
+        step: "translate",
+        step_index: 3,
+        step_count: 5,
+        progress: { done: -1, total: 2 },
+      }).success,
+    ).toBe(false);
+  });
+
   it("rejects unknown steps, codes and types", () => {
     expect(
       ProcessingEvent.safeParse({

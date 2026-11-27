@@ -154,7 +154,7 @@ function video(
       line_count: 0,
     },
     translation_language: "en",
-    translation: { language: "en", status: "ready" },
+    translation: { language: "en", status: "ready", error_code: null, progress: null },
     ...rest,
   };
 }
@@ -183,7 +183,7 @@ export const mockVideos: Record<string, { video: VideoDetail; lines: Line[] }> =
         video: video(MOCK_VIDEO_IDS.noTranslation, {
           durationMs: NORMAL_MS,
           translation_language: null,
-          translation: { language: "en", status: "none" },
+          translation: { language: "en", status: "none", error_code: null, progress: null },
         }),
         lines: buildLines(NORMAL_MS, { translated: false }),
       },

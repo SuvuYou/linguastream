@@ -319,4 +319,15 @@ describe("LibraryScreen", () => {
     expect(await screen.findByText(/Can't reach the server right now/)).toBeInTheDocument();
     expect(screen.getAllByRole("article")).toHaveLength(24);
   });
+
+  it("shows a translation in progress and why a translation failed", async () => {
+    stubApi();
+    const failedTranslation = mockLibrary.find((v) => v.translation?.status === "failed")!;
+    const translating = mockLibrary.find((v) => v.translation?.status === "processing")!;
+    api.override = () => ({ items: [failedTranslation, translating], page: 0, page_size: 24, total: 2 });
+    renderScreen();
+    await waitFor(() => expect(card(failedTranslation)).toBeDefined());
+    expect(card(failedTranslation)).toHaveTextContent("Translation failed: Gemini didn't answer");
+    expect(card(translating)).toHaveTextContent("Preparing: Translating, 56%");
+  });
 });

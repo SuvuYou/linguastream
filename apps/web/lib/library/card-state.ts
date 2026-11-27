@@ -5,6 +5,7 @@ import {
   type ProcessingEvent,
   type ProcessingStep,
 } from "@linguastream/contracts";
+import { percentOf } from "@/lib/processing/eta";
 import { FAILURE_MESSAGES, RETRYABLE, STAGES } from "@/lib/processing/stages";
 
 export type CardState =
@@ -41,8 +42,11 @@ export function cardState(
       case "queued":
         return { kind: "waiting" };
       case "step":
-        return preparing(event.step, event.step_index, event.step_count);
+        return event.progress
+          ? { kind: "preparing", stage: "Translating", percent: percentOf(event.progress) }
+          : preparing(event.step, event.step_index, event.step_count);
       case "ready":
+      case "translation_failed":
         return { kind: "ready" };
       case "failed":
         return failed(event.error_code);
@@ -50,7 +54,16 @@ export function cardState(
   }
   const track = video.track;
   if (!track || track.status === "pending") return { kind: "waiting" };
-  if (track.status === "ready") return { kind: "ready" };
+  if (track.status === "ready") {
+    const translation = video.translation;
+    if (translation?.status === "pending" || translation?.status === "processing")
+      return {
+        kind: "preparing",
+        stage: "Translating",
+        percent: translation.progress ? percentOf(translation.progress) : 0,
+      };
+    return { kind: "ready" };
+  }
   if (track.status === "failed") return failed(track.error_code ?? "internal");
   const index = Math.min(track.progress, PROCESSING_STEPS.length - 1);
   return preparing(PROCESSING_STEPS[index]!, index, PROCESSING_STEPS.length);

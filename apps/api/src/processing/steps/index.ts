@@ -1,4 +1,4 @@
-import type { ProcessingStep } from "@linguastream/contracts";
+import type { ProcessingStep, TranslationErrorCode } from "@linguastream/contracts";
 import { Logger } from "@nestjs/common";
 import { gunzipSync } from "node:zlib";
 import type { SpendLimiter } from "../../usage/spend-limiter";
@@ -11,10 +11,16 @@ import type { ProcessingRepository } from "../processing.repository";
 import { translateLines, type Translator } from "../translate/translate";
 import { parseJson3 } from "./parse-json3";
 
+export interface StepReporter {
+  progress(done: number, total: number): Promise<void>;
+  translationFailed(code: TranslationErrorCode): Promise<void>;
+}
+
 export interface StepContext {
   trackId: string;
   repository: ProcessingRepository;
   spend: Pick<SpendLimiter, "canSpend" | "record">;
+  report?: StepReporter;
 }
 
 export type StepHandler = (context: StepContext) => Promise<void>;
@@ -24,6 +30,7 @@ export interface StepDeps {
   lexicon: VerbLexicon | null;
   analyse: Analyser;
   translate: Translator;
+  retryDelayMs?: number;
 }
 
 const logger = new Logger("Translation");
@@ -60,18 +67,33 @@ export function createStepHandlers(deps: StepDeps): Partial<Record<ProcessingSte
       if (!target || baseLanguage(target.targetLanguage) === baseLanguage(target.sourceLanguage)) return;
       const translationId = await context.repository.startTranslation(context.trackId, target.targetLanguage);
       const lines = await context.repository.translationLines(context.trackId, translationId);
+      const label = `Track ${context.trackId} → ${target.targetLanguage}`;
+      logger.log(`${label}: translating ${lines.filter((l) => !l.translated).length} of ${lines.length} lines`);
+      await context.report?.progress(lines.filter((l) => l.translated).length, lines.length);
       const report = await translateLines(lines, {
         translate: deps.translate,
         canSpend: () => context.spend.canSpend(),
         save: (done) => context.repository.saveLineTranslations(translationId, done),
         sourceLanguage: target.sourceLanguage,
         targetLanguage: target.targetLanguage,
+        retryDelayMs: deps.retryDelayMs,
+        onProgress: async (done, total) => {
+          await context.repository.saveTranslationProgress(translationId, done);
+          await context.report?.progress(done, total);
+        },
+        onChunkFailure: (failure) =>
+          logger.warn(
+            `${label}: lines ${failure.fromLine}–${failure.toLine}, try ${failure.attempt} failed: ${failure.reason}`,
+          ),
       });
       await context.repository.finishTranslation(translationId, report);
-      logger.log(
-        `Track ${context.trackId} → ${target.targetLanguage}: ${report.status}${report.errorCode ? ` (${report.errorCode})` : ""}, ` +
-          `${report.translatedLines}/${lines.length} lines, ${report.chunks} chunks, ${report.calls} calls, ${dollars(report.costMicroUsd)}`,
-      );
+      const summary =
+        `${label}: ${report.status}${report.errorCode ? ` (${report.errorCode})` : ""}, ` +
+        `${report.translatedLines}/${report.totalLines} lines, ${report.chunks} chunks, ${report.calls} calls, ${dollars(report.costMicroUsd)}`;
+      if (report.status === "failed") {
+        logger.warn(summary);
+        await context.report?.translationFailed(report.errorCode ?? "internal");
+      } else logger.log(summary);
     },
   };
 }

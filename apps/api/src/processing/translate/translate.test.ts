@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   CONTEXT_LINES,
+  TranslationProviderError,
   translateLines,
+  type ChunkFailure,
   type SourceLine,
   type TranslatedLine,
   type TranslationRequest,
@@ -24,6 +26,8 @@ const echo: Translator = async (request) => ({
 function setup(translate: Translator = echo, options: { canSpend?: () => Promise<boolean>; chunkLines?: number; concurrency?: number } = {}) {
   const saved: TranslatedLine[] = [];
   const requests: TranslationRequest[] = [];
+  const progress: [number, number][] = [];
+  const failures: ChunkFailure[] = [];
   const deps = {
     translate: vi.fn<Translator>(async (request) => {
       requests.push(request);
@@ -37,8 +41,15 @@ function setup(translate: Translator = echo, options: { canSpend?: () => Promise
     targetLanguage: "uk",
     chunkLines: options.chunkLines ?? 4,
     concurrency: options.concurrency ?? 1,
+    retryDelayMs: 0,
+    onProgress: (done: number, total: number) => {
+      progress.push([done, total]);
+    },
+    onChunkFailure: (failure: ChunkFailure) => {
+      failures.push(failure);
+    },
   };
-  return { deps, saved, requests };
+  return { deps, saved, requests, progress, failures };
 }
 
 describe("translateLines", () => {
@@ -46,7 +57,15 @@ describe("translateLines", () => {
     const { deps, saved, requests } = setup();
     const report = await translateLines(source(10), deps);
 
-    expect(report).toEqual({ status: "ready", errorCode: null, translatedLines: 10, chunks: 3, calls: 3, costMicroUsd: 30 });
+    expect(report).toEqual({
+      status: "ready",
+      errorCode: null,
+      translatedLines: 10,
+      totalLines: 10,
+      chunks: 3,
+      calls: 3,
+      costMicroUsd: 30,
+    });
     expect(requests.map((r) => r.lines.length)).toEqual([4, 4, 2]);
     expect(requests[1]).toEqual({
       lines: ["Zeile 4", "Zeile 5", "Zeile 6", "Zeile 7"],
@@ -107,14 +126,14 @@ describe("translateLines", () => {
     expect(saved).toHaveLength(4);
   });
 
-  it("fails as internal when a single line can't be translated, keeping what was done and starting nothing new", async () => {
+  it("fails as an invalid answer when a single line can't be translated, keeping what was done and starting nothing new", async () => {
     const { deps, saved } = setup(
       async (request) => (request.lines.includes("Zeile 4") ? { translations: [], costMicroUsd: 0 } : echo(request)),
       { chunkLines: 2 },
     );
     const report = await translateLines(source(10), deps);
 
-    expect(report).toMatchObject({ status: "failed", errorCode: "internal", translatedLines: 4, chunks: 5 });
+    expect(report).toMatchObject({ status: "failed", errorCode: "invalid_answer", translatedLines: 4, chunks: 5 });
     expect(saved.map((l) => l.lineId)).toEqual(["line-0", "line-1", "line-2", "line-3"]);
   });
 
@@ -156,5 +175,59 @@ describe("translateLines", () => {
 
     expect(peak).toBe(3);
     expect(report).toMatchObject({ status: "ready", translatedLines: 8, calls: 8 });
+  });
+
+  it("reports progress after every saved chunk", async () => {
+    const { deps, progress } = setup(echo, { chunkLines: 2 });
+    await translateLines(source(5, [0]), deps);
+    expect(progress).toEqual([
+      [3, 5],
+      [5, 5],
+    ]);
+  });
+
+  it("waits and asks again when the provider is busy, and names each failed try", async () => {
+    const translate = vi
+      .fn<Translator>()
+      .mockRejectedValueOnce(new TranslationProviderError("gemini-3.5-flash 503", true))
+      .mockImplementation(echo);
+    const { deps, failures } = setup(translate);
+    const report = await translateLines(source(3), deps);
+
+    expect(report).toMatchObject({ status: "ready", translatedLines: 3, calls: 2 });
+    expect(failures).toEqual([{ fromLine: 0, toLine: 2, attempt: 1, reason: "gemini-3.5-flash 503" }]);
+  });
+
+  it("fails as provider_unavailable when the provider keeps failing, and stops at once on an error that won't go away", async () => {
+    const busy = setup(async () => {
+      throw new TranslationProviderError("gemini-3.5-flash 429", true);
+    });
+    expect(await translateLines(source(3), busy.deps)).toMatchObject({
+      status: "failed",
+      errorCode: "provider_unavailable",
+      calls: 2,
+    });
+    expect(busy.failures.map((f) => f.attempt)).toEqual([1, 2]);
+
+    const refused = setup(async () => {
+      throw new TranslationProviderError("gemini-3.1-flash-lite 400", false);
+    });
+    expect(await translateLines(source(3), refused.deps)).toMatchObject({
+      status: "failed",
+      errorCode: "provider_unavailable",
+      calls: 1,
+    });
+  });
+
+  it("names a wrong answer and an unexpected error in the failure log", async () => {
+    const { deps, failures } = setup(
+      vi
+        .fn<Translator>()
+        .mockResolvedValueOnce({ translations: ["x"], costMicroUsd: 0 })
+        .mockRejectedValueOnce(new RangeError("boom")),
+    );
+    const report = await translateLines(source(2), deps);
+    expect(failures.map((f) => f.reason)).toEqual(["answer had 1 of 2 lines", "RangeError"]);
+    expect(report.errorCode).toBe("internal");
   });
 });

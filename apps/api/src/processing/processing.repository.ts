@@ -7,6 +7,12 @@ import { updateLineTextsAndWords, updateLineWordsAndLemmas, upsertLineTranslatio
 import type { ParsedLine } from "./steps/parse-json3";
 import type { SourceLine, TranslatedLine, TranslationReport } from "./translate/translate";
 
+export interface OpenTranslation {
+  track: TrackSummary;
+  done: number;
+  total: number;
+}
+
 export interface TrackSummary {
   trackId: string;
   videoId: string;
@@ -195,5 +201,24 @@ export class ProcessingRepository {
       where: { trackId, status: { in: ["pending", "processing"] } },
       data: { status: "failed", errorCode: "internal" },
     });
+  }
+
+  async saveTranslationProgress(translationId: string, done: number): Promise<void> {
+    await db.trackTranslation.update({ where: { id: translationId }, data: { progress: done } });
+  }
+
+  async openTranslations(userId: string): Promise<OpenTranslation[]> {
+    const translations = await db.trackTranslation.findMany({
+      where: { status: { in: ["pending", "processing"] }, track: { status: "ready", video: { userId } } },
+      select: {
+        progress: true,
+        track: { select: { ...summarySelect, _count: { select: { lines: true } } } },
+      },
+    });
+    return translations.map(({ progress, track }) => ({
+      track: toSummary(track),
+      done: progress,
+      total: track._count.lines,
+    }));
   }
 }

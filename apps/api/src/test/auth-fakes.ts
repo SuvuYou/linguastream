@@ -12,7 +12,7 @@ import { configureApp } from "../http/configure-app";
 import { EXTENSION_ORIGIN, WEB_ORIGIN } from "../http/origin.guard";
 import { ProcessingEvents } from "../processing/processing-events";
 import { ProcessingQueue } from "../processing/processing-queue";
-import { ProcessingRepository, type TrackSummary } from "../processing/processing.repository";
+import { ProcessingRepository, type OpenTranslation, type TrackSummary } from "../processing/processing.repository";
 import { UsageStore } from "../usage/usage-store";
 
 export const TEST_WEB_ORIGIN = "http://localhost:3000";
@@ -118,9 +118,11 @@ export function fakeProcessingEvents() {
   };
 }
 
-export function fakeProcessingRepository(tracks: TrackSummary[] = []) {
+export function fakeProcessingRepository(tracks: TrackSummary[] = [], translations: OpenTranslation[] = []) {
   return {
     tracks,
+    translations,
+    openTranslations: vi.fn(async (userId: string) => translations.filter((t) => t.track.userId === userId)),
     findUserTrack: vi.fn(async (userId: string, trackId: string) =>
       tracks.find((t) => t.userId === userId && t.trackId === trackId) ?? null,
     ),

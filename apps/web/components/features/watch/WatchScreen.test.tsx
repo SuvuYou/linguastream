@@ -1,5 +1,6 @@
 import {
   act,
+  cleanup,
   fireEvent,
   render,
   screen,
@@ -65,7 +66,10 @@ function stubApi() {
         });
       if (!match![2]) {
         const video = api.translating.has(match![1]!)
-          ? { ...entry.video, translation: { language: "en", status: "pending" } }
+          ? {
+              ...entry.video,
+              translation: { language: "en", status: "pending", error_code: null, progress: null },
+            }
           : entry.video;
         return new Response(JSON.stringify(video), { status: 200 });
       }
@@ -338,7 +342,42 @@ describe("WatchScreen", () => {
       `/api/videos/${MOCK_VIDEO_IDS.noTranslation}/translation`,
       expect.objectContaining({ method: "POST" }),
     );
-    expect(await screen.findByRole("button", { name: "Translating…" })).toBeDisabled();
+    expect(await screen.findByText("Translating…")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Translate into/ })).toBeNull();
+
+    act(() =>
+      FakeEventSource.latest().emit(PROCESSING_EVENT_NAME, {
+        type: "step",
+        track_id: "0190f3c2-7d1a-7c00-8b00-000000000009",
+        video_id: MOCK_VIDEO_IDS.noTranslation,
+        title: "x",
+        step: "translate",
+        step_index: 3,
+        step_count: 5,
+        progress: { done: 120, total: 812 },
+      }),
+    );
+    expect(await screen.findByText("Translating 15%")).toBeInTheDocument();
+    expect(screen.getAllByText("120 of 812 lines").length).toBeGreaterThan(0);
+  });
+
+  it("says why a translation failed and offers to try again", async () => {
+    const entry = mockVideos[MOCK_VIDEO_IDS.noTranslation]!;
+    const original = entry.video.translation;
+    entry.video.translation = { language: "en", status: "failed", error_code: "provider_unavailable", progress: { done: 3, total: 9 } };
+    try {
+      renderWatch(MOCK_VIDEO_IDS.noTranslation);
+      expect(await screen.findByText(/Translation failed\. The translation service \(Gemini\) didn't answer/)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Translate again" })).toBeInTheDocument();
+
+      entry.video.translation = { language: "en", status: "failed", error_code: "spend_cap", progress: null };
+      cleanup();
+      renderWatch(MOCK_VIDEO_IDS.noTranslation);
+      expect(await screen.findByText(/AI budget is used up/)).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Translate again" })).toBeNull();
+    } finally {
+      entry.video.translation = original;
+    }
   });
 
   it("offers no translate button for a translated or unfinished video", async () => {

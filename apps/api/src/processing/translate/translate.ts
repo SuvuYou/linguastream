@@ -1,3 +1,4 @@
+import type { TranslationErrorCode } from "@linguastream/contracts";
 export const CHUNK_LINES = 40;
 export const CONTEXT_LINES = 3;
 export const CONCURRENCY = 3;
@@ -28,6 +29,24 @@ export class TranslationAnswerError extends Error {
   }
 }
 
+export class TranslationProviderError extends Error {
+  constructor(
+    readonly reason: string,
+    readonly retryable: boolean,
+  ) {
+    super(`Translation provider failed (${reason})`);
+    this.name = "TranslationProviderError";
+  }
+}
+
+
+export interface ChunkFailure {
+  fromLine: number;
+  toLine: number;
+  attempt: number;
+  reason: string;
+}
+
 export interface SourceLine {
   lineId: string;
   index: number;
@@ -42,8 +61,9 @@ export interface TranslatedLine {
 
 export interface TranslationReport {
   status: "ready" | "failed";
-  errorCode: "internal" | "spend_cap" | null;
+  errorCode: TranslationErrorCode | null;
   translatedLines: number;
+  totalLines: number;
   chunks: number;
   calls: number;
   costMicroUsd: number;
@@ -57,9 +77,29 @@ export interface TranslateDeps {
   targetLanguage: string;
   chunkLines?: number;
   concurrency?: number;
+  retryDelayMs?: number;
+  onProgress?: (done: number, total: number) => Promise<void> | void;
+  onChunkFailure?: (failure: ChunkFailure) => void;
 }
 
+export const RETRY_DELAY_MS = 5_000;
+
 class SpendCapReached extends Error {}
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+export function translationErrorCode(err: unknown): TranslationErrorCode {
+  if (err instanceof SpendCapReached) return "spend_cap";
+  if (err instanceof TranslationAnswerError) return "invalid_answer";
+  if (err instanceof TranslationProviderError) return "provider_unavailable";
+  return "internal";
+}
+
+function failureReason(err: unknown): string {
+  if (err instanceof TranslationAnswerError) return `answer had ${err.received ?? "no"} of ${err.expected} lines`;
+  if (err instanceof TranslationProviderError) return err.reason;
+  return err instanceof Error ? err.name : typeof err;
+}
 
 function pendingRuns(lines: SourceLine[], size: number): [number, number][] {
   const runs: [number, number][] = [];
@@ -80,6 +120,7 @@ export async function translateLines(lines: SourceLine[], deps: TranslateDeps): 
     status: "ready",
     errorCode: null,
     translatedLines: lines.filter((l) => l.translated).length,
+    totalLines: lines.length,
     chunks: 0,
     calls: 0,
     costMicroUsd: 0,
@@ -104,16 +145,31 @@ export async function translateLines(lines: SourceLine[], deps: TranslateDeps): 
     return answer.translations;
   };
 
+  const failed = (from: number, to: number, attempt: number, err: unknown) =>
+    deps.onChunkFailure?.({
+      fromLine: lines[from]!.index,
+      toLine: lines[to - 1]!.index,
+      attempt,
+      reason: failureReason(err),
+    });
+
   const translateRange = async (from: number, to: number): Promise<void> => {
     let translations: string[];
     try {
       translations = await ask(from, to);
     } catch (err) {
       if (err instanceof SpendCapReached) throw err;
+      failed(from, to, 1, err);
+      if (err instanceof TranslationProviderError) {
+        if (!err.retryable) throw err;
+        await sleep(deps.retryDelayMs ?? RETRY_DELAY_MS);
+      }
       const wrongAnswer = err instanceof TranslationAnswerError ? { received: err.received } : undefined;
       try {
         translations = await ask(from, to, wrongAnswer);
       } catch (again) {
+        if (again instanceof SpendCapReached) throw again;
+        failed(from, to, 2, again);
         if (again instanceof TranslationAnswerError && to - from > 1) {
           const middle = from + Math.ceil((to - from) / 2);
           await translateRange(from, middle);
@@ -125,6 +181,7 @@ export async function translateLines(lines: SourceLine[], deps: TranslateDeps): 
     }
     await deps.save(translations.map((text, i) => ({ lineId: lines[from + i]!.lineId, text: text.trim() })));
     report.translatedLines += to - from;
+    await deps.onProgress?.(report.translatedLines, report.totalLines);
   };
 
   let failure: unknown = null;
@@ -143,7 +200,7 @@ export async function translateLines(lines: SourceLine[], deps: TranslateDeps): 
 
   if (failure !== null) {
     report.status = "failed";
-    report.errorCode = failure instanceof SpendCapReached ? "spend_cap" : "internal";
+    report.errorCode = translationErrorCode(failure);
   }
   return report;
 }

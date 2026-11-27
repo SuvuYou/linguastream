@@ -4,28 +4,46 @@ import type { ProcessingEvent } from "@linguastream/contracts";
 import { CircleAlert, CircleCheck, LoaderCircle, X } from "lucide-react";
 import Link from "next/link";
 import type { ProcessingToast as ToastState } from "@/hooks/useProcessingToasts";
+import { progressLabel, remainingMs } from "@/lib/processing/eta";
 import {
   FAILURE_MESSAGES,
   RETRYABLE,
   STAGES,
+  TRANSLATION_FAILURE_MESSAGES,
+  TRANSLATION_RETRYABLE,
   stageStates,
 } from "@/lib/processing/stages";
 import { cn } from "@/lib/utils";
 
-function heading(event: ProcessingEvent) {
+function heading(event: ProcessingEvent, translationFailed: boolean) {
   switch (event.type) {
     case "queued":
       return "Waiting to prepare";
     case "step":
-      return "Preparing";
+      return event.step === "translate" ? "Translating" : "Preparing";
     case "ready":
-      return "Ready:";
+      return translationFailed ? "Ready without translation:" : "Ready:";
     case "failed":
       return "Couldn't prepare";
+    case "translation_failed":
+      return "Couldn't translate";
   }
 }
 
-function Icon({ event }: { event: ProcessingEvent }) {
+function Icon({
+  event,
+  warning,
+}: {
+  event: ProcessingEvent;
+  warning: boolean;
+}) {
+  if (warning || event.type === "translation_failed")
+    return (
+      <CircleAlert
+        className="size-4 shrink-0 text-destructive"
+        aria-hidden="true"
+      />
+    );
   if (event.type === "ready")
     return (
       <CircleCheck
@@ -52,29 +70,38 @@ export default function ProcessingToast({
   toast,
   onDismiss,
   onRetry,
+  onRetryTranslation,
 }: {
   toast: ToastState;
   onDismiss(): void;
   onRetry(): void;
+  onRetryTranslation(): void;
 }) {
-  const { event } = toast;
+  const { event, translationError } = toast;
   const states = stageStates(event);
   const failed = event.type === "failed";
+  const progress = event.type === "step" ? event.progress : undefined;
+  const remaining =
+    progress && toast.progressStart && toast.progressLast
+      ? remainingMs(toast.progressStart, toast.progressLast, progress.total)
+      : null;
+  const canTranslateAgain =
+    translationError !== null && TRANSLATION_RETRYABLE[translationError];
 
   return (
     <div
-      role={failed ? "alert" : "status"}
+      role={failed || translationError ? "alert" : "status"}
       className="pointer-events-auto flex flex-col gap-2 rounded-2xl border border-border bg-popup py-3 pr-2 pl-4 shadow-float backdrop-blur-[20px]"
     >
       <div className="flex items-start gap-2">
         <span className="mt-0.5">
-          <Icon event={event} />
+          <Icon event={event} warning={translationError !== null} />
         </span>
         <p
           className="line-clamp-2 min-w-0 flex-1 text-[13px] leading-5 font-semibold"
           title={event.title}
         >
-          {heading(event)}{" "}
+          {heading(event, translationError !== null)}{" "}
           <span lang="de" className="break-words">
             “{event.title}”
           </span>
@@ -100,6 +127,7 @@ export default function ProcessingToast({
                   state === "done" && "bg-primary",
                   state === "current" && "bg-[var(--a45)]",
                   state === "todo" && "bg-foreground/12",
+                  state === "failed" && "bg-destructive/70",
                 )}
               />
             ))}
@@ -109,7 +137,10 @@ export default function ProcessingToast({
               <li
                 key={stage.label}
                 aria-current={states[i] === "current" ? "step" : undefined}
-                className={cn(states[i] === "current" && "text-accent-text")}
+                className={cn(
+                  states[i] === "current" && "text-accent-text",
+                  states[i] === "failed" && "text-destructive",
+                )}
               >
                 {stage.label}
                 {states[i] === "done" && i < STAGES.length - 1 && (
@@ -118,20 +149,50 @@ export default function ProcessingToast({
               </li>
             ))}
           </ol>
+          {progress && (
+            <p className="text-xs text-text-2">
+              {progressLabel(progress, remaining)}
+            </p>
+          )}
         </div>
       )}
 
-      {event.type === "ready" && (
-        <div className="flex pr-2">
-          <Link
-            href={`/watch/${event.video_id}`}
-            className={cn(
-              smallButton,
-              "bg-primary font-semibold text-primary-foreground hover:bg-primary/90",
-            )}
-          >
-            Open video
-          </Link>
+      {translationError && (
+        <p className="pr-2 text-[13px] text-text-2">
+          {toast.retryFailed
+            ? "The new try didn't start. Try again in a moment."
+            : TRANSLATION_FAILURE_MESSAGES[translationError]}
+        </p>
+      )}
+
+      {(event.type === "ready" || canTranslateAgain) && (
+        <div className="flex gap-2 pr-2">
+          {event.type === "ready" && (
+            <Link
+              href={`/watch/${event.video_id}`}
+              className={cn(
+                smallButton,
+                "bg-primary font-semibold text-primary-foreground hover:bg-primary/90",
+              )}
+            >
+              Open video
+            </Link>
+          )}
+          {canTranslateAgain && (
+            <span className="flex text-[13px] font-medium">
+              <button
+                type="button"
+                onClick={onRetryTranslation}
+                disabled={toast.retrying}
+                className={cn(
+                  smallButton,
+                  "bg-raised-2 text-foreground hover:bg-raised disabled:opacity-60",
+                )}
+              >
+                {toast.retrying ? "Starting…" : "Translate again"}
+              </button>
+            </span>
+          )}
         </div>
       )}
 

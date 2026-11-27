@@ -76,6 +76,9 @@ describe("processing API", () => {
       track({ trackId: ids(3), status: "ready", progress: 5 }),
       track({ trackId: ids(4), userId: "user-2", status: "failed" }),
       track({ trackId: ids(5), status: "pending" }),
+    ], [
+      { track: track({ trackId: ids(3), status: "ready", progress: 5 }), done: 120, total: 812 },
+      { track: track({ trackId: ids(6), userId: "user-2", status: "ready", progress: 5 }), done: 1, total: 2 },
     ]);
     app = await createTestApp({
       providers: [
@@ -93,8 +96,8 @@ describe("processing API", () => {
   });
 
   describe("GET /api/processing/events", () => {
-    it("starts with the state of the user's unfinished tracks, then streams their live events", async () => {
-      const received = readEvents(`${baseUrl}/api/processing/events`, 4);
+    it("starts with the state of the user's unfinished tracks and translations, then streams their live events", async () => {
+      const received = readEvents(`${baseUrl}/api/processing/events`, 5);
       await vi.waitFor(() => expect(events.forUser).toHaveBeenCalledWith("user-1"));
       const live = (userId: string, n: number) => ({
         user_id: userId,
@@ -111,7 +114,14 @@ describe("processing API", () => {
       const parsed = list.map((e) => ProcessingEvent.parse(e.data));
       expect(parsed[0]).toMatchObject({ type: "step", track_id: ids(1), step: "normalise", step_index: 1 });
       expect(parsed[1]).toMatchObject({ type: "queued", track_id: ids(5) });
-      expect(parsed.slice(2).map((e) => [e.type, e.track_id])).toEqual([
+      expect(parsed[2]).toMatchObject({
+        type: "step",
+        track_id: ids(3),
+        step: "translate",
+        step_index: 3,
+        progress: { done: 120, total: 812 },
+      });
+      expect(parsed.slice(3).map((e) => [e.type, e.track_id])).toEqual([
         ["ready", ids(1)],
         ["ready", ids(5)],
       ]);

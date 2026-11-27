@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import {
   LIBRARY_PAGE_SIZE,
   ProcessingErrorCode,
+  TranslationErrorCode,
   type LibraryPage,
   type Line,
   type ProcessingStatus,
@@ -19,12 +20,25 @@ export interface VideoView {
 const baseLanguage = (code: string) => code.toLowerCase().split("-")[0];
 
 export function translationState(
-  track: { status: ProcessingStatus; language: string; translations: { status: ProcessingStatus }[] } | null,
+  track: {
+    status: ProcessingStatus;
+    language: string;
+    lineCount: number;
+    translations: { status: ProcessingStatus; errorCode: string | null; progress: number }[];
+  } | null,
   nativeLanguage: string,
 ): VideoTranslation {
   if (!track || track.status !== "ready") return null;
   if (baseLanguage(track.language) === baseLanguage(nativeLanguage)) return null;
-  return { language: nativeLanguage, status: track.translations[0]?.status ?? "none" };
+  const translation = track.translations[0];
+  if (!translation) return { language: nativeLanguage, status: "none", error_code: null, progress: null };
+  return {
+    language: nativeLanguage,
+    status: translation.status,
+    error_code:
+      translation.status === "failed" ? (TranslationErrorCode.safeParse(translation.errorCode).data ?? "internal") : null,
+    progress: translation.status === "ready" ? null : { done: translation.progress, total: track.lineCount },
+  };
 }
 
 @Injectable()
@@ -63,7 +77,11 @@ export class VideosRepository {
               progress: true,
               errorCode: true,
               language: true,
-              translations: { where: { language: nativeLanguage }, select: { status: true } },
+              _count: { select: { lines: true } },
+              translations: {
+                where: { language: nativeLanguage },
+                select: { status: true, errorCode: true, progress: true },
+              },
             },
           },
         },
@@ -90,7 +108,7 @@ export class VideosRepository {
             error_code:
               track.status === "failed" ? (ProcessingErrorCode.safeParse(track.errorCode).data ?? "internal") : null,
           },
-          translation: translationState(track, nativeLanguage),
+          translation: translationState(track && { ...track, lineCount: track._count.lines }, nativeLanguage),
         };
       }),
     };
@@ -115,7 +133,7 @@ export class VideosRepository {
             isAutoCaptions: true,
             status: true,
             _count: { select: { lines: true } },
-            translations: { select: { id: true, language: true, status: true } },
+            translations: { select: { id: true, language: true, status: true, errorCode: true, progress: true } },
           },
         },
       },
@@ -144,7 +162,10 @@ export class VideosRepository {
           line_count: track._count.lines,
         },
         translation_language: translation?.language ?? null,
-        translation: translationState(track && { ...track, translations: native }, video.user.nativeLanguage),
+        translation: translationState(
+          track && { ...track, lineCount: track._count.lines, translations: native },
+          video.user.nativeLanguage,
+        ),
       },
     };
   }

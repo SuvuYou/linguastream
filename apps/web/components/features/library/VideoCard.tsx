@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useState } from "react";
 import type { CardState } from "@/lib/library/card-state";
 import { addedLabel, coverTint, thumbnailUrl } from "@/lib/library/format";
+import { TRANSLATION_FAILURE_SHORT } from "@/lib/processing/stages";
 import { formatTime } from "@/lib/watch/lines";
 import VideoCardMenu from "./VideoCardMenu";
 import { cn } from "@/lib/utils";
@@ -124,6 +125,16 @@ export default function VideoCard({
           <span className="flex min-w-0 text-[13px] text-text-3">
             <span className="truncate">{meta.join(" · ")}</span>
           </span>
+          {state.kind === "ready" &&
+            video.translation?.status === "failed" &&
+            video.translation.error_code && (
+              <span className="flex min-w-0 text-xs text-destructive">
+                <span className="truncate">
+                  Translation failed:{" "}
+                  {TRANSLATION_FAILURE_SHORT[video.translation.error_code]}
+                </span>
+              </span>
+            )}
         </div>
         {status && <span className="sr-only">{status}</span>}
       </Link>

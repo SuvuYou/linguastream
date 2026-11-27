@@ -203,6 +203,7 @@ describe("ProcessingRepository (Postgres)", () => {
       status: "failed",
       errorCode: "spend_cap",
       translatedLines: 1,
+      totalLines: 2,
       chunks: 1,
       calls: 1,
       costMicroUsd: 10,
@@ -257,5 +258,30 @@ describe("ProcessingRepository (Postgres)", () => {
       ["failed", "internal"],
     ]);
     expect(await repo.pendingTranslationTrackIds()).not.toContain(ready.id);
+  });
+
+  it("records translation progress and lists a user's open translations with their line count", async () => {
+    const track = await trackFor(undefined, "ready");
+    const userId = track.video.userId;
+    await repo.replaceLines(track.id, [
+      { index: 0, startMs: 0, endMs: 900, text: "eins" },
+      { index: 1, startMs: 900, endMs: 1800, text: "zwei" },
+      { index: 2, startMs: 1800, endMs: 2700, text: "drei" },
+    ]);
+    const other = await trackFor(undefined, "ready");
+    await repo.startTranslation(other.id, "uk");
+
+    const id = await repo.startTranslation(track.id, "uk");
+    await repo.saveTranslationProgress(id, 2);
+    expect(await repo.openTranslations(userId)).toEqual([
+      {
+        track: expect.objectContaining({ trackId: track.id, userId, title: track.video.title, status: "ready" }),
+        done: 2,
+        total: 3,
+      },
+    ]);
+
+    await db.trackTranslation.update({ where: { id }, data: { status: "ready" } });
+    expect(await repo.openTranslations(userId)).toEqual([]);
   });
 });

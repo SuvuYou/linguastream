@@ -181,4 +181,75 @@ describe("ProcessingToasts", () => {
     emit("not json");
     expect(screen.queryByRole("region")).toBeNull();
   });
+
+  describe("translation", () => {
+    const progress = (n: number, done: number, total = 812): ProcessingEvent => ({
+      ...(step(n, "translate", 3) as Extract<ProcessingEvent, { type: "step" }>),
+      progress: { done, total },
+    });
+
+    it("counts translated lines and estimates the time left", () => {
+      vi.useFakeTimers();
+      render(<ProcessingToasts />);
+      emit(progress(1, 0));
+      const status = region().getByRole("status");
+      expect(status).toHaveTextContent("Translating “Video 1”");
+      expect(status).toHaveTextContent("0 of 812 lines");
+      expect(status).not.toHaveTextContent("left");
+
+      act(() => vi.advanceTimersByTime(60_000));
+      emit(progress(1, 203));
+      expect(region().getByRole("status")).toHaveTextContent("203 of 812 lines · about 3 min left");
+    });
+
+    it("says why a translation failed, keeps the toast, and translates again", async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      const fetchMock = vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({ video_id: track(1).video_id, translation: { language: "uk", status: "pending" } }),
+            { status: 202 },
+          ),
+      );
+      vi.stubGlobal("fetch", fetchMock);
+      render(<ProcessingToasts />);
+      emit(progress(1, 40));
+      emit({ type: "translation_failed", ...track(1), error_code: "provider_unavailable" });
+
+      let alert = region().getByRole("alert");
+      expect(alert).toHaveTextContent("Couldn't translate “Video 1”");
+      expect(alert).toHaveTextContent("The translation service (Gemini) didn't answer");
+
+      emit({ type: "ready", ...track(1) });
+      alert = region().getByRole("alert");
+      expect(alert).toHaveTextContent("Ready without translation: “Video 1”");
+      expect(within(alert).getByRole("link", { name: "Open video" })).toBeInTheDocument();
+      act(() => vi.advanceTimersByTime(READY_HIDE_MS * 2));
+      expect(region().getByRole("alert")).toBeInTheDocument();
+
+      await userEvent
+        .setup({ advanceTimers: vi.advanceTimersByTime })
+        .click(within(alert).getByRole("button", { name: "Translate again" }));
+      expect(fetchMock).toHaveBeenCalledWith(
+        `/api/videos/${track(1).video_id}/translation`,
+        expect.objectContaining({ method: "POST" }),
+      );
+      expect(await region().findByRole("status")).toHaveTextContent("Translating “Video 1”");
+    });
+
+    it("offers no new try when the budget is used up", () => {
+      render(<ProcessingToasts />);
+      emit({ type: "translation_failed", ...track(1), error_code: "spend_cap" });
+      expect(region().getByRole("alert")).toHaveTextContent("This month's AI budget is used up");
+      expect(region().queryByRole("button", { name: "Translate again" })).toBeNull();
+    });
+
+    it("says so when the new try can't start", async () => {
+      vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ error: "boom" }), { status: 409 })));
+      render(<ProcessingToasts />);
+      emit({ type: "translation_failed", ...track(1), error_code: "internal" });
+      await userEvent.setup().click(region().getByRole("button", { name: "Translate again" }));
+      expect(await region().findByText(/The new try didn't start/)).toBeInTheDocument();
+    });
+  });
 });
