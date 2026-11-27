@@ -7,9 +7,10 @@ import { HealthController } from "./health/health.controller";
 import { HttpModule } from "./http/http.module";
 import { ProcessingModule } from "./processing/processing.module";
 import { UsersModule } from "./users/users.module";
+import { VideosModule } from "./videos/videos.module";
 
 @Module({
-  imports: [AuthModule, HttpModule, UsersModule, DefinitionModule, ExtensionModule, CapturesModule, ProcessingModule],
+  imports: [AuthModule, HttpModule, UsersModule, DefinitionModule, ExtensionModule, CapturesModule, ProcessingModule, VideosModule],
   controllers: [HealthController],
 })
 export class AppModule {}
