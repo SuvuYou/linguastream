@@ -1,5 +1,11 @@
 import { Injectable } from "@nestjs/common";
-import type { Line, VideoDetail } from "@linguastream/contracts";
+import {
+  LIBRARY_PAGE_SIZE,
+  ProcessingErrorCode,
+  type LibraryPage,
+  type Line,
+  type VideoDetail,
+} from "@linguastream/contracts";
 import { db } from "@linguastream/db";
 
 export interface VideoView {
@@ -10,6 +16,63 @@ export interface VideoView {
 
 @Injectable()
 export class VideosRepository {
+  async listVideos(userId: string, page: number, search?: string): Promise<LibraryPage> {
+    const where = {
+      userId,
+      ...(search && {
+        OR: [
+          { title: { contains: search, mode: "insensitive" as const } },
+          { channelName: { contains: search, mode: "insensitive" as const } },
+        ],
+      }),
+    };
+    const [total, videos] = await db.$transaction([
+      db.video.count({ where }),
+      db.video.findMany({
+        where,
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        skip: page * LIBRARY_PAGE_SIZE,
+        take: LIBRARY_PAGE_SIZE,
+        select: {
+          id: true,
+          youtubeVideoId: true,
+          title: true,
+          channelName: true,
+          durationMs: true,
+          createdAt: true,
+          tracks: {
+            orderBy: { createdAt: "desc" },
+            select: { id: true, status: true, progress: true, errorCode: true },
+          },
+        },
+      }),
+    ]);
+
+    return {
+      page,
+      page_size: LIBRARY_PAGE_SIZE,
+      total,
+      items: videos.map((video) => {
+        const track = video.tracks.find((t) => t.status === "ready") ?? video.tracks[0] ?? null;
+        return {
+          id: video.id,
+          youtube_video_id: video.youtubeVideoId,
+          title: video.title,
+          channel_name: video.channelName,
+          duration_ms: video.durationMs,
+          added_at: video.createdAt.toISOString(),
+          track: track && {
+            id: track.id,
+            status: track.status,
+            progress: track.progress,
+            error_code:
+              track.status === "failed" ? (ProcessingErrorCode.safeParse(track.errorCode).data ?? "internal") : null,
+          },
+        };
+      }),
+    };
+  }
+
   async findVideo(userId: string, videoId: string): Promise<VideoView | null> {
     const video = await db.video.findFirst({
       where: { id: videoId, userId },

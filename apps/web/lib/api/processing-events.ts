@@ -4,25 +4,42 @@ import {
   processingEventsRoute,
 } from "@linguastream/contracts";
 
-export function openProcessingEvents(
-  onEvent: (event: ProcessingEvent) => void,
-): () => void {
+type Subscriber = (event: ProcessingEvent) => void;
+
+let shared: { source: EventSource; subscribers: Set<Subscriber> } | null =
+  null;
+
+function open() {
   const source = new EventSource(processingEventsRoute.path, {
     withCredentials: true,
   });
-  const listener = (message: MessageEvent<string>) => {
-    let data: unknown;
-    try {
-      data = JSON.parse(message.data);
-    } catch {
-      return;
-    }
-    const parsed = ProcessingEvent.safeParse(data);
-    if (parsed.success) onEvent(parsed.data);
-  };
-  source.addEventListener(PROCESSING_EVENT_NAME, listener);
+  const subscribers = new Set<Subscriber>();
+  source.addEventListener(
+    PROCESSING_EVENT_NAME,
+    (message: MessageEvent<string>) => {
+      let data: unknown;
+      try {
+        data = JSON.parse(message.data);
+      } catch {
+        return;
+      }
+      const parsed = ProcessingEvent.safeParse(data);
+      if (parsed.success)
+        for (const subscriber of [...subscribers]) subscriber(parsed.data);
+    },
+  );
+  return { source, subscribers };
+}
+
+export function openProcessingEvents(onEvent: Subscriber): () => void {
+  shared ??= open();
+  const current = shared;
+  current.subscribers.add(onEvent);
   return () => {
-    source.removeEventListener(PROCESSING_EVENT_NAME, listener);
-    source.close();
+    current.subscribers.delete(onEvent);
+    if (current.subscribers.size === 0 && shared === current) {
+      current.source.close();
+      shared = null;
+    }
   };
 }

@@ -11,10 +11,18 @@ async function user(nativeLanguage = "uk") {
   });
 }
 
-async function video(userId: string) {
+async function video(userId: string, title = "Ein Tag in Hamburg", createdAt?: Date) {
   n++;
   return db.video.create({
-    data: { userId, youtubeVideoId: `yt-${n}`, title: "Ein Tag in Hamburg", channelName: "Nordlicht Reisen", durationMs: 768_000, language: "de" },
+    data: {
+      userId,
+      youtubeVideoId: `yt-${n}`,
+      title,
+      channelName: "Nordlicht Reisen",
+      durationMs: 768_000,
+      language: "de",
+      ...(createdAt && { createdAt }),
+    },
   });
 }
 
@@ -124,5 +132,60 @@ describe("VideosRepository (Postgres)", () => {
       { index: 2, start_ms: 60_000, end_ms: 60_900, text: "Zeile 2", translation: null },
       { index: 3, start_ms: 90_000, end_ms: 90_900, text: "Zeile 3", translation: null },
     ]);
+  });
+
+  describe("listVideos", () => {
+    it("lists only the user's videos, newest first, with their track state", async () => {
+      const u = await user();
+      const other = await user();
+      await video(other.id, "Fremd");
+      const old = await video(u.id, "Alt", new Date("2026-11-01"));
+      const recent = await video(u.id, "Neu", new Date("2026-11-20"));
+      await track(old.id, "ready", new Date("2026-11-01"));
+      const failed = await track(recent.id, "failed", new Date("2026-11-20"));
+      await db.track.update({ where: { id: failed.id }, data: { errorCode: "empty_track", progress: 1 } });
+
+      const page = await repo.listVideos(u.id, 0);
+      expect(page).toMatchObject({ page: 0, page_size: 24, total: 2 });
+      expect(page.items.map((v) => v.title)).toEqual(["Neu", "Alt"]);
+      expect(page.items[0]).toEqual({
+        id: recent.id,
+        youtube_video_id: recent.youtubeVideoId,
+        title: "Neu",
+        channel_name: "Nordlicht Reisen",
+        duration_ms: 768_000,
+        added_at: "2026-11-20T00:00:00.000Z",
+        track: { id: failed.id, status: "failed", progress: 1, error_code: "empty_track" },
+      });
+      expect(page.items[1]!.track).toMatchObject({ status: "ready", error_code: null });
+    });
+
+    it("prefers a ready track, and reports an unknown error code as internal", async () => {
+      const u = await user();
+      const v = await video(u.id);
+      expect((await repo.listVideos(u.id, 0)).items[0]!.track).toBeNull();
+
+      const broken = await track(v.id, "failed", new Date("2026-11-01"));
+      await db.track.update({ where: { id: broken.id }, data: { errorCode: "something_new" } });
+      expect((await repo.listVideos(u.id, 0)).items[0]!.track).toMatchObject({ error_code: "internal" });
+
+      const ready = await track(v.id, "ready", new Date("2026-11-02"));
+      await track(v.id, "processing", new Date("2026-11-03"));
+      expect((await repo.listVideos(u.id, 0)).items[0]!.track).toMatchObject({ id: ready.id, status: "ready" });
+    });
+
+    it("pages by 24 and searches title and channel without case", async () => {
+      const u = await user();
+      for (let i = 0; i < 25; i++) await video(u.id, `Folge ${i}`, new Date(Date.UTC(2026, 10, 1, 0, i)));
+      await video(u.id, "Hamburger Hafen", new Date("2026-10-01"));
+
+      const second = await repo.listVideos(u.id, 1);
+      expect(second.total).toBe(26);
+      expect(second.items.map((v) => v.title)).toEqual(["Folge 0", "Hamburger Hafen"]);
+
+      expect((await repo.listVideos(u.id, 0, "hamburger")).items.map((v) => v.title)).toEqual(["Hamburger Hafen"]);
+      expect((await repo.listVideos(u.id, 0, "NORDLICHT")).total).toBe(26);
+      expect((await repo.listVideos(u.id, 5)).items).toEqual([]);
+    });
   });
 });

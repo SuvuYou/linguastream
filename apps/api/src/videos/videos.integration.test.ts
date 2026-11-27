@@ -1,5 +1,5 @@
 import type { INestApplication } from "@nestjs/common";
-import { ApiError, LineWindow, VideoDetail } from "@linguastream/contracts";
+import { ApiError, LibraryPage, LineWindow, VideoDetail } from "@linguastream/contracts";
 import request from "supertest";
 import { createTestApp } from "../test/auth-fakes";
 import { VideosRepository, type VideoView } from "./videos.repository";
@@ -24,7 +24,11 @@ const view = (track: boolean): VideoView => ({
 
 describe("videos API", () => {
   let app: INestApplication;
-  let repo: { findVideo: ReturnType<typeof vi.fn>; linesInWindow: ReturnType<typeof vi.fn> };
+  let repo: {
+    findVideo: ReturnType<typeof vi.fn>;
+    linesInWindow: ReturnType<typeof vi.fn>;
+    listVideos: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(async () => {
     repo = {
@@ -32,6 +36,22 @@ describe("videos API", () => {
         userId === "user-1" && videoId === VIDEO_ID ? view(true) : null,
       ),
       linesInWindow: vi.fn(async () => [{ index: 0, start_ms: 0, end_ms: 900, text: "Hallo", translation: null }]),
+      listVideos: vi.fn(async (_userId: string, page: number) => ({
+        items: [
+          {
+            id: VIDEO_ID,
+            youtube_video_id: "4Ja5iJtYOPw",
+            title: "Ein Tag in Hamburg",
+            channel_name: null,
+            duration_ms: 768_000,
+            added_at: "2026-11-27T01:00:00.000Z",
+            track: { id: TRACK_ID, status: "failed", progress: 1, error_code: "internal" },
+          },
+        ],
+        page,
+        page_size: 24,
+        total: 1,
+      })),
     };
     app = await createTestApp({ providers: [{ token: VideosRepository, value: repo }] });
   });
@@ -80,7 +100,28 @@ describe("videos API", () => {
     expect(repo.linesInWindow).not.toHaveBeenCalled();
   });
 
+  it("lists the user's videos, a page at a time", async () => {
+    const res = await get("/api/videos").expect(200);
+    expect(LibraryPage.parse(res.body).items[0]!.track).toEqual({
+      id: TRACK_ID,
+      status: "failed",
+      progress: 1,
+      error_code: "internal",
+    });
+    expect(repo.listVideos).toHaveBeenCalledWith("user-1", 0, undefined);
+
+    await get("/api/videos?page=2&q=%20Hamburg%20").expect(200);
+    expect(repo.listVideos).toHaveBeenLastCalledWith("user-1", 2, "Hamburg");
+  });
+
+  it("answers 400 for a bad page or search", async () => {
+    await get("/api/videos?page=-1").expect(400);
+    await get(`/api/videos?q=${"a".repeat(101)}`).expect(400);
+    expect(repo.listVideos).not.toHaveBeenCalled();
+  });
+
   it("answers 401 without a session", async () => {
+    await request(app.getHttpServer()).get("/api/videos").expect(401);
     await request(app.getHttpServer()).get(`/api/videos/${VIDEO_ID}`).expect(401);
     await request(app.getHttpServer()).get(`/api/videos/${VIDEO_ID}/lines?from_ms=0&to_ms=1000`).expect(401);
   });

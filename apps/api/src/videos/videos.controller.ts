@@ -2,7 +2,9 @@ import { Controller, Get, Inject, NotFoundException } from "@nestjs/common";
 import {
   getLineWindowRoute,
   getVideoRoute,
+  listVideosRoute,
   type ApiError,
+  type LibraryPage,
   type LineWindow,
   type RequestParams,
   type RequestQuery,
@@ -16,6 +18,14 @@ import { VideosRepository, type VideoView } from "./videos.repository";
 @Controller("videos")
 export class VideosController {
   constructor(@Inject(VideosRepository) private readonly videos: VideosRepository) {}
+
+  @Get()
+  list(
+    @CurrentUser() user: AuthUser,
+    @ValidQuery(listVideosRoute) query: RequestQuery<typeof listVideosRoute>,
+  ): Promise<LibraryPage> {
+    return this.videos.listVideos(user.id, query.page, query.q);
+  }
 
   @Get(":videoId")
   async video(

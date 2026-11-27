@@ -8,3 +8,4 @@ export * from "./watch.js";
 export * from "./preferences.js";
 export * from "./processing.js";
 export * from "./usage.js";
+export * from "./library.js";

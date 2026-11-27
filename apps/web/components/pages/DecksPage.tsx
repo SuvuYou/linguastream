@@ -26,8 +26,8 @@ export default function DecksPage() {
   const decks = data?.decks ?? [];
 
   return (
-    <section className="flex h-full w-full flex-col bg-background m-2 p-2 rounded-l-lg">
-      <div className="px-4 py-4 flex flex-col gap-10">
+    <section className="flex h-full w-full flex-col mx-auto max-w-[1400px] p-6 max-[560px]:p-4">
+      <div className="flex flex-col gap-10">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-medium text-primary-foreground">
             Decks

@@ -14,7 +14,7 @@ export default function SessionCompleteState({ studyDetails, stats }: Props) {
   const router = useRouter();
 
   return (
-    <section className="flex justify-center items-center h-full w-full bg-background m-2 p-2 rounded-l-lg">
+    <section className="flex justify-center items-center h-full w-full mx-auto max-w-[1400px] p-6 max-[560px]:p-4">
       <Card className="flex justify-center items-center relative max-w-5xl w-full mx-auto px-6 py-8 gap-6">
         <h2 className="text-4xl font-medium text-primary-foreground">
           All caught up!

@@ -143,7 +143,7 @@ export default function ProcessingToast({
               : FAILURE_MESSAGES[event.error_code]}
           </p>
           {RETRYABLE[event.error_code] && (
-            <div className="flex">
+            <div className="flex text-[13px] font-medium">
               <button
                 type="button"
                 onClick={onRetry}

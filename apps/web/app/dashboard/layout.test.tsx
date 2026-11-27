@@ -1,57 +1,26 @@
-import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import RootLayout from "./layout";
+import { describe, expect, it, vi } from "vitest";
+import DashboardLayout from "./layout";
 
-vi.mock("@/components/layout/Navbar", () => ({
-  default: () => <div data-testid="navbar" />,
+vi.mock("@/components/layout/TopNav", () => ({
+  default: () => <header data-testid="top-nav" />,
 }));
 
-vi.mock("@/components/ui/sidebar", () => ({
-  SidebarProvider: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="sidebar-provider">{children}</div>
-  ),
+vi.mock("@/components/features/processing/ProcessingToasts", () => ({
+  default: () => <section data-testid="processing-toasts" />,
 }));
 
-describe("RootLayout", () => {
-  it("renders children", () => {
-    render(
-      <RootLayout>
-        <div data-testid="child">Hello</div>
-      </RootLayout>,
-    );
-
-    expect(screen.getByTestId("child")).toBeInTheDocument();
-  });
-
-  it("renders Navbar", () => {
-    render(
-      <RootLayout>
-        <div />
-      </RootLayout>,
-    );
-
-    expect(screen.getByTestId("navbar")).toBeInTheDocument();
-  });
-
-  it("wraps children with SidebarProvider", () => {
-    render(
-      <RootLayout>
-        <div data-testid="child" />
-      </RootLayout>,
-    );
-
-    const provider = screen.getByTestId("sidebar-provider");
-
-    expect(provider).toContainElement(screen.getByTestId("child"));
-  });
-
-  it("renders the main element", () => {
+describe("DashboardLayout", () => {
+  it("puts the page between the top navigation and the processing toasts", () => {
     const { container } = render(
-      <RootLayout>
-        <div />
-      </RootLayout>,
+      <DashboardLayout>
+        <div data-testid="child">Hello</div>
+      </DashboardLayout>,
     );
 
-    expect(container.querySelector("main")).toBeInTheDocument();
+    const main = container.querySelector("main")!;
+    expect(main).toContainElement(screen.getByTestId("child"));
+    expect(screen.getByTestId("top-nav").compareDocumentPosition(main)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(screen.getByTestId("processing-toasts")).toBeInTheDocument();
   });
 });

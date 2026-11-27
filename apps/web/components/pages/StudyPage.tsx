@@ -33,7 +33,7 @@ export default function StudyPage() {
 
   if (queue.isLoading) {
     return (
-      <section className="grid grid-rows-16 h-full w-full bg-background m-2 p-2 rounded-l-lg">
+      <section className="grid grid-rows-16 h-full w-full mx-auto max-w-[1400px] p-6 max-[560px]:p-4">
         <Card className="relative max-w-5xl w-full row-span-3 row-start-2 row-end-15 mx-auto px-6 py-8 gap-6">
           <Skeleton className="h-4 w-full" />
           <Skeleton className="h-48 w-full" />
@@ -58,7 +58,7 @@ export default function StudyPage() {
 
   if (!queue.currentCard) {
     return (
-      <section className="grid grid-rows-16 h-full w-full bg-background m-2 p-2 rounded-l-lg">
+      <section className="grid grid-rows-16 h-full w-full mx-auto max-w-[1400px] p-6 max-[560px]:p-4">
         <Card className="relative max-w-5xl w-full row-span-3 row-start-2 row-end-15 mx-auto px-6 py-8 gap-6">
           <Skeleton className="h-4 w-full" />
           <Skeleton className="h-48 w-full" />
@@ -77,7 +77,7 @@ export default function StudyPage() {
       : 0;
 
   return (
-    <section className="grid grid-rows-16 h-full w-full bg-background m-2 p-2 rounded-l-lg">
+    <section className="grid grid-rows-16 h-full w-full mx-auto max-w-[1400px] p-6 max-[560px]:p-4">
       <Card className="relative max-w-5xl w-full row-span-3 row-start-2 row-end-15 mx-auto px-6 py-8 gap-6">
         <Button
           variant="destructive"

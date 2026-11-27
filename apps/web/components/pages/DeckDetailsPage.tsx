@@ -54,7 +54,7 @@ export default function DeckDetailPage({ deckId }: DeckDetailPageProps) {
 
   if (deckDetails.isLoading) {
     return (
-      <section className="flex h-full w-full flex-col bg-background m-2 p-8 rounded-l-lg">
+      <section className="flex h-full w-full flex-col mx-auto max-w-[1400px] p-6 max-[560px]:p-4">
         <Skeleton className="h-6 w-48 mb-4" />
         <Skeleton className="h-10 w-72 mb-4" />
         <Skeleton className="h-8 w-full mb-4" />
@@ -67,8 +67,8 @@ export default function DeckDetailPage({ deckId }: DeckDetailPageProps) {
   const availableLanguages = deckDetails.data?.availableLanguages ?? [];
 
   return (
-    <section className="flex h-full w-full flex-col bg-background m-2 p-2 rounded-l-lg">
-      <div className="px-6 py-4 flex flex-col gap-6">
+    <section className="flex h-full w-full flex-col mx-auto max-w-[1400px] p-6 max-[560px]:p-4">
+      <div className="flex flex-col gap-6">
         <div className="flex items-center justify-between pt-2">
           <div className="flex items-center gap-3">
             <Button

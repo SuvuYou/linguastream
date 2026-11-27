@@ -1,20 +1,19 @@
 import { Suspense } from "react";
-import Navbar from "@/components/layout/Navbar";
 import ProcessingToasts from "@/components/features/processing/ProcessingToasts";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import TopNav from "@/components/layout/TopNav";
 
-export default function RootLayout({
+export default function DashboardLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <SidebarProvider>
-      <Navbar />
-      <main className="flex min-h-dvh w-full flex-col bg-sidebar">
+    <div className="flex min-h-dvh flex-col bg-background">
+      <TopNav />
+      <main className="flex w-full flex-1 flex-col">
         <Suspense>{children}</Suspense>
       </main>
       <ProcessingToasts />
-    </SidebarProvider>
+    </div>
   );
 }

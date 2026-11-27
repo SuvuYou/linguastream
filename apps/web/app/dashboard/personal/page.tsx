@@ -1,9 +1,5 @@
-import PersonalLibraryPage from "@/components/pages/PersonalLibraryPage";
+import LibraryScreen from "@/components/features/library/LibraryScreen";
 
-export default async function PersonalLibrary() {
-  return (
-    <>
-      <PersonalLibraryPage />
-    </>
-  );
+export default function Library() {
+  return <LibraryScreen />;
 }
